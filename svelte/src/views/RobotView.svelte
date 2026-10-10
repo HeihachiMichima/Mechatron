@@ -161,6 +161,7 @@
   .grid { display: grid; gap: 12px; }
   .grid > .panel + .panel { margin-top: 0; }
   @media (min-width: 900px) { .grid { grid-template-columns: 1fr 1fr; align-items: start; } .wide { grid-column: 1 / -1; } }
+  @media (min-width: 1500px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   em { font-style: normal; }
   .models { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
   @media (min-width: 560px) { .models { grid-template-columns: repeat(4, 1fr); } }

@@ -61,6 +61,7 @@
   .devs { display: grid; gap: 16px; }
   @media (min-width: 640px) { .devs { grid-template-columns: 1fr 1fr; } }
   @media (min-width: 1100px) { .devs { grid-template-columns: repeat(4, 1fr); } }
+  .top { max-width: none; }
   .dev h3 { font-size: 1rem; margin-bottom: 6px; }
   .dev-val { display: flex; gap: 8px; }
   .dev-val .input { width: 5.5em; font-size: 1.2rem; font-weight: 600; text-align: center; }

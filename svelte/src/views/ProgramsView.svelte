@@ -118,6 +118,7 @@
   .grid { display: grid; gap: 12px; }
   .grid > .panel + .panel { margin-top: 0; }
   @media (min-width: 900px) { .grid { grid-template-columns: 1fr 1fr; align-items: start; } .wide { grid-column: 1 / -1; } }
+  @media (min-width: 1500px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   .prow { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 10px; padding: 4px 0; }
   .pmain { display: grid; text-align: left; background: none; border: 0; padding: 8px 0; min-height: 48px; align-content: center; }
   .pmain:hover .pname { color: var(--amber); }

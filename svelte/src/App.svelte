@@ -79,12 +79,14 @@
 
 <style>
   .head { position: sticky; top: 0; z-index: 20; box-shadow: 0 6px 18px rgb(3 14 16 / .25); }
-  main { padding: 14px 12px calc(var(--nav-h) + 28px + env(safe-area-inset-bottom)); max-width: 1200px; margin: 0 auto; }
+  /* No max width: on a big screen the views spread over the whole window (extra columns below). */
+  main { padding: 14px 12px calc(var(--nav-h) + 28px + env(safe-area-inset-bottom)); }
   @media (min-width: 720px) { main { padding-left: 20px; padding-right: 20px; } }
   @media (min-width: 960px) {
     .main { margin-left: 96px; }
     main { padding-bottom: 40px; }
   }
+  @media (min-width: 1400px) { main { padding-left: 28px; padding-right: 28px; } }
   @media print { .app, :global(.toast-zone) { display: none !important; } }
   :global(body) { min-height: 100dvh; }
 </style>

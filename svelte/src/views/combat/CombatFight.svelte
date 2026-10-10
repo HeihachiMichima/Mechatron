@@ -142,6 +142,7 @@
 <style>
   .layout { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
   @media (min-width: 1000px) { .layout { grid-template-columns: minmax(0, 1fr) 340px; align-items: start; } }
+  @media (min-width: 1400px) { .layout { grid-template-columns: minmax(0, 1fr) minmax(380px, 28%); } }
   .main-col, .side-col { display: grid; gap: 12px; align-content: start; min-width: 0; grid-template-columns: minmax(0, 1fr); }
   .main-col > :global(.panel + .panel), .side-col > .panel + .panel { margin-top: 0; }
   .track-panel { padding-bottom: 8px; min-width: 0; }

@@ -158,6 +158,8 @@
   .col > .panel + .panel { margin-top: 0; }
   .col { display: grid; gap: 12px; align-content: start; }
   @media (min-width: 900px) { .grid { grid-template-columns: 1.1fr 1fr; align-items: start; } }
+  /* Wide screens: the right-hand column splits in two, the whole width is used. */
+  @media (min-width: 1500px) { .grid { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); } .col { grid-template-columns: 1fr 1fr; } }
   .empty { margin-bottom: 12px; border-left: 3px solid var(--amber); }
   .empty h2 { font-size: 1.2rem; }
   .empty p { margin: 6px 0 12px; color: var(--muted); }

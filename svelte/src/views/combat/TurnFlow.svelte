@@ -14,6 +14,7 @@
   import LogicConflict from './LogicConflict.svelte';
   import BlowerStep from './BlowerStep.svelte';
   import RecycleStep from './RecycleStep.svelte';
+  import ActorStats from './ActorStats.svelte';
   import { store, payEp, availableEp } from '../../lib/store.svelte.js';
   import { GAME_DATA as D } from '../../lib/data.js';
   import { order, current, isDown, endTurn } from '../../lib/combat.js';
@@ -503,6 +504,8 @@
       {#if actor.x.prone}<p class="banner">À terre. <button class="btn small" onclick={stand}>Se relever (manœuvre)</button></p>{/if}
       {#if actor.x.held}<p class="banner"><span>Immobilisé ({actor.x.held.how}{holder ? ` par ${nm(holder.c)}` : ''}) : aucune action physique. Se libérer : {actor.x.held.with}{actor.x.held.mod ? ` à ${sgn(actor.x.held.mod)}` : ''}, compte comme une action.</span> <button class="btn small" onclick={breakFree}>Libéré</button></p>{/if}
       {#if T.info}<OverheatDice act={T.info.act} name={T.info.name} compact />{/if}
+
+      <ActorStats c={actor.c} />
 
       <div class="manoeuvre">
         <span class="lbl">Manœuvre</span>
