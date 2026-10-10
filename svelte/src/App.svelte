@@ -22,6 +22,7 @@
   import DamageSheet from './sheets/DamageSheet.svelte';
   import CombatantSheet from './sheets/CombatantSheet.svelte';
   import EnemyEditSheet from './sheets/EnemyEditSheet.svelte';
+  import DuplicateSheet from './sheets/DuplicateSheet.svelte';
   import CombatView from './views/CombatView.svelte';
   import { store } from './lib/store.svelte.js';
   import { parseShareHash } from './lib/exports.js';
@@ -66,6 +67,7 @@
 {:else if sheet?.type === 'templates'}<TemplateSheet mode={sheet.mode} />
 {:else if sheet?.type === 'combatant'}{#key sheet}<CombatantSheet xid={sheet.xid} />{/key}
 {:else if sheet?.type === 'enemyEdit'}{#key sheet}<EnemyEditSheet cid={sheet.cid} />{/key}
+{:else if sheet?.type === 'duplicate'}{#key sheet}<DuplicateSheet cid={sheet.cid} />{/key}
 {:else if sheet?.type === 'weapon'}{#key sheet}<WeaponSheet index={sheet.index} />{/key}
 {:else if sheet?.type === 'picker'}<PickerSheet {...sheet} />
 {:else if sheet?.type === 'export'}<ExportSheet />

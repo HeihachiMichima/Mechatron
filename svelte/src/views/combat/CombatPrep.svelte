@@ -61,6 +61,7 @@
           <button class="chip" aria-pressed={r.x.side === 'enemy'} onclick={() => setSide(r, 'enemy')}>Ennemi</button>
         </div>
         <button class="icon-btn" aria-label="Modifier {r.c.name}" title="Modifier" onclick={() => store.open({ type: 'enemyEdit', cid: r.c.id })}><Icon name="edit" /></button>
+        <button class="icon-btn" aria-label="Dupliquer {r.c.name}" title="Dupliquer" onclick={() => store.open({ type: 'duplicate', cid: r.c.id })}><Icon name="copy" /></button>
         <button class="icon-btn" aria-label="Retirer {r.c.name}" title="Retirer du combat" onclick={() => removeX(r)}><Icon name="close" /></button>
       </li>
     {/each}

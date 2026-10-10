@@ -69,6 +69,7 @@
 
   {#snippet footer()}
     <button class="btn ghost" onclick={openSheet}>Ouvrir la fiche complète</button>
+    {#if c.kind === 'npc'}<button class="btn" onclick={() => store.open({ type: 'duplicate', cid })}><Icon name="copy" size={16} />Dupliquer</button>{/if}
     <button class="btn primary" style="margin-left:auto" onclick={() => store.close()}>Terminé</button>
   {/snippet}
 </Sheet>

@@ -54,9 +54,9 @@
   {#if qty > 1}<p class="hint">Un groupe identique partage un seul jet d'initiative (règle du livre).</p>{/if}
   <input class="input" type="search" bind:value={q} placeholder="Rechercher un modèle" aria-label="Rechercher un modèle" />
   <div class="blanks">
-    <button class="btn small" onclick={() => blank('robot')}><Icon name="plus" size={16} />Robot vierge</button>
-    <button class="btn small" onclick={() => blank('drone')}><Icon name="plus" size={16} />Drone vierge</button>
-    <button class="btn small" onclick={() => blank('creature')}><Icon name="plus" size={16} />Créature vierge</button>
+    <button class="btn small" onclick={() => blank('robot')}><Icon name="plus" size={16} />Nouveau robot</button>
+    <button class="btn small" onclick={() => blank('drone')}><Icon name="plus" size={16} />Nouveau drone</button>
+    <button class="btn small" onclick={() => blank('creature')}><Icon name="plus" size={16} />Nouvelle créature</button>
   </div>
   {#each groups as g (g)}
     <h3 class="sec">{g}</h3>

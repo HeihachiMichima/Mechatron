@@ -143,6 +143,37 @@ function normalizeCombat(raw, ids) {
   };
 }
 
+/**
+ * Make `n` copies of NPC `src` (fresh ids, same stats, no damage) inside a
+ * commit. Names are numbered after the original ("Garde 1" → "Garde 2"…; an
+ * unnumbered original becomes "… 1"). Copies share the original's group, so
+ * they roll one initiative together (book p.80). In combat they join on the
+ * same side, with the same initiative if it was already rolled.
+ */
+export function addCopies(data, src, n) {
+  const base = (src.name || 'PNJ').replace(/\s+\d+$/, '').trim() || 'PNJ';
+  const esc = base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const re = new RegExp(`^${esc}\\s+(\\d+)$`);
+  let max = Math.max(0, ...data.chars.map((c) => Number(re.exec(c.name || '')?.[1] || 0)));
+  if (!re.test(src.name || '')) src.name = `${base} ${++max}`;
+  if (!src.group) src.group = newId();
+  const sx = data.combat.combatants.find((x) => x.cid === src.id);
+  const made = Array.from({ length: n }, () => {
+    const c = normalize(JSON.parse(JSON.stringify(src)));
+    c.id = newId();
+    while (data.chars.some((y) => y.id === c.id)) c.id = newId();
+    c.name = `${base} ${++max}`;
+    c.color = '';
+    c.damage = { servos: 0, stabilite: 0, processeur: 0, reseau: 0 };
+    c.armorDamage = 0; c.cover = 0; c.brokenModules = [];
+    c.weapons = c.weapons.map((w) => ({ ...w, empty: false, crankDue: false, spent: false }));
+    data.chars.push(c);
+    if (sx) { const x = newCombatant(c.id, sx.side); x.init = sx.init; x.surprise = sx.surprise; data.combat.combatants.push(x); }
+    return c;
+  });
+  return made;
+}
+
 /** Give a player robot the first tab color not already taken. */
 export function ensureColor(chars, c) {
   if (c.kind === 'npc' || c.color) return;
