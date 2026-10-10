@@ -15,3 +15,9 @@ assets/
 
 # Versioned snapshots of dist/index.html
 svelte/releases/
+
+# v1 legacy vanilla-JS sheet (kept locally, not versioned)
+/index.html
+/app.js
+/data.js
+/style.css
