@@ -4,6 +4,7 @@
   import Stepper from '../../components/Stepper.svelte';
   import CombatGuide from '../../components/CombatGuide.svelte';
   import TurnFlow from './TurnFlow.svelte';
+  import { flip } from 'svelte/animate';
   import { store, blankCombat } from '../../lib/store.svelte.js';
   import { order, current, isDown, sideCounts } from '../../lib/combat.js';
   import { status, devBand, epMax } from '../../lib/rules.js';
@@ -15,6 +16,19 @@
   const cur = $derived(store.ui.turnActor ? ord.find((r) => r.x.id === store.ui.turnActor) : current(store.data));
   const counts = $derived(sideCounts(store.data));
   const hasNpc = $derived(ord.some((r) => r.c.kind === 'npc'));
+  // Turn lane: whoever acts now first, then those still to act, then (greyed)
+  // those who already acted this round, then the destroyed — all in
+  // initiative order. A new round puts everyone back in initiative order.
+  const lane = $derived.by(() => {
+    const up = ord.filter((r) => !isDown(r) && r.x.id !== cur?.x.id);
+    const waiting = up.filter((r) => !r.x.acted), done = up.filter((r) => r.x.acted);
+    return { head: [...(cur ? [cur] : []), ...waiting], done, down: ord.filter((r) => isDown(r) && r.x.id !== cur?.x.id) };
+  });
+  const laneItems = $derived([...lane.head, ...(lane.head.length && lane.done.length ? [{ sep: true, x: { id: '__sep' } }] : []), ...lane.done, ...lane.down]);
+  const reduced = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let trackEl = $state(null);
+  // Keep the active robot in sight: the lane itself scrolls back to its start.
+  $effect(() => { cur?.x.id; trackEl?.scrollTo({ left: 0, behavior: reduced ? 'auto' : 'smooth' }); });
   const supply = $derived(devBand(store.c.dev.Energie).energyEp);
   let confirmEnd = $state(false);
   let logOpen = $state(true);
@@ -45,14 +59,16 @@
         <span class="rn num">Tour {cb.round}</span>
         <span class="counts"><b class="ally">{counts.ally}</b> allié{counts.ally > 1 ? 's' : ''} debout, <b class="enemy">{counts.enemy}</b> ennemi{counts.enemy > 1 ? 's' : ''}</span>
       </div>
-      <ol class="track" aria-label="Ordre d'initiative">
-        {#each ord as r (r.x.id)}
-          <li>
+      <ol class="track" aria-label="Ordre de jeu du tour" bind:this={trackEl}>
+        {#each laneItems as r (r.x.id)}
+          <li class:sep={r.sep} animate:flip={{ duration: reduced ? 0 : 380 }}>
+            {#if r.sep}<span class="sepline" title="Ont déjà joué ce tour"></span>{:else}
             <button class="tk" class:enemy={r.x.side === 'enemy'} onclick={() => store.open({ type: 'combatant', xid: r.x.id })} aria-label="{r.c.name}, initiative {r.x.init}">
               <span class="ti num">{r.x.init}</span>
               <Avatar c={r.c} side={r.x.side} size={42} current={cur?.x.id === r.x.id} dim={r.x.acted && cur?.x.id !== r.x.id} down={isDown(r)} />
               <span class="flags">{#if r.c.body !== 'creature' && (r.c.kind !== 'npc' || !cb.usePool)}<i class="epf" class:zero={r.c.ep.current === 0} title="PE">⚡{r.c.ep.current}</i>{/if}{#if r.x.held}<i title="immobilisé">⛓</i>{/if}{#if r.x.lock}<i title="verrouille une cible">◎</i>{/if}{#if r.x.overwatch}<i title="surveillance">👁</i>{/if}{#if r.x.prone}<i title="à terre">↓</i>{/if}{#if r.x.lostAction}<i title="a perdu son action">✋</i>{/if}</span>
             </button>
+            {/if}
           </li>
         {/each}
       </ol>
@@ -135,6 +151,8 @@
   .counts .ally { color: var(--text); }
   .counts .enemy { color: var(--fault); }
   .track { list-style: none; margin: 10px -4px 0; padding: 4px 0 2px; display: flex; gap: 2px; overflow-x: auto; scrollbar-width: thin; }
+  .track li.sep { display: flex; align-items: stretch; padding: 6px 4px 22px; }
+  .sepline { width: 0; border-left: 2px dashed var(--line); }
   .tk { display: grid; justify-items: center; gap: 2px; background: none; border: 0; padding: 4px 2px; border-radius: 8px; }
   .tk:hover { background: var(--hull-2); }
   .ti { font-size: .78rem; font-weight: 700; color: var(--muted); }
