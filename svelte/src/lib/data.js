@@ -520,6 +520,13 @@ export const GAME_DATA = {
       { h: "Se déplacer", t: "Bras ↔ Proche ↔ Courte : 1 manœuvre par portée. Au-delà de Courte : 2 manœuvres d'affilée par portée." },
       { h: "Fuir", t: "Jet de Déplacement : Bras −2, Proche −1, Courte 0, Longue +1, Lointaine réussite automatique. Seulement par où vous êtes venu." }
     ]},
+    { id: "soutien", title: "Soutien et conflits logiques", tone: "amber", items: [
+      { h: "Aider", t: "Remplace votre action (pas votre manœuvre) : +1 au jet de l'allié. Un groupe de PNJ peut attaquer d'un seul jet, +1 par membre qui aide." },
+      { h: "Calculer (Robot de protocole)", t: "Annoncé avant le jet d'un allié à portée Courte, lancé avant lui ; coûte votre action. Réussite : l'allié peut renoncer après son jet, avant de forcer, et choisir une autre action. +1 à son action par succès en plus." },
+      { h: "Raisonner", t: "Interaction contre Contestation, entre robots seulement (un seul jet si la cible n'est pas consciente d'elle-même). +1 par cran de Hiérarchie d'écart, +1 par argument de base logique de chaque côté. Plus de succès que l'adversaire : il obéit. Succès en plus : 1 dégât de Réseau chacun." },
+      { h: "Manipuler (Robot de compagnie)", t: "Contre Contestation ou, pour les vivants, Percevoir les émotions ; la Hiérarchie ne compte pas. Un vivant convaincu voudra quelque chose en retour." },
+      { h: "Essaims", t: "Seuls le feu, les explosions, Nettoyer (dégâts 3, portée Courte, sans bonus) et l'Impulsion énergétique les blessent." }
+    ]},
     { id: "energie", title: "Énergie et modules", tone: "coolant", items: [
       { h: "Activer un module", t: "C'est une action, sauf les effets « avec une attaque » (E), qui s'ajoutent à un jet ou une manœuvre, et les réactions (R), utilisables à tout moment tant qu'il reste des PE." },
       { h: "Surchauffe", t: "Un dé d'équipement par PE dépensé. Un seul 1 : D6 sur la table (module cassé, coût doublé, autre module, redémarrage, effacement mémoire, surtension)." },

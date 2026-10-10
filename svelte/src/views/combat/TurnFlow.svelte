@@ -10,10 +10,13 @@
   import Stepper from '../../components/Stepper.svelte';
   import DiceTray from '../../components/DiceTray.svelte';
   import OverheatDice from '../../components/OverheatDice.svelte';
+  import LogicConflict from './LogicConflict.svelte';
+  import BlowerStep from './BlowerStep.svelte';
+  import RecycleStep from './RecycleStep.svelte';
   import { store, payEp, availableEp } from '../../lib/store.svelte.js';
   import { GAME_DATA as D } from '../../lib/data.js';
   import { order, current, isDown, endTurn } from '../../lib/combat.js';
-  import { chassis, armorCurrent, combatWeapons, combatModules, poolFor, canTarget, rangeIndex, hasWorkingModule, resolveDamage, findWeapon, fmtBonus, attrCurrent, attrLabel, attrLabels, hasSecondary, status, epMax, ATTRS } from '../../lib/rules.js';
+  import { chassis, armorCurrent, combatWeapons, combatModules, poolFor, canTarget, rangeIndex, hasWorkingModule, resolveDamage, findWeapon, fmtBonus, attrCurrent, attrLabel, attrLabels, hasSecondary, status, epMax, ATTRS, isSwarm } from '../../lib/rules.js';
   import { rollActivation, settleActivation, actText, moduleFx, workingIndex, isEnergyWeapon, weaponPower, weaponBlock, POWER, chargeItems, spareEpacks, rollBlast, blastDice, rollD6 } from '../../lib/energy.js';
 
   const ACTION_KINDS = ['dmg', 'multi', 'fatigue', 'selfHarm', 'disable', 'control', 'grappleAtk', 'hold', 'blast', 'shift', 'escape', 'info'];
@@ -32,7 +35,8 @@
     bonus: null, preActs: [], postActs: [], info: null,
     fx: null, fxObj: null, fxTargets: [], fxEp: 1, fxDist: {}, fxArmor: true, fxReact: 0, fxEmp: 0, fxFrom: '', fxTo: '', fxAttr: '', fxMods: [], fxResult: null,
     droneAct: null, droneTarget: null, droneRange: 'Proche', droneRoll: null, droneDone: null,
-    transferTo: null, transferN: 1
+    transferTo: null, transferN: 1,
+    helpers: [], calcBy: null, calc: null, atkPushed: false
   });
 
   $effect(() => {
@@ -94,6 +98,8 @@
     if (grappling) L.push({ label: "Attaque d'immobilisation", v: 2 });
     if (lockedOnTarget) L.push({ label: 'Cible verrouillée', v: lock.atk });
     if (target?.x.lock && target.x.lock.target !== actor.c.id) L.push({ label: `${nm(target.c)} est focalisé ailleurs`, v: 1 });
+    if (T.helpers?.length) L.push({ label: `Aide (${T.helpers.length})`, v: T.helpers.length });
+    if (T.calc && T.calc.successes > 1) L.push({ label: `Calcul de ${nm(ord.find((r) => r.x.id === T.calcBy)?.c)}`, v: T.calc.successes - 1 });
     if (T.manual) L.push({ label: 'Autre modificateur', v: T.manual });
     return L.filter((m) => m.v !== 0);
   });
@@ -102,7 +108,7 @@
   const pk0 = $derived(actor ? poolFor(actor.c, progKey) : null);
   // Grapple attack (book p.85): while you hold the target, unarmed only, +2, no defense.
   const grappling = $derived(!!(target && actor && kind === 'melee' && target.x.held?.by === actor.x.id));
-  const atkPool = $derived(actor && w ? poolFor(actor.c, progKey, { mod: modSum, gear: Number(w.bonus) || 0, full: T?.fullOk }) : null);
+  const atkPool = $derived(actor && w ? poolFor(actor.c, w.prog || progKey, { mod: modSum, gear: Number(w.bonus) || 0, full: T?.fullOk }) : null);
   const defWeapon = $derived(target ? combatWeapons(target.c, 'melee').filter((x) => !weaponBlock(target.c, x, ep(target.c))).sort((a, b) => (Number(b.bonus) || 0) - (Number(a.bonus) || 0))[0] : null);
   const defPool = $derived(target && T?.defend ? poolFor(target.c, 'assaut', { gear: Number(defWeapon?.bonus) || 0 }) : null);
   const drained = $derived(!!(energy && power === 'epack' && T?.atkFirst && T.atkFirst.gear > 0 && T.atkFirst.gearOnes === T.atkFirst.gear));
@@ -116,6 +122,12 @@
   const rolled = $derived(T?.atk && (!T.defend || T.def));
   const protectors = $derived(target ? ord.filter((r) => r.x.side === target.x.side && r.c.id !== target.c.id && !isDown(r) && r.c.model === 'security' && (r.c.specialRating || 0) > 0 && r.x.protectRound !== cb.round && !r.x.held) : []);
   const prot = $derived(T?.protector ? ord.find((r) => r.x.id === T.protector) : null);
+  // Help (+1 each, costs the helper's action — book p.81; NPC groups attack
+  // together the same way) and Calculate (Protocol Robot, book p.61).
+  const supporters = $derived(actor && !overwatchShot ? allies.filter((r) => !r.x.acted && !r.x.lostAction && !r.x.held && !status(r.c).asleep) : []);
+  const calculators = $derived(supporters.filter((r) => r.c.model === 'protocol' && (r.c.specialRating || 0) > 0));
+  const calcRow = $derived(T?.calcBy ? ord.find((r) => r.x.id === T.calcBy) : null);
+  const swarmTarget = $derived(!!target && isSwarm(target.c));
   const extraOpts = $derived.by(() => {
     if (!actor || !T || !['melee', 'shoot'].includes(T.action) || !target || isDown(target)) return [];
     const used = actor.x.extra?.round === cb.round ? actor.x.extra.used : [];
@@ -123,12 +135,12 @@
   });
 
   function set(patch) { store.ui.turn = { ...store.ui.turn, ...patch }; }
-  const firstFree = (ws) => ws.find((x) => !weaponBlock(actor.c, x, ep(actor.c))) ?? ws[0];
+  const firstFree = (ws, swarm) => ws.find((x) => !weaponBlock(actor.c, x, ep(actor.c)) && !!x.swarmOnly === swarm) ?? ws.find((x) => !weaponBlock(actor.c, x, ep(actor.c)) && !x.swarmOnly) ?? ws[0];
   function choose(action) {
     const first = opponents[0]?.c.id ?? null;
     const ws = actor ? combatWeapons(actor.c, action === 'shoot' ? 'ranged' : 'melee') : [];
-    const w0 = firstFree(ws);
     const tgt = action === 'target' ? first : lock ? (opponents.find((o) => o.c.id === lock.target)?.c.id ?? first) : first;
+    const w0 = firstFree(ws, isSwarm(ord.find((r) => r.c.id === tgt)?.c));
     set({ action, step: action === 'melee' || action === 'shoot' ? 'setup' : action, targetId: tgt, weaponIdx: w0?.index ?? null, range: action === 'shoot' ? (rangeIndex(w0?.portee) >= 2 ? 'Courte' : 'Proche') : 'Bras' });
   }
 
@@ -143,9 +155,15 @@
     const again = T.defend && target.x.defending;
     if (again) { defAct = rollActivation(target.c, 1); defOk = defAct.works; acts.push({ name: 'Bras supplémentaires', act: defAct, who: target.c.id, index: workingIndex(target.c, 'Bras supplémentaires') }); }
     const ax = actor.x.id, aid = actor.c.id, wi = w?.index;
+    const helpers = T.helpers.map((id) => ord.find((r) => r.x.id === id)).filter(Boolean);
+    const calcBy = calcRow;
     store.commitAll(null, (d) => {
       acts.forEach((a) => { const c = C(d, a.who); settleActivation(d, c, a.index, a.act, payEp); log(`${nm(c)} : ${actText(a.name, a.act)}`); });
       const me = C(d, aid);
+      helpers.forEach((h) => { X(d, h.x.id).lostAction = true; });
+      if (helpers.length) log(`${helpers.map((h) => nm(h.c)).join(', ')} ${helpers.length > 1 ? 'aident' : 'aide'} ${nm(me)} (+${helpers.length}) : action utilisée`);
+      if (calcBy) { X(d, calcBy.x.id).lostAction = true; log(`${nm(calcBy.c)} calcule pour ${nm(me)} : ${T.calc?.successes || 0} succès`); }
+
       if (energy && wi >= 0) {
         if (power === 'internal') { payEp(d, me, 1); log(`${nm(me)} tire sur son alimentation interne : −1 PE`); }
         if (power === 'crank') me.weapons[wi].crankDue = true;
@@ -157,10 +175,10 @@
         log(`${nm(target.c)} se défend${again ? ' encore (Bras supplémentaires)' : ' : perd sa prochaine action'}`);
       }
     });
-    set({ step: 'roll', atk: null, atkFirst: null, def: null, stunts: [], fullOk, defend: T.defend && defOk, preActs: acts });
+    set({ ...(wi >= 0 && actor.c.weapons[wi]?.oneUse ? { spentIdx: [...new Set([...(T.spentIdx || []), wi])] } : {}), step: 'roll', atk: null, atkFirst: null, atkPushed: false, def: null, stunts: [], fullOk, defend: T.defend && defOk, preActs: acts });
   }
   function onAtk(t, pushed) {
-    set({ atk: t, ...(pushed ? {} : { atkFirst: t }) });
+    set({ atk: t, atkPushed: !!pushed, ...(pushed ? {} : { atkFirst: t }) });
     if (!pushed && energy && power === 'epack' && t.gear > 0 && t.gearOnes === t.gear && w.index >= 0) {
       const aid = actor.c.id, wi = w.index;
       store.commitOn(aid, `${w.name} : E-pack vide`, (s) => { s.weapons[wi].empty = true; log(`${nm(s)} : l'E-pack de ${w.name} est vide, l'attaque est perdue`); });
@@ -237,12 +255,21 @@
     });
     set({ step: 'done', doneMsg: `${nm(actor.c)} verrouille ${nm(target.c)} : +${1 + n('atk')} à ses attaques contre lui${n('dmg') ? `, +${n('dmg')} dégât` : ''}. Les autres ennemis ont +1 contre ${nm(actor.c)}.` });
   }
+  // Calculate: withdraw the action after the roll, before pushing, and pick another.
+  function withdraw() {
+    log(`${nm(actor.c)} renonce à son attaque sur le conseil de ${nm(calcRow?.c)}`);
+    set({ step: 'action', atk: null, atkFirst: null, def: null, defend: false, calc: null, calcBy: null, helpers: [], preActs: [] });
+  }
   function finish() {
-    const id = actor.x.id;
+    const id = actor.x.id, cid = actor.c.id;
     const ow = overwatchShot;
+    const spentIdx = T?.spentIdx || [];
     store.ui.turnActor = null;
     store.ui.turn = null;
     store.commitAll(null, (d) => {
+      const me = C(d, cid);
+      // One-use recycled weapons are thrown away once the turn they were used ends.
+      if (me && spentIdx.length) { me.weapons = me.weapons.filter((x, i) => !(spentIdx.includes(i) && x.oneUse)); log(`${nm(me)} jette son arme recyclée`); }
       const x = X(d, id);
       if (ow) { x.overwatch = false; x.lostAction = true; log(`${nm(actor.c)} a tiré en surveillance`); return; }
       endTurn(d, x, log);
@@ -496,6 +523,9 @@
             <button class="act mod" onclick={() => choose('module')}><b>Module</b><span>{[...new Set([...actionFx.map((f) => f.module), ...otherMods.map((m) => m.name)])].join(', ')}</span></button>
           {/if}
           {#if !overwatchShot}
+            {#if opponents.some((o) => o.c.body !== 'creature') || (actor.c.model === 'companion' && (actor.c.specialRating || 0) > 0)}<button class="act logic" onclick={() => set({ step: 'logic' })}><b>Raisonner</b><span>{actor.c.model === 'companion' && (actor.c.specialRating || 0) > 0 ? 'Interaction ou Manipuler' : 'Interaction contre Contestation'}</span></button>{/if}
+            {#if hasSecondary(actor.c, 'Souffleur de déchets') && (actor.c.specialRating || 0) > 0}<button class="act" onclick={() => set({ step: 'blower' })}><b>Souffleur de déchets</b><span>Nettoyer, portée Proche</span></button>{/if}
+            {#if actor.c.model === 'scrap' && (actor.c.specialRating || 0) > 0}<button class="act" onclick={() => set({ step: 'recycle' })}><b>Recycler</b><span>Trouver une arme ou un outil</span></button>{/if}
             {#each crankWeapons as wp (wp.index)}<button class="act en" onclick={() => crank(wp)}><b>Remonter la manivelle</b><span>{wp.name}, sans jet</span></button>{/each}
             {#if transferable.length && actor.c.ep.current > 0}<button class="act en" onclick={() => set({ step: 'transfer', transferTo: transferable[0].c.id, transferN: 1 })}><b>Transférer des PE</b><span>À un allié, par câble</span></button>{/if}
             <button class="act" onclick={() => set({ step: 'wait', waitTo: Math.max(0, (actor.x.init || 1) - 1) })}><b>Attendre</b><span>Baisser son initiative</span></button>
@@ -524,10 +554,12 @@
       <span class="lbl">{kind === 'melee' ? 'Arme de contact' : 'Arme'}</span>
       <div class="chips">
         {#each weapons as x (x.index)}
-          {@const blk = weaponBlock(actor.c, x, ep(actor.c))}
+          {@const blk = weaponBlock(actor.c, x, ep(actor.c)) || (x.swarmOnly && !swarmTarget ? 'essaims seulement' : '')}
           <button class="chip" aria-pressed={w?.index === x.index} disabled={!!blk} onclick={() => set({ weaponIdx: x.index, range: rangeIndex(T.range) > rangeIndex(x.portee) ? x.portee : T.range })}>{x.name} {x.bonus !== '' && x.bonus != null ? `+${x.bonus}` : ''}, dégâts {x.degats}{blk ? ` (${blk})` : ''}</button>
         {/each}
       </div>
+      {#if swarmTarget && !w?.swarmOnly}<p class="hint warn">{nm(target.c)} est un essaim : seuls le feu, les explosions, Nettoyer et l'Impulsion énergétique le blessent.</p>{/if}
+      {#if w?.swarmOnly}<p class="hint">Nettoyer : l'équipement de nettoyage compte comme une arme, dégâts 3, portée Courte, sans bonus.</p>{/if}
       {#if energy && w.index >= 0}
         <p class="hint en-hint"><Icon name="bolt" size={13} />Arme à énergie, source : <b>{POWER.find((p) => p.id === power).label}</b>. {POWER.find((p) => p.id === power).hint}{power === 'internal' ? ` Reste ${ep(actor.c)} PE.` : ''}</p>
       {/if}
@@ -558,6 +590,19 @@
         {/if}
       {/if}
 
+      {#if supporters.length && !T.bonus}
+        <div class="support">
+          <span class="lbl">Soutien (coûte l'action de l'allié, pas sa manœuvre)</span>
+          <div class="chips">
+            {#each supporters.filter((r) => r.x.id !== T.calcBy) as r (r.x.id)}<button class="chip" aria-pressed={T.helpers.includes(r.x.id)} onclick={() => set({ helpers: T.helpers.includes(r.x.id) ? T.helpers.filter((x) => x !== r.x.id) : [...T.helpers, r.x.id] })}>Aide : {nm(r.c)} +1{actor.c.group && r.c.group === actor.c.group ? ' (groupe)' : ''}</button>{/each}
+            {#each calculators.filter((r) => !T.helpers.includes(r.x.id)) as r (r.x.id)}<button class="chip en" aria-pressed={T.calcBy === r.x.id} onclick={() => set({ calcBy: T.calcBy === r.x.id ? null : r.x.id, calc: null })}>Calculer : {nm(r.c)}</button>{/each}
+          </div>
+          {#if calcRow}
+            {#key calcRow.x.id}<DiceTray cid={calcRow.c.id} title="{nm(calcRow.c)} : Calculer" pool={poolFor(calcRow.c, '__special')} onresult={(t) => set({ calc: t })} compact />{/key}
+            {#if T.calc}<p class="hint">{T.calc.successes ? `Réussi : ${nm(actor.c)} pourra renoncer après son jet (avant de forcer)${T.calc.successes > 1 ? `, +${T.calc.successes - 1} à son attaque` : ''}.` : 'Calcul raté : sans effet.'}</p>{/if}
+          {/if}
+        </div>
+      {/if}
       <div class="mods">
         <span class="lbl">Modificateurs (dés de programme)</span>
         {#if mods.length}<ul>{#each mods as m (m.label)}<li><span>{m.label}</span><b class="num" class:neg={m.v < 0}>{fmtBonus(m.v)}</b></li>{/each}</ul>{:else}<p class="muted">Aucun.</p>{/if}
@@ -566,7 +611,7 @@
 
       <div class="nav">
         <button class="btn ghost" onclick={() => set({ step: 'action' })}>Retour</button>
-        <button class="btn primary" disabled={!target || !w || !!weaponBlock(actor.c, w, ep(actor.c)) || (pk0.base <= 0 && !T.fullAttr)} onclick={toRoll}>Aux dés<Icon name="chevron" size={18} /></button>
+        <button class="btn primary" disabled={!target || !w || !!weaponBlock(actor.c, w, ep(actor.c)) || (w.swarmOnly && !swarmTarget) || (pk0.base <= 0 && !T.fullAttr) || (!!T.calcBy && !T.calc)} onclick={toRoll}>Aux dés<Icon name="chevron" size={18} /></button>
       </div>
 
     {:else if T.step === 'roll'}
@@ -594,6 +639,7 @@
       {/if}
       <div class="nav">
         <button class="btn ghost" onclick={() => set({ step: 'setup', atk: null, atkFirst: null, def: null })}>Retour</button>
+        {#if T.calc?.successes && T.atk && !T.atkPushed && !drained}<button class="btn en-btn" onclick={withdraw}>Renoncer (calcul de {nm(calcRow?.c)})</button>{/if}
         {#if rolled && net > 0 && T.armlock}<button class="btn primary" onclick={armlockHold}>Immobiliser {nm(target.c)}<Icon name="chevron" size={18} /></button>
         {:else if rolled && net > 0}<button class="btn primary" onclick={toDamage}>Dégâts<Icon name="chevron" size={18} /></button>
         {:else if rolled || drained}
@@ -835,6 +881,15 @@
         {/if}
       {/if}
 
+    {:else if T.step === 'logic'}
+      <LogicConflict {actor} {opponents} onback={() => set({ step: 'action' })} ondone={(m) => set({ step: 'done', doneMsg: m })} />
+
+    {:else if T.step === 'blower'}
+      <BlowerStep {actor} {opponents} onback={() => set({ step: 'action' })} ondone={(m) => set({ step: 'done', doneMsg: m })} />
+
+    {:else if T.step === 'recycle'}
+      <RecycleStep {actor} onback={() => set({ step: 'action' })} ondone={(m) => set({ step: 'done', doneMsg: m })} />
+
     {:else if T.step === 'transfer'}
       <p class="hint">Transfert par câble : vous perdez les PE que l'allié reçoit (sans dépasser son maximum). Un allié en veille se réveille un tour plus tard.</p>
       <span class="lbl">Allié</span>
@@ -908,6 +963,9 @@
   .act.melee { border-left-color: var(--fault); }
   .act.shoot { border-left-color: var(--coolant); }
   .act.target { border-left-color: var(--amber); }
+  .act.logic { border-left-color: var(--muted); }
+  .support { display: grid; gap: 6px; }
+  .hint.warn { color: var(--fault); }
   .act.mod, .act.en { border-left-color: color-mix(in srgb, var(--coolant) 55%, var(--line)); }
   .act.pass { border-style: dashed; }
   .act:disabled { opacity: .5; cursor: not-allowed; }

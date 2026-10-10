@@ -246,10 +246,19 @@ export function weaponKind(w) {
   return (w?.portee || 'Bras') === 'Bras' ? 'melee' : 'ranged';
 }
 
-/** Weapons usable for an attack kind; melee always offers bare hands (index -1). */
+/** Swarms can only be hurt by fire, explosions, Clean and Energy Pulse (book p.59). */
+export const isSwarm = (c) => !!c && (['zone-rats', 'worm-swarm'].includes(c.template) || /essaim/i.test(`${c.name || ''} ${c.notes || ''}`));
+
+/**
+ * Weapons usable for an attack kind; melee always offers bare hands (index -1).
+ * A Cleaning Robot's gear counts as a ranged weapon against swarms (index -2,
+ * rolled with Clean: damage 3, Short range, no Gear Bonus — book p.59).
+ * One-use recycled weapons already fired (`spent`) are left out.
+ */
 export function combatWeapons(c, kind) {
-  const list = (c.weapons || []).map((w, i) => ({ ...w, index: i, kind: weaponKind(w) })).filter((w) => w.kind === kind);
+  const list = (c.weapons || []).map((w, i) => ({ ...w, index: i, kind: weaponKind(w) })).filter((w) => w.kind === kind && !w.spent);
   if (kind === 'melee') list.push({ index: -1, name: 'Mains nues', bonus: '', degats: hasSecondary(c, 'Outil de coupe') ? 2 : 1, portee: 'Bras', kind: 'melee', note: '' });
+  if (kind === 'ranged' && c.model === 'cleaning' && (c.specialRating || 0) > 0) list.push({ index: -2, name: 'Nettoyer', bonus: '', degats: 3, portee: 'Courte', kind: 'ranged', note: 'Équipement de nettoyage, contre les essaims uniquement.', prog: '__special', swarmOnly: true });
   return list;
 }
 
