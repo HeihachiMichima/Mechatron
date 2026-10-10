@@ -6,7 +6,8 @@
   import TurnFlow from './TurnFlow.svelte';
   import { store, blankCombat } from '../../lib/store.svelte.js';
   import { order, current, isDown, sideCounts } from '../../lib/combat.js';
-  import { status, devBand } from '../../lib/rules.js';
+  import { status, devBand, epMax } from '../../lib/rules.js';
+  import { isEnergyWeapon, weaponPower } from '../../lib/energy.js';
 
   let { onprep } = $props();
   const cb = $derived(store.combat);
@@ -31,6 +32,10 @@
     confirmEnd = false;
   }
   const setPool = (v) => store.commitAll(null, (d) => (d.combat.gmPool = Math.max(0, v)));
+  // Robots with their own EP (player robots and NPCs when the GM pool is off).
+  const powered = $derived(ord.filter((r) => r.c.body !== 'creature' && (r.c.kind !== 'npc' || !cb.usePool)));
+  const setEp = (c, v) => store.commitOn(c.id, null, (s) => (s.ep.current = Math.max(0, Math.min(epMax(s), v))));
+  const wState = (c) => (c.weapons || []).filter((w) => isEnergyWeapon(w)).map((w) => `${w.name} : ${weaponPower(w) === 'internal' ? 'interne' : weaponPower(w) === 'crank' ? (w.crankDue ? 'manivelle à remonter' : 'manivelle') : w.empty ? 'E-pack vide' : 'E-pack'}`);
 </script>
 
 <div class="layout">
@@ -46,7 +51,7 @@
             <button class="tk" class:enemy={r.x.side === 'enemy'} onclick={() => store.open({ type: 'combatant', xid: r.x.id })} aria-label="{r.c.name}, initiative {r.x.init}">
               <span class="ti num">{r.x.init}</span>
               <Avatar c={r.c} side={r.x.side} size={42} current={cur?.x.id === r.x.id} dim={r.x.acted && cur?.x.id !== r.x.id} down={isDown(r)} />
-              <span class="flags">{#if r.x.lock}<i title="verrouille une cible">◎</i>{/if}{#if r.x.overwatch}<i title="surveillance">👁</i>{/if}{#if r.x.prone}<i title="à terre">↓</i>{/if}{#if r.x.lostAction}<i title="a perdu son action">✋</i>{/if}</span>
+              <span class="flags">{#if r.c.body !== 'creature' && (r.c.kind !== 'npc' || !cb.usePool)}<i class="epf" class:zero={r.c.ep.current === 0} title="PE">⚡{r.c.ep.current}</i>{/if}{#if r.x.held}<i title="immobilisé">⛓</i>{/if}{#if r.x.lock}<i title="verrouille une cible">◎</i>{/if}{#if r.x.overwatch}<i title="surveillance">👁</i>{/if}{#if r.x.prone}<i title="à terre">↓</i>{/if}{#if r.x.lostAction}<i title="a perdu son action">✋</i>{/if}</span>
             </button>
           </li>
         {/each}
@@ -77,6 +82,27 @@
   </div>
 
   <aside class="side-col">
+    {#if powered.length}
+      <section class="panel energy">
+        <div class="panel-head"><h2>Énergie</h2><span class="meta">PE en combat</span></div>
+        <ul class="list en">
+          {#each powered as r (r.x.id)}
+            {@const mx = epMax(r.c)}
+            <li>
+              <div class="enrow">
+                <span class="enm" class:enemy={r.x.side === 'enemy'}>{r.c.name || 'Sans nom'}</span>
+                <span class="num env" class:zero={r.c.ep.current === 0}>{r.c.ep.current}<small>/{mx}</small></span>
+                <Stepper value={r.c.ep.current} min={0} max={mx} label="PE de {r.c.name}" onchange={(v) => setEp(r.c, v)} size="sm" bare />
+              </div>
+              <span class="bar"><span style="width:{Math.round((r.c.ep.current / mx) * 100)}%"></span></span>
+              {#if r.c.ep.current === 0}<span class="sleep">En veille : inactif tant qu'il n'a pas reçu de PE.</span>{/if}
+              {#if wState(r.c).length}<span class="ws">{wState(r.c).join(', ')}</span>{/if}
+            </li>
+          {/each}
+        </ul>
+        <p class="hint">Chaque module coûte des PE et lance un dé de surchauffe par PE. À 0 PE, un robot passe en veille.</p>
+      </section>
+    {/if}
     {#if hasNpc}
       <section class="panel pool">
         <div class="panel-head"><h2>Réserve du MJ</h2><span class="meta">{cb.usePool ? 'payée par les PNJ' : 'inactive'}</span></div>
@@ -114,6 +140,19 @@
   .ti { font-size: .78rem; font-weight: 700; color: var(--muted); }
   .flags { min-height: 16px; font-size: .75rem; display: flex; gap: 2px; }
   .flags i { font-style: normal; }
+  .flags .epf { color: var(--coolant); font-size: .7rem; }
+  .flags .epf.zero { color: var(--fault); }
+  .en li { display: grid; gap: 4px; padding: 8px 0; }
+  .enrow { display: flex; align-items: center; gap: 8px; }
+  .enm { flex: 1; font-family: var(--display); font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .enm.enemy { color: var(--fault); }
+  .env { font-weight: 700; color: var(--coolant); font-size: 1.1rem; }
+  .env small { color: var(--muted); font-size: .75rem; }
+  .env.zero { color: var(--fault); }
+  .bar { height: 5px; border-radius: 3px; background: var(--abyss); overflow: hidden; }
+  .bar span { display: block; height: 100%; background: var(--coolant); }
+  .sleep { font-size: .78rem; color: var(--fault); }
+  .ws { font-size: .78rem; color: var(--muted); }
   .over { box-shadow: inset 0 0 0 1px var(--line), inset 0 3px 0 var(--amber); }
   .over h2 { font-size: 1.2rem; }
   .over p { margin: 4px 0 10px; }

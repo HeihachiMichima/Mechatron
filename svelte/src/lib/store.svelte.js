@@ -63,7 +63,8 @@ export function normalize(raw) {
   c.modules = arr(raw.modules).map(str);
   c.brokenModules = arr(raw.brokenModules).map((i) => num(i, -1)).filter((i) => i >= 0 && i < c.modules.length);
   c.equipment = arr(raw.equipment).map((e) => (typeof e === 'string' ? { name: e, integre: false } : { name: str(e?.name), integre: !!e?.integre }));
-  c.weapons = arr(raw.weapons).map((w) => ({ name: str(w?.name), bonus: w?.bonus ?? '', degats: w?.degats ?? '', portee: str(w?.portee), note: str(w?.note) }));
+  // power/empty/crankDue: energy weapon power source state (book p.86).
+  c.weapons = arr(raw.weapons).map((w) => ({ name: str(w?.name), bonus: w?.bonus ?? '', degats: w?.degats ?? '', portee: str(w?.portee), note: str(w?.note), power: ['epack', 'internal', 'crank'].includes(w?.power) ? w.power : 'epack', empty: !!w?.empty, crankDue: !!w?.crankDue }));
   c.online = raw.online !== false;
   c.ep = { current: num(raw.ep?.current, b.ep.current) };
   c.xp = { current: num(raw.xp?.current) };
@@ -112,7 +113,10 @@ export function fromTemplate(t, name) {
   return c;
 }
 
-export const newCombatant = (cid, side) => ({ id: newId(), cid, side, init: null, tie: Math.random(), acted: false, defending: false, overwatch: false, surprise: false, lostAction: false, prone: false, fled: false, lock: null, initBonus: 0 });
+// held: { by, how, mod, with } while immobilized; extra: { round, used: [module] }
+// for bonus attacks; defenses: defenses this round; protectRound: last round
+// the Protect program was used (once per round).
+export const newCombatant = (cid, side) => ({ id: newId(), cid, side, init: null, tie: Math.random(), acted: false, defending: false, overwatch: false, surprise: false, lostAction: false, prone: false, fled: false, lock: null, initBonus: 0, held: null, extra: null, defenses: 0, protectRound: 0 });
 
 export function blankCombat() {
   return { phase: 'prep', active: false, round: 1, turn: 0, combatants: [], log: [], gmPool: 0, usePool: true };
@@ -129,7 +133,10 @@ function normalizeCombat(raw, ids) {
       acted: !!x.acted, defending: !!x.defending, overwatch: !!x.overwatch,
       surprise: !!x.surprise, lostAction: !!x.lostAction, prone: !!x.prone, fled: !!x.fled,
       lock: x.lock && x.lock.target ? { target: str(x.lock.target), atk: num(x.lock.atk, 1), dmg: num(x.lock.dmg) } : null,
-      initBonus: num(x.initBonus)
+      initBonus: num(x.initBonus),
+      held: x.held && typeof x.held === 'object' ? { by: str(x.held.by), how: str(x.held.how), mod: num(x.held.mod), with: str(x.held.with) } : null,
+      extra: x.extra && typeof x.extra === 'object' ? { round: num(x.extra.round), used: arr(x.extra.used).map(str) } : null,
+      defenses: Math.max(0, num(x.defenses)), protectRound: num(x.protectRound)
     })),
     log: arr(raw.log).slice(-60).map((l) => ({ round: num(l?.round, 1), text: str(l?.text) })),
     gmPool: Math.max(0, num(raw.gmPool)), usePool: raw.usePool !== false

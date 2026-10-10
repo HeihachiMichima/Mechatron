@@ -2,6 +2,7 @@
   import Icon from '../components/Icon.svelte';
   import { store } from '../lib/store.svelte.js';
   import { chassis, findModule, findWeapon, findEquipment, modelOf } from '../lib/rules.js';
+  import { isEnergyWeapon, weaponPower, POWER } from '../lib/energy.js';
   import { moduleItems, weaponItems, equipmentItems } from '../lib/pickers.js';
 
   const c = $derived(store.c);
@@ -104,6 +105,7 @@
                 <span><b>{w.portee || '—'}</b></span>
               </span>
               {#if ref?.note}<span class="note">{ref.note}</span>{/if}
+              {#if isEnergyWeapon(w)}<span class="note pw" class:bad={(weaponPower(w) === 'epack' && w.empty) || (weaponPower(w) === 'crank' && w.crankDue)}>Énergie : {POWER.find((p) => p.id === weaponPower(w)).label}{weaponPower(w) === 'epack' && w.empty ? ' (vide)' : weaponPower(w) === 'crank' && w.crankDue ? ' (à remonter)' : ''}</span>{/if}
             </button>
             <button class="icon-btn" aria-label="Modifier {w.name}" onclick={() => store.open({ type: 'weapon', index: i })}><Icon name="edit" /></button>
           </li>
@@ -163,4 +165,6 @@
   .equip { display: flex; align-items: center; gap: 8px; padding: 10px 0; }
   .equip > div { flex: 1; }
   .equip p { margin: 2px 0 0; font-size: .85rem; }
+  .note.pw { color: var(--coolant); }
+  .note.pw.bad { color: var(--fault); }
 </style>

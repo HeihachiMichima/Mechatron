@@ -2,9 +2,11 @@
   import Avatar from '../../components/Avatar.svelte';
   import Icon from '../../components/Icon.svelte';
   import Stepper from '../../components/Stepper.svelte';
-  import { store } from '../../lib/store.svelte.js';
+  import OverheatDice from '../../components/OverheatDice.svelte';
+  import { store, payEp, availableEp } from '../../lib/store.svelte.js';
   import { order, rollInits } from '../../lib/combat.js';
   import { chassis, attrCurrent, hasSecondary } from '../../lib/rules.js';
+  import { moduleFx, rollActivation, settleActivation, actText } from '../../lib/energy.js';
 
   let { onback, onstart } = $props();
   const cb = $derived(store.combat);
@@ -13,7 +15,26 @@
   const missing = $derived(rows.filter((r) => r.x.init == null).length);
   const log = (t) => store.log(t);
 
-  const rollSome = (list, label) => store.commitAll(label, (d) => rollInits(d, list.map((r) => d.combat.combatants.find((y) => y.id === r.x.id)), log));
+  // Accelerator (book p.73): +2 initiative per EP, decided before rolling.
+  let accel = $state({});
+  let accelActs = $state({});
+  const accelFx = (c) => moduleFx(c, 'initBoost')[0] ?? null;
+  function rollSome(list, label) {
+    const acts = {};
+    list.forEach((r) => { const f = accelFx(r.c); const n = accel[r.x.id] || 0; if (f && n > 0) acts[r.x.id] = { f, act: rollActivation(r.c, n) }; });
+    store.commitAll(label, (d) => {
+      rollInits(d, list.map((r) => d.combat.combatants.find((y) => y.id === r.x.id)), log);
+      Object.entries(acts).forEach(([xid, { f, act }]) => {
+        const y = d.combat.combatants.find((z) => z.id === xid);
+        const c = d.chars.find((z) => z.id === y.cid);
+        settleActivation(d, c, f.index, act, payEp);
+        if (act.works) y.init += 2 * act.effective;
+        log(`${c.name || 'Sans nom'} : ${actText(f.module, act)}${act.works ? `, initiative +${2 * act.effective}` : ''}`);
+      });
+    });
+    accelActs = { ...accelActs, ...Object.fromEntries(Object.entries(acts).map(([k, v]) => [k, v.act])) };
+    const left = { ...accel }; Object.keys(acts).forEach((k) => delete left[k]); accel = left;
+  }
   const setInit = (r, v) => store.commitAll(null, (d) => (d.combat.combatants.find((y) => y.id === r.x.id).init = v));
   function toggleSurprise(r) {
     store.commitAll(null, (d) => {
@@ -32,7 +53,7 @@
 
 <section class="panel">
   <div class="panel-head"><h2>Initiative</h2><span class="meta">1D6, sans forcer</span></div>
-  <p class="hint first">Lancez pour chacun ou saisissez le résultat des dés réels. Tactiques SWAT : deux dés, le meilleur. Un groupe identique de PNJ partage un jet. Attaque surprise : +2 pour tout le combat.</p>
+  <p class="hint first">Lancez pour chacun ou saisissez le résultat des dés réels. Tactiques SWAT : deux dés, le meilleur. Un groupe identique de PNJ partage un jet. Attaque surprise : +2 pour tout le combat. Accélérateur : choisissez les PE avant de lancer (+2 par PE ; avec « Saisir », ajoutez le bonus vous-même).</p>
   <div class="acts">
     <button class="btn primary" disabled={missing === 0} onclick={() => rollSome(rows.filter((r) => r.x.init == null), 'Initiative lancée')}><Icon name="dice" size={18} />{missing === 0 ? 'Tous ont une initiative' : missing === rows.length ? 'Lancer pour tous' : `Lancer pour ${missing === 1 ? 'le dernier' : `les ${missing} restants`}`}</button>
     <button class="btn ghost" onclick={() => rollSome(rows, 'Initiative relancée')}>Tout relancer</button>
@@ -46,6 +67,9 @@
           <span class="muted">{r.x.side === 'ally' ? 'Allié' : 'Ennemi'}, Stabilité {stab(r.c)}{hasSecondary(r.c, 'Tactiques SWAT') ? ', SWAT' : ''}</span>
         </div>
         <button class="chip" aria-pressed={r.x.surprise} onclick={() => toggleSurprise(r)} title="Attaque surprise : +2">Surprise +2</button>
+        {#if accelFx(r.c) && r.x.init == null}
+          <span class="acc" title="Accélérateur : +2 par PE, à décider avant le jet"><span>Accél. <small class="muted">{availableEp(store.data, r.c)} PE</small></span><Stepper value={accel[r.x.id] || 0} min={0} max={availableEp(store.data, r.c)} label="PE d'Accélérateur pour {r.c.name}" onchange={(v) => (accel = { ...accel, [r.x.id]: v })} size="sm" /></span>
+        {/if}
         <div class="val">
           {#if r.x.init == null}
             <button class="btn small" onclick={() => rollSome([r], null)}><Icon name="dice" size={16} />Lancer</button>
@@ -55,6 +79,7 @@
             <button class="icon-btn" aria-label="Relancer pour {r.c.name}" title="Relancer" onclick={() => rollSome([r], null)}><Icon name="dice" /></button>
           {/if}
         </div>
+        {#if accelActs[r.x.id]}<div class="accres"><OverheatDice act={accelActs[r.x.id]} name="Accélérateur" compact /></div>{/if}
       </li>
     {/each}
   </ul>
@@ -88,6 +113,9 @@
   .who b { font-family: var(--display); font-weight: 600; }
   .who .muted { font-size: .82rem; }
   .val { display: flex; align-items: center; gap: 4px; }
+  .acc { display: inline-flex; align-items: center; gap: 6px; font-size: .85rem; color: var(--coolant); }
+  .acc small { font-size: .75rem; }
+  .accres { flex-basis: 100%; }
   .order { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
   .order li { display: flex; align-items: center; gap: 10px; }
   .n { min-width: 34px; height: 34px; display: grid; place-items: center; font-weight: 700; font-size: 1.15rem; background: var(--abyss); border: 1px solid var(--line); border-radius: 4px; }

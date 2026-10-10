@@ -2,6 +2,7 @@
   import Sheet from '../components/Sheet.svelte';
   import { store } from '../lib/store.svelte.js';
   import { findWeapon } from '../lib/rules.js';
+  import { isEnergyWeapon, weaponPower, POWER } from '../lib/energy.js';
   let { index: indexProp } = $props();
   const index = indexProp; // captured: props vanish once the sheet closes
   const w = $derived(store.c.weapons[index]);
@@ -25,6 +26,16 @@
     </select>
   </label>
   {#if ref?.note}<p class="hint">{ref.note}</p>{/if}
+  {#if isEnergyWeapon(w)}
+    <div class="field"><span>Source d'énergie</span>
+      <div class="chips">
+        {#each POWER as p (p.id)}<button class="chip" aria-pressed={weaponPower(w) === p.id} onclick={() => store.commit(`${w.name} : ${p.label}`, (s) => Object.assign(s.weapons[index], { power: p.id, empty: false, crankDue: false }))}>{p.label}</button>{/each}
+      </div>
+      <p class="hint">{POWER.find((p) => p.id === weaponPower(w)).hint}{weaponPower(w) === 'crank' ? ' Installer la manivelle : quelques heures et le programme Fabriquer.' : ''}</p>
+      {#if weaponPower(w) === 'epack' && w.empty}<button class="btn small" onclick={() => store.commit(`${w.name} : E-pack neuf`, (s) => (s.weapons[index].empty = false))}>E-pack vide : en mettre un neuf</button>{/if}
+      {#if weaponPower(w) === 'crank' && w.crankDue}<button class="btn small" onclick={() => store.commit(`${w.name} remonté`, (s) => (s.weapons[index].crankDue = false))}>Remonter la manivelle</button>{/if}
+    </div>
+  {/if}
   <div class="actions">
     {#if ref}<button class="btn small" onclick={reset}>Valeurs du livre</button>{/if}
     <button class="btn small danger" onclick={remove}>Retirer l'arme</button>
@@ -34,6 +45,7 @@
 {/if}
 
 <style>
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
   .actions .primary { margin-left: auto; }

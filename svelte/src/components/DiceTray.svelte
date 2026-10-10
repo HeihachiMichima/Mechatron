@@ -6,7 +6,7 @@
   import { store, payEp, availableEp } from '../lib/store.svelte.js';
   import { rollPool, push, canReroll, tally, maxPushes, attrLabel, chassis } from '../lib/rules.js';
 
-  let { cid, title, pool, weaponIdx = null, onresult = () => {}, compact = false, autoRoll = false } = $props();
+  let { cid, title, pool, weaponIdx = null, onresult = () => {}, compact = false, autoRoll = false, noPush = false } = $props();
   const c = $derived(store.char(cid));
   let dice = $state(null);
   let pushes = $state(0);
@@ -75,7 +75,7 @@
     {#if pendingGear > 0 && w}
       <div class="warn"><p><b>{pendingGear} × 1</b> en dés d'équipement.</p><button class="btn small" onclick={wear}>{w.name} : bonus −{pendingGear}</button></div>
     {/if}
-    {#if pushes < maxPushes(c) && rerollable > 0}
+    {#if !noPush && pushes < maxPushes(c) && rerollable > 0}
       <button class="btn small" onclick={doPush}>Forcer ({rerollable} dé{rerollable > 1 ? 's' : ''})</button>
     {/if}
   {/if}

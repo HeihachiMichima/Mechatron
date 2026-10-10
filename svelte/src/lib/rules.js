@@ -119,7 +119,8 @@ export function tally(dice) {
     successes: raw - cancelled,
     cancelled,
     baseOnes: dice.filter((d) => d.t === 'base' && d.v === 1).length,
-    gearOnes: dice.filter((d) => d.t === 'gear' && d.v === 1).length
+    gearOnes: dice.filter((d) => d.t === 'gear' && d.v === 1).length,
+    gear: dice.filter((d) => d.t === 'gear').length
   };
 }
 
@@ -166,21 +167,30 @@ export function resolveDamage(c, opts) {
     if (dmg > 0) { wear = dice.filter((v) => v === 1).length; out.newCover = Math.max(0, opts.coverRating - wear); }
     steps.push(`Couverture ${opts.coverRating} : ${blocked} bloqué${blocked > 1 ? 's' : ''}${wear ? `, couverture −${wear}` : ''}`);
   }
-  const armor = armorCurrent(c, ch);
+  // Rubberized: +2 Armor against close combat (and falls) only (book p.66).
+  const rubber = opts.melee && hasSecondary(c, 'Revêtement caoutchouté') ? 2 : 0;
+  const armor = armorCurrent(c, ch) + rubber;
   if (!opts.ignoreArmor && armor > 0 && dmg > 0) {
     const dice = rollN(armor);
     const blocked = Math.min(dmg, dice.filter((v) => v === 6).length);
     dmg -= blocked;
     out.armorDice = dice;
     let wear = 0;
-    if (dmg > 0) { wear = dice.filter((v) => v === 1).length; c.armorDamage = (c.armorDamage || 0) + wear; }
-    steps.push(`Armure ${armor} : ${blocked} bloqué${blocked > 1 ? 's' : ''}${wear ? `, armure −${wear}` : ''}`);
+    if (dmg > 0) { wear = Math.min(armorCurrent(c, ch), dice.filter((v) => v === 1).length); c.armorDamage = (c.armorDamage || 0) + wear; }
+    steps.push(`Armure ${armor}${rubber ? ' (dont caoutchouc +2)' : ''} : ${blocked} bloqué${blocked > 1 ? 's' : ''}${wear ? `, armure −${wear}` : ''}`);
   } else if (opts.ignoreArmor && dmg > 0) steps.push('Armure ignorée');
 
   if (opts.reduce > 0 && dmg > 0) {
     const r = Math.min(dmg, opts.reduce);
     dmg -= r;
     steps.push(`${opts.reduceLabel || 'Réduction'} : −${r}`);
+  }
+  // Protect (Security Robot): an ally takes some points in your place.
+  if (opts.absorb > 0 && dmg > 0) {
+    const a = Math.min(dmg, opts.absorb);
+    dmg -= a;
+    out.absorbed = a;
+    steps.push(`${opts.absorbLabel || 'Protection'} : ${a} encaissé${a > 1 ? 's' : ''} à sa place`);
   }
   if (dmg === 0) { steps.push('Aucun dégât ne passe.'); return out; }
   out.taken = dmg;
@@ -247,11 +257,12 @@ export const hasWorkingModule = (c, name) => (c.modules || []).some((m, i) => m 
 export const combatModules = (c, role) => (c.modules || []).map((m, i) => ({ name: m, index: i, ref: findModule(m), broken: (c.brokenModules || []).includes(i) })).filter((m) => m.name && m.ref?.combat && (!role || m.ref.combat === role));
 
 /** Dice for an attack or defense roll. progKey: 'assaut' | 'tir' | '__special'. */
-export function poolFor(c, progKey, { mod = 0, gear = 0 } = {}) {
+export function poolFor(c, progKey, { mod = 0, gear = 0, full = false } = {}) {
   const ch = chassis(c);
   const p = programs(c).find((x) => x.id === progKey || x.key === progKey);
   const attr = p?.attr ?? (progKey === 'tir' ? 'stabilite' : 'servos');
-  const base = attrCurrent(c, ch, attr);
+  // full: Back-Up System rolls with the full attribute score despite damage.
+  const base = full ? ch.attrMax[attr] : attrCurrent(c, ch, attr);
   const dev = p ? devModFor(c, p) : 0;
   const raw = (p?.rating || 0) + dev + mod;
   return { attr, base, rating: p?.rating || 0, dev, mod, prog: Math.max(0, raw), neg: Math.max(0, -raw), gear: Math.max(0, gear | 0), label: p?.label || progKey };

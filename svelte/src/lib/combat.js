@@ -31,7 +31,7 @@ export function endTurn(data, x, log) {
   if (x) { x.acted = true; x.lostAction = false; }
   if (current(data)) return false;
   data.combat.round++;
-  data.combat.combatants.forEach((y) => { y.acted = false; y.defending = false; });
+  data.combat.combatants.forEach((y) => { y.acted = false; y.defending = false; y.defenses = 0; });
   log(`— Tour ${data.combat.round} —`);
   return true;
 }
