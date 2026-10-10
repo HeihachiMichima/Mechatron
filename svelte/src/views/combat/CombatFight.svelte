@@ -4,6 +4,7 @@
   import Stepper from '../../components/Stepper.svelte';
   import CombatGuide from '../../components/CombatGuide.svelte';
   import TurnFlow from './TurnFlow.svelte';
+  import ResetAllButton from '../../components/ResetAllButton.svelte';
   import { flip } from 'svelte/animate';
   import { store, blankCombat } from '../../lib/store.svelte.js';
   import { order, current, isDown, sideCounts } from '../../lib/combat.js';
@@ -89,6 +90,7 @@
 
     <div class="foot">
       <button class="btn small ghost" onclick={onprep}><Icon name="plus" size={16} />Ajouter des combattants</button>
+      <ResetAllButton small />
       <button class="btn small ghost" onclick={() => (confirmEnd = !confirmEnd)}>Terminer le combat</button>
       {#if confirmEnd}
         <button class="btn small" onclick={() => end(false)}>Confirmer</button>

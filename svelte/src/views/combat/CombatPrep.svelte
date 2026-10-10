@@ -3,6 +3,7 @@
   import Icon from '../../components/Icon.svelte';
   import Stepper from '../../components/Stepper.svelte';
   import { store, newCombatant } from '../../lib/store.svelte.js';
+  import ResetAllButton from '../../components/ResetAllButton.svelte';
   import { GAME_DATA as D } from '../../lib/data.js';
   import { chassis, armorCurrent, devBand, status } from '../../lib/rules.js';
 
@@ -91,12 +92,16 @@
   </section>
 {/if}
 
+<div class="reset"><ResetAllButton small /><span class="muted">Avant un nouveau combat : dégâts, armure, modules, PE et armes au maximum, pour tous.</span></div>
+
 <div class="cta">
   <button class="btn primary big" disabled={!ready} onclick={onnext}>Initiative<Icon name="chevron" size={18} /></button>
   {#if !ready}<span class="muted">Il faut au moins un allié et un ennemi.</span>{/if}
 </div>
 
 <style>
+  .reset { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 12px 0; }
+  .reset .muted { font-size: .85rem; }
   .avatars { display: flex; flex-wrap: wrap; gap: 10px 6px; }
   .avbtn { position: relative; background: none; border: 0; padding: 4px; border-radius: 8px; }
   .avbtn:hover { background: var(--hull-2); }

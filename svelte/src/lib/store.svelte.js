@@ -2,7 +2,7 @@
 // and the combat in progress. Autosaves to localStorage; commit() makes
 // discrete changes undoable. normalize() accepts v1/v2 character saves.
 import { GAME_DATA as D } from './data.js';
-import { chassis, ATTRS } from './rules.js';
+import { chassis, ATTRS, epMax, findWeapon } from './rules.js';
 
 const KEY = 'mechatron-roster-v3';
 const OLD_KEYS = ['mechatron-sheet-v2', 'mechatron-sheet-v1'];
@@ -172,6 +172,30 @@ export function addCopies(data, src, n) {
     return c;
   });
   return made;
+}
+
+/**
+ * Put every robot back in full working order (inside a commit): no damage,
+ * armor and modules repaired, no cover, EP refilled, energy weapons reloaded,
+ * Gear Bonus lost to pushing restored up to the book value. In a combat, the
+ * temporary states (held, prone, lost action, defending) are cleared too;
+ * initiative, target locks and the GM pool are left alone.
+ */
+export function restoreAll(data) {
+  data.chars.forEach((c) => {
+    c.damage = { servos: 0, stabilite: 0, processeur: 0, reseau: 0 };
+    c.armorDamage = 0;
+    c.cover = 0;
+    c.brokenModules = [];
+    if (c.body !== 'creature') c.ep.current = epMax(c);
+    c.weapons.forEach((w) => {
+      w.empty = false; w.crankDue = false; w.spent = false;
+      const ref = findWeapon(w.name);
+      if (ref && typeof ref.bonus === 'number' && (Number(w.bonus) || 0) < ref.bonus) w.bonus = ref.bonus;
+    });
+  });
+  data.combat.combatants.forEach((x) => { x.held = null; x.prone = false; x.lostAction = false; x.defending = false; x.defenses = 0; });
+  return data.chars.length;
 }
 
 /** Give a player robot the first tab color not already taken. */

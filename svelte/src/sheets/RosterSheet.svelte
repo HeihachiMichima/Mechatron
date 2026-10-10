@@ -1,6 +1,7 @@
 <script>
   import Sheet from '../components/Sheet.svelte';
   import Icon from '../components/Icon.svelte';
+  import ResetAllButton from '../components/ResetAllButton.svelte';
   import { store, blankCharacter, newId } from '../lib/store.svelte.js';
   import { chassis, attrCurrent, shownAttrs, attrLabels, modelOf, status } from '../lib/rules.js';
   import { GAME_DATA as D } from '../lib/data.js';
@@ -56,6 +57,7 @@
       {/each}
     </ul>
   {/each}
+  <div class="reset-row"><ResetAllButton small /></div>
   {#snippet footer()}
     <button class="btn" onclick={newPc}><Icon name="plus" size={18} />Nouveau PJ</button>
     <button class="btn primary" onclick={newNpc}><Icon name="plus" size={18} />Nouveau PNJ</button>
@@ -63,6 +65,7 @@
 </Sheet>
 
 <style>
+  .reset-row { display: flex; justify-content: flex-end; margin-top: 12px; }
   .sec { font-size: .95rem; font-weight: 500; color: var(--muted); margin: 14px 0 2px; }
   .sec:first-child { margin-top: 0; }
   .empty { font-size: .9rem; margin: 4px 0 8px; }
