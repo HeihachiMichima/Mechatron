@@ -1,0 +1,21 @@
+{
+  "name": "mechatron-sheet",
+  "private": true,
+  "version": "2.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^7.0.0",
+    "svelte": "^5.57.0",
+    "vite": "^8.0.0",
+    "vite-plugin-singlefile": "^2.3.0"
+  },
+  "dependencies": {
+    "@fontsource/chakra-petch": "^5.0.0",
+    "@fontsource/ibm-plex-sans": "^5.0.0"
+  }
+}

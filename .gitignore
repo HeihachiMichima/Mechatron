@@ -1,0 +1,17 @@
+# Dependencies (reinstall with: cd svelte && npm install)
+node_modules/
+
+# Vite cache
+.vite/
+
+# Documentation (not needed to run the site)
+*.md
+*.txt
+
+# Assets: optional logo exported from the purchased PDFs
+# (the pages fall back to a text title when it is missing)
+assets/
+**/logo.png
+
+# Versioned snapshots of dist/index.html
+svelte/releases/
