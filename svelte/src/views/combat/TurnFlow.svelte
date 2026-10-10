@@ -5,6 +5,7 @@
   // enhancing effects ride along a roll or maneuver, reactive effects are
   // used when hit, other modules are an action. Every activation rolls the
   // overheating dice (lib/energy.js).
+  import { tick } from 'svelte';
   import Avatar from '../../components/Avatar.svelte';
   import Icon from '../../components/Icon.svelte';
   import Stepper from '../../components/Stepper.svelte';
@@ -46,6 +47,28 @@
       // Overwatch lasts until the robot's next turn.
       if (actor && actor.x.overwatch && !overwatchShot) store.commitAll(null, (d) => (d.combat.combatants.find((y) => y.id === actor.x.id).overwatch = false));
     }
+  });
+
+  // Only scroll when it's needed: after a step or turn change, if none of the
+  // panel's buttons is on screen (between the sticky header and the bottom
+  // nav), bring the top of the panel just under the header. Otherwise the
+  // page stays exactly where it is.
+  let panel = $state(null);
+  let lastView = '';
+  $effect(() => {
+    const v = T ? `${key}:${T.step}` : '';
+    if (!v || v === lastView) return;
+    const first = !lastView;
+    lastView = v;
+    if (first) return;
+    tick().then(() => {
+      if (!panel) return;
+      const top = document.querySelector('.head')?.getBoundingClientRect().bottom ?? 0;
+      const navEl = document.querySelector('nav[aria-label="Sections de la fiche"]');
+      const bottom = navEl ? navEl.getBoundingClientRect().top : window.innerHeight;
+      const seen = [...panel.querySelectorAll('button:not(:disabled)')].some((b) => { const r = b.getBoundingClientRect(); return r.height > 0 && r.top >= top && r.bottom <= bottom; });
+      if (!seen) window.scrollTo({ top: Math.max(0, window.scrollY + panel.getBoundingClientRect().top - top - 8), behavior: 'smooth' });
+    });
   });
 
   const log = (t) => store.log(t);
@@ -451,7 +474,7 @@
 {#if !actor}
   <section class="panel turn"><p class="muted">Personne ne peut agir.</p></section>
 {:else if T}
-  <section class="panel turn" style="--tc:{actor.c.kind !== 'npc' && actor.c.color ? actor.c.color : actor.x.side === 'enemy' ? 'var(--fault)' : 'var(--muted)'}">
+  <section class="panel turn" bind:this={panel} style="--tc:{actor.c.kind !== 'npc' && actor.c.color ? actor.c.color : actor.x.side === 'enemy' ? 'var(--fault)' : 'var(--muted)'}">
     <header class="who">
       <Avatar c={actor.c} side={actor.x.side} size={54} label={false} current />
       <div>

@@ -53,7 +53,10 @@
 
 /* ---------- base ---------- */
 *, *::before, *::after { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
+/* No scroll anchoring: the combat turn panel changes height at every step, and the
+   browser kept shifting the page to compensate (unwanted jumps on phones). */
+html { -webkit-text-size-adjust: 100%; overflow-anchor: none; }
+body, body * { overflow-anchor: none; }
 body {
   margin: 0; background: var(--abyss); color: var(--text);
   font: 400 16px/1.45 var(--body);
