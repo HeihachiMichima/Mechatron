@@ -25,6 +25,7 @@ code, comments and identifiers are in English.
     │   ├── demo.js          demoParty(): the demo team (« Essayer la démo »)
     │   ├── creation.js      creation wizard: STEPS, stepErrors, buildRobot/applyDraft, start/finishWizard
     │   ├── clock.js         day/night clock + energy engine: endDay, nightCharge, startDay, transfer, drainPack
+    │   ├── market.js        black market: catalog (defaultListings), normalizeMarket, prices, sell price, file
     │   ├── campaign.js      campaign files (classifyImport, readImport, file name) + automatic backups
     │   ├── rules.js         pure rules functions (chassis, pools, dice, damage…)
     │   ├── rng.js           every random draw: d6(), random(), pick(), setRng(seed)
@@ -41,6 +42,7 @@ code, comments and identifiers are in English.
     ├── views/               Welcome (no campaign yet); fiche tabs État, Programmes, Matériel, Robot
     │                        (« Identité »); spaces Energy, Market, Combat, Session, Gm
     │   ├── energy/          EnergyTransfer (« Donner des PE »), EnergyRules (GM overrides)
+    │   ├── gm/              MarketEditor (MJ → Marché noir)
     │   ├── combat/          CombatPrep → CombatInit → CombatFight (+ TurnFlow, ActorStats,
     │   │                    LogicConflict, BlowerStep, RecycleStep)
     │   └── creation/        CreationWizard (+ ChassisStep, ProgramStep, ModuleStep)
@@ -149,6 +151,13 @@ undo step. `store.open(type, props)` / `store.close()` drive bottom sheets; **pr
   values ← `campaign.rules.energy` (`dailyDrain`, `outsideSolarEp`, `overrideRation`); every ration
   (fiche, wizard, GM pool) reads it. `transfer(data, {id, item?}, {id, item?}, n)` = cable or Banque
   d'énergie (`charge`, `capacity: 5` in data.js); `drainPack` = E-pack / Batterie D6, used up.
+- **Black market (T09, `lib/market.js`).** `listing = { id, kind: module|weapon|equipment|part|custom,
+  ref, custom, price (null = not for sale until the GM sets it), rarity, stock (null = unlimited),
+  enabled, hidden, note }`. `defaultListings()` = every module, weapon (not Mains nues), chassis part
+  and equipment item; book prices from `GAME_DATA.goodsPrices` (p.234), `priceSource(l)` = book /
+  house / none. House defaults in `house.js` (`HOUSE.market`: sellRate 0.5, sellMin 1, rarities with
+  daily chances, rarity by kind). `setPhase('play')` opens the market, `'creation'` closes it; the
+  demo starts open. GM editor: `views/gm/MarketEditor.svelte` in the MJ space.
 - **`store.started`** is false while no campaign exists (clean profile, or a save of another
   version): App shows `WelcomeView` and nothing is saved. `store.start(raw, label)` opens the first
   campaign (new, demo, file, backup) with no undo back to the welcome screen, saves at once and
@@ -169,7 +178,8 @@ undo step. `store.open(type, props)` / `store.close()` drive bottom sheets; **pr
   phase ('creation'|'play'), dev {Energie, Production, Défense, Information}, rules {} (GM
   overrides), journal [{at, day?, text}], clock, market, xp {log}, maps [], encounters []`.
   `clock` = `{ day, phase, clearSky, charged, exclude[], report }` (`normalizeClock`, T07);
-  `market`/`xp`/`maps`/`encounters` are kept as plain JSON until their ticket (T09…T15).
+  `market` = `{ open, sellRate, rarities[], listings[], ledger[] }` (`normalizeMarket`, T09);
+  `xp`/`maps`/`encounters` are kept as plain JSON until their ticket (T11…T15).
   Journal: `pushJournal(data, text, {day})` inside a commit, or `store.addJournal(text)`.
   Rename with `store.renameCampaign(name)`.
 - **DEV levels live once, in `campaign.dev`** — read them with `getDev()` (`settings.js`), never
@@ -363,6 +373,10 @@ Follow `docs/PLAN-COMPAGNON.md` §0: one ticket at a time, in order.
   table (EP bar, OK / bas / en veille, connected, « exclu cette nuit » / « pas de borne »), last report,
   ration with its band, transfers and E-packs, DEV levels, GM energy rules with book value and reset;
   the fiche lost « Nouveau jour (−1) ».
+- v3.6.0 (2026-10-11, plan ticket T09): black market catalog (every item of data.js, book prices
+  p.234, house rarities and sell-back rate, `null` price = not for sale), GM editor in the MJ space
+  (search, filters, inline price/rarity/stock/on sale/hidden, custom items, reset, JSON export and
+  import, market house rules), open/closed switch, read-only catalog in the Marché space.
 - v3.2.1 (2026-10-11): from Combat, « Ouvrir la fiche » opens an NPC's full fiche in place, in both
   GM modes, with « Retour au combat » (`ui.peek`): combat is now strictly the same in both modes.
 

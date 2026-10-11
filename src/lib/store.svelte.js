@@ -8,6 +8,7 @@ import { random } from './rng.js';
 import { bindCampaign, defaultDev, getRules } from './settings.js';
 import { makeBackup, listBackups, backupData } from './campaign.js';
 import { blankClock, normalizeClock, isBank, bankCapacity } from './clock.js';
+import { blankMarket, normalizeMarket } from './market.js';
 
 export const VERSION = 3;
 const KEY = 'mechatron-v3';
@@ -210,8 +211,8 @@ export function ensureColor(chars, c) {
 }
 
 // ---------- campaign ----------
-// clock: normalizeClock (lib/clock.js, T07). market (T09), xp (T11), maps (T13)
-// and encounters (T15) are placeholders until their ticket: kept as plain JSON.
+// clock: normalizeClock (lib/clock.js, T07); market: normalizeMarket (lib/market.js,
+// T09). xp (T11), maps (T13) and encounters (T15) are kept as plain JSON until then.
 
 /** A new, empty campaign (DEV levels at the book's starting value). */
 export function blankCampaign(name = '') {
@@ -222,7 +223,7 @@ export function blankCampaign(name = '') {
     dev: defaultDev(),
     rules: {},
     journal: [],
-    clock: blankClock(), market: null, xp: { log: [] },
+    clock: blankClock(), market: blankMarket(false), xp: { log: [] },
     maps: [], encounters: []
   };
 }
@@ -249,7 +250,7 @@ export function normalizeCampaign(raw) {
     rules: isObj(raw.rules) ? copy(raw.rules) : {},
     journal: normalizeJournal(raw.journal),
     clock: normalizeClock(raw.clock),
-    market: isObj(raw.market) ? copy(raw.market) : null,
+    market: normalizeMarket(raw.market, raw.phase),
     xp: { log: arr(raw.xp?.log).filter(isObj).map(copy) },
     maps: arr(raw.maps).filter(isObj).map(copy),
     encounters: arr(raw.encounters).filter(isObj).map(copy)
@@ -485,6 +486,7 @@ class Store {
     const play = phase === 'play';
     this.commitAll(play ? "L'équipe est prête : la partie commence" : "Retour à la création de l'équipe", (d) => {
       d.campaign.phase = phase;
+      d.campaign.market.open = play; // the gate opens the black market (T06/T09); the GM can close it
       pushJournal(d, play ? "L'équipe est prête, la partie commence." : "Retour à la création de l'équipe.");
     });
   }

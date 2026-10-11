@@ -17,7 +17,7 @@ function richCampaign() {
   c.rules = { xpPerUpgrade: 6, energy: { dailyDrain: 2 } };
   c.journal = [{ at: '2026-10-11T10:00:00.000Z', text: 'Arrivée au secteur 7' }, { at: '2026-10-11T11:00:00.000Z', day: 3, text: 'Nuit au dépôt' }];
   c.clock = { day: 3, phase: 'night', clearSky: false };
-  c.market = { open: true, listings: [{ id: 'x', price: 5 }] };
+  c.market = { open: true, sellRate: 0.5, rarities: [{ id: 'commun', label: 'Commun', chance: 1 }], listings: [{ id: 'custom:x', kind: 'custom', ref: '', custom: 'Huile fine', price: 5, rarity: 'commun', stock: 2, enabled: true, hidden: false, note: '' }], ledger: [] };
   c.xp = { log: [{ at: 'a', awards: [] }] };
   c.maps = [{ id: 'm1', w: 4, h: 3, terrain: '............' }];
   c.encounters = [{ id: 'e1', name: 'Quai', enemies: [] }];

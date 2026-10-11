@@ -19,7 +19,10 @@
     if (store.start({ version: VERSION, campaign: campaign(name.trim()), chars: [], activeId: null }, 'Campagne créée')) store.go('equipe', 'etat');
   }
   function demo() {
-    store.start({ version: VERSION, campaign: campaign('Démo', { phase: 'play' }), ...demoParty() }, 'Démo chargée : 4 robots et 3 PNJ');
+    // The demo is already in play: the black market is open.
+    const cp = campaign('Démo', { phase: 'play' });
+    cp.market.open = true;
+    store.start({ version: VERSION, campaign: cp, ...demoParty() }, 'Démo chargée : 4 robots et 3 PNJ');
     store.go('equipe', 'etat');
   }
   async function openFile(e) {

@@ -605,6 +605,22 @@ export const GAME_DATA = {
     devDecay: "1D6"      // each DEV drops by D6 after every session
   },
 
+  // ---------------------------------------------------------------------
+  // Goods and services (p.234), « typical cost in Energy Points. Actual costs
+  // may vary. » The black market starts from these prices (T09). Scrap club and
+  // vibro knife were checked in the PDF (the OCR had garbled them). Services
+  // and drugs are not sold in the app: the GM deducts EP by hand.
+  // ---------------------------------------------------------------------
+  goodsPrices: {
+    module: 5,
+    part: 8,
+    weapons: {
+      "Couteau de ferraille": 1, "Gourdin de ferraille": 1, "Matraque électrique": 2, "Fer à souder laser": 3,
+      "Vibro-couteau": 3, "Scie de combat": 5, "Pistolet paralysant": 3, "Pistolet laser": 2,
+      "Fusil laser": 5, "Pistolet maser": 4, "Fusil à plasma": 7
+    }
+  },
+
   // Defaults used when no chassis part supplies a number yet.
   defaults: {
     attributeMax: 6,

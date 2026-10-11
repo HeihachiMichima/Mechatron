@@ -23,7 +23,7 @@ ordinateur, une colonne à gauche) :
 |---|---|
 | Équipe | Les fiches des robots joueurs : onglets de couleur, plaque d'état, puis *État · Programmes · Matériel · Identité*, et *Gérer* (la liste de l'équipe) |
 | Énergie | L'horloge jour/nuit de Mechatron-7, l'énergie de l'équipe, le rationnement, les transferts de PE, les niveaux de développement |
-| Marché | Le marché noir : fermé tant que l'équipe est en création, il arrive dans une prochaine version |
+| Marché | Le marché noir : fermé tant que l'équipe est en création (ou si le MJ le ferme), sinon le catalogue du MJ |
 | Combat | Préparation, initiative et tours guidés (inchangé) |
 | Séance | Fin de séance : questions de PX par robot, usure des niveaux (−1D6), journal de campagne |
 | MJ | En mode MJ seulement : les PNJ et leurs fiches, et la place des futurs outils du meneur |
@@ -202,6 +202,16 @@ MJ, on peut passer outre et ouvrir n'importe quelle étape. Pendant la création
 *Reprendre l'assistant* (onglet Identité) modifie un robot. Le MJ ouvre la partie avec
 *L'équipe est prête* (espace MJ, qui signale les robots pas finis) : le marché noir ouvre, et
 l'entrée va au journal. *Rouvrir la création* fait l'inverse.
+
+**Marché noir (mode MJ, espace MJ).** Le catalogue contient tous les modules, armes, pièces de
+châssis et équipements du compagnon. Les prix du livre (p.234 : module 5 PE, pièce de châssis 8 PE,
+armes de 1 à 7 PE) sont marqués « livre p.234 » ; un prix changé par le MJ, ou un objet sans prix
+dans le livre (l'équipement), porte le badge « règle maison ». Un objet sans prix ne se vend pas tant
+que le MJ n'en a pas fixé un. Pour chaque objet : prix, rareté (commun, peu commun, rare, unique),
+stock (vide = illimité), en vente ou non, caché ou non ; recherche et filtres ; *Ajouter un objet
+perso* ; export et import du catalogue (JSON) ; *Tout réinitialiser*. *Règles du marché* (règles
+maison) : revente à la moitié du prix, au moins 1 PE, et la chance de chaque rareté. L'interrupteur
+*Ouvert/Fermé* ferme le marché aux joueurs ; *L'équipe est prête* l'ouvre.
 
 **Premier lancement.** Un écran d'accueil propose *Nouvelle campagne* (donnez-lui un nom, l'équipe est vide : créez ensuite vos robots), *Importer une campagne* (un fichier `.mechatron.json`, ou un robot `.json` qui ouvre une nouvelle campagne) ou *Essayer la démo* (quatre robots joueurs et trois PNJ). Une seule campagne à la fois : pour en changer, exportez-la, puis créez-en une autre ou importez-en une.
 

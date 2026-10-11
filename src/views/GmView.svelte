@@ -4,6 +4,7 @@
   import Icon from '../components/Icon.svelte';
   import RobotList from '../components/RobotList.svelte';
   import ResetAllButton from '../components/ResetAllButton.svelte';
+  import MarketEditor from './gm/MarketEditor.svelte';
   import { store } from '../lib/store.svelte.js';
   import { stepErrors, draftFrom, startWizard } from '../lib/creation.js';
 
@@ -15,7 +16,6 @@
   const unready = $derived(pcs.filter((c) => issues(c).length));
   let reopen = $state(false);
   const soon = [
-    { icon: 'marche', title: 'Marché noir', text: 'Prix, rareté et stock des marchandises.' },
     { icon: 'edit', title: 'Règles maison', text: 'Les valeurs que le livre ne donne pas, et les PX de fin de séance.' },
     { icon: 'combat', title: 'Rencontres', text: 'Des combats préparés à lancer en un geste.' }
   ];
@@ -53,6 +53,8 @@
     <RobotList list={npcs} onpick={(id) => store.openFiche(id)} empty="Aucun PNJ. Créez-en un depuis les modèles du livre, ou ajoutez des adversaires en préparant un combat." />
     {#if npcs.length}<div class="reset-row"><ResetAllButton small kind="npc" /></div>{/if}
   </section>
+
+  <MarketEditor />
 
   <section class="panel">
     <div class="panel-head"><h2>Outils à venir</h2></div>
