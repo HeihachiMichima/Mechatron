@@ -1,14 +1,13 @@
 <script>
   import Sheet from '../components/Sheet.svelte';
-  import { store, normalize, ensureColor, isCurrentSave, OLD_SAVE } from '../lib/store.svelte.js';
-  import { downloadBlob as dl } from '../lib/exports.js';
-  import { slug, jsonBlob, downloadBlob, shareOrDownload, readJsonFile, shareUrl, toText, cardBlob } from '../lib/exports.js';
+  import { store, OLD_SAVE } from '../lib/store.svelte.js';
+  import { slug, jsonBlob, downloadBlob, shareOrDownload, shareUrl, toText, cardBlob } from '../lib/exports.js';
+  import { readImport, campaignFileName, NOT_MECHATRON } from '../lib/campaign.js';
 
   const c = $derived(store.c);
   let preview = $state(null);
   let blob = null;
   let fileInput;
-  let confirmReset = $state(false); // holds a pending table file
   const canShare = typeof navigator !== 'undefined' && !!navigator.share;
 
   $effect(() => {
@@ -44,36 +43,17 @@
     const f = e.currentTarget.files[0];
     e.currentTarget.value = '';
     if (!f) return;
-    try {
-      const data = await readJsonFile(f);
-      store.close();
-      if (Array.isArray(data?.chars)) {
-        const n = data.chars.length;
-        store.commitAll(`${n} robot${n > 1 ? 's' : ''} ajouté${n > 1 ? 's' : ''}`, (d) => data.chars.forEach((ch) => { const c = normalize({ ...ch, id: undefined, color: '' }); d.chars.push(c); ensureColor(d.chars, d.chars[d.chars.length - 1]); }));
-      } else store.addChar({ ...data, id: undefined }, { label: `${data.name || 'Robot'} ajouté à vos robots` });
-    } catch {
-      store.notify("Ce fichier n'est pas une sauvegarde de fiche (.json) lisible.");
-    }
+    const { kind, data } = await readImport(f);
+    if (kind === 'robot') { store.close(); store.addChar({ ...data, id: undefined }, { label: `${data.name || 'Robot'} ajouté à vos robots` }); }
+    // A campaign file replaces the campaign: confirm in the campaign menu.
+    else if (kind === 'campaign') store.open({ type: 'campaign', pending: data });
+    else store.notify(kind === 'old' ? OLD_SAVE : NOT_MECHATRON);
   }
   function print() { store.close(); setTimeout(() => window.print(), 250); }
-  function saveAll() {
-    const all = JSON.parse(JSON.stringify($state.snapshot(store.data)));
-    dl(new Blob([JSON.stringify(all, null, 2)], { type: 'application/json' }), 'mechatron-table.json');
-    store.notify('Toute la table téléchargée');
+  function exportCampaign() {
+    downloadBlob(jsonBlob(store.exportData()), campaignFileName(store.campaign.name));
+    store.notify('Campagne exportée');
   }
-  function restoreAll() { tableInput.click(); }
-  let tableInput;
-  async function openTable(e) {
-    const f = e.currentTarget.files[0]; e.currentTarget.value = '';
-    if (!f) return;
-    try {
-      const data = await readJsonFile(f);
-      if (!Array.isArray(data?.chars)) throw new Error();
-      if (!isCurrentSave(data)) { store.notify(OLD_SAVE); return; }
-      if (!confirmReset) { confirmReset = data; return; }
-    } catch { store.notify("Ce fichier n'est pas une sauvegarde de table (.json)."); }
-  }
-  function confirmRestore() { const d = confirmReset; confirmReset = false; store.close(); store.replaceAll(d, 'Table restaurée'); }
 </script>
 
 <Sheet title="Exporter et partager" subtitle={c ? c.name || 'Robot sans nom' : 'Aucun robot pour l’instant'} wide>
@@ -132,19 +112,12 @@
 
   <div class="opt">
     <div class="txt">
-      <b>Toute la table</b>
-      <p>Toute la campagne (robots de l'équipe et PNJ, niveaux de développement, journal, combat en cours) dans un seul fichier, pour changer d'appareil ou faire une copie de sécurité.</p>
+      <b>Toute la campagne</b>
+      <p>Robots de l'équipe et PNJ, niveaux de développement, journal et combat en cours dans un seul fichier, pour changer d'appareil ou garder une copie.</p>
       <div class="acts">
-        <button class="btn small" onclick={saveAll}>Télécharger la table</button>
-        <button class="btn small" onclick={restoreAll}>Restaurer une table</button>
-        <input type="file" accept="application/json,.json" hidden bind:this={tableInput} onchange={openTable} />
+        <button class="btn small" onclick={exportCampaign}>Exporter la campagne</button>
+        <button class="btn small" onclick={() => store.open({ type: 'campaign' })}>Importer ou restaurer…</button>
       </div>
-      {#if confirmReset}
-        <div class="confirm">
-          <p>Remplacer toute la campagne par celle du fichier ({confirmReset.chars.length} robot{confirmReset.chars.length > 1 ? 's' : ''}) ? Annulable juste après.</p>
-          <div class="acts"><button class="btn small" onclick={() => (confirmReset = false)}>Garder les miens</button><button class="btn small primary" onclick={confirmRestore}>Remplacer</button></div>
-        </div>
-      {/if}
     </div>
   </div>
 </Sheet>
@@ -162,7 +135,5 @@
   .thumb img { width: 100%; height: 100%; display: block; object-fit: cover; }
   details { margin: 0 0 10px; }
   summary { cursor: pointer; font-size: .9rem; color: var(--muted); min-height: 32px; }
-  .confirm { margin-top: 10px; padding: 10px 12px; border-left: 3px solid var(--amber); background: var(--abyss); }
-  .confirm p { color: var(--text); }
   pre { white-space: pre-wrap; font: .82rem/1.45 var(--body); background: var(--abyss); padding: 10px; margin: 6px 0 0; border: 1px solid var(--line); max-height: 200px; overflow: auto; }
 </style>

@@ -49,7 +49,7 @@ Repo: `HeihachiMichima/Mechatron` (local: `G:\MYZ\mechatron-sheet`) · Baseline:
 
 ---
 
-## 1. Current state (verified against the code; as of v3.0.0, after T03)
+## 1. Current state (verified against the code; as of v3.1.0, after T04)
 
 - **Stack:** Svelte 5 (runes), Vite 8, `vite-plugin-singlefile` → a single `dist/index.html` (about 624 kB) with scripts, CSS, fonts and logo inlined. French UI, mobile-first, side rail at ≥ 960 px.
 - **Layout and deploy (T00, v2.3.8):** the app lives at the repo root (`index.html` = Vite entry, `src/`, `package.json`). `.github/workflows/deploy.yml` builds and deploys `dist/` to GitHub Pages on each push to `main`; `dist/` is git-ignored. Paths below are relative to the root (`src/...`); before T00 they were under `svelte/`.
@@ -61,7 +61,9 @@ Repo: `HeihachiMichima/Mechatron` (local: `G:\MYZ\mechatron-sheet`) · Baseline:
   - `store.c` can be `null` (empty team); `EmptyTeam` replaces the fiche views. No pre-filled robot: the demo party is `demoParty()` in `lib/demo.js` (wired in T04).
   - Journal: `campaign.journal`, `pushJournal()` / `store.addJournal()` (no UI before T05). Text fields go through `store.type()` (one undo step per field edit).
   - Autosave 300 ms + flush on `pagehide`/hidden tab, error toast; undo 40 steps without maps/encounters.
-- **First launch:** an empty team ("Créez votre premier robot"). The welcome screen comes in T04.
+- **First launch (T04, v3.1.0):** `WelcomeView` while no campaign exists (`store.started` false: clean profile or a save of another version; nothing is saved meanwhile): *Nouvelle campagne* (name → empty team, `phase: 'creation'`), *Importer une campagne*, *Essayer la démo* (`demoParty()`, campaign « Démo », `phase: 'play'`), plus the automatic backups when there are any. `store.start()` opens it (no undo back to the welcome screen) and calls `navigator.storage.persist()`.
+- **Campaign menu (T04):** the ☰ button in the top bar (it replaced the theme button) opens `CampaignSheet`: rename, *Exporter la campagne* (`<nom>.mechatron.json`, `store.exportData()`), *Importer* (`classifyImport`: a v3 campaign replaces after a confirmation offering to export first; a robot is added), *Nouvelle campagne*, *Restaurer une sauvegarde automatique*, theme. T05 adds the « Mode MJ » switch here.
+- **Automatic backups (T04):** `mechatron-v3-backup-1…3` (`src/lib/campaign.js`): one at startup if the save changed, one before each replacement (import, new campaign); `store.backup(reason)` for T11; `store.restoreBackup(n)` is undoable.
 - **"Notes et journal"** in Collectif is still the active robot's notes (now through `store.type`); the campaign journal gets its UI in T05.
 - **Tabs:** État · Combat · Programmes · Matériel · Robot · Collectif, plus colored PC tabs and the roster sheet (PCs and NPCs).
 - **Energy:** in StateView: ±1, "Recharger jusqu'à {ration}", "Soleil (+1)" when `c.online` is false (outside), and "Nouveau jour (−1)". There is no clock.
@@ -71,7 +73,7 @@ Repo: `HeihachiMichima/Mechatron` (local: `G:\MYZ\mechatron-sheet`) · Baseline:
   - Cover is **a state of the robot** (`c.cover`): set by the "se mettre à couvert" maneuver (chips), and worn down by hits (`t.cover = res.newCover`).
   - Overwatch exists as a manual state. The quick guide (data.js about line 511) describes it as covering "votre arc de 90°".
   - Moving is described as "Bras ↔ Proche ↔ Courte: 1 maneuver per range band; beyond Courte, 2 maneuvers in a row per band" (data.js about line 520). **No maneuver counter exists.**
-- **Exports:** robot JSON, share link `#robot=…` (it imports a **copy**), text, PNG card, print, and "Télécharger la table" (`mechatron-table.json`, the whole roster).
+- **Exports:** robot JSON, share link `#robot=…` (it imports a **copy**), text, PNG card, print, and « Toute la campagne » → *Exporter la campagne* (T04; the old « Télécharger la table » is gone).
 - **Tests (T02, v2.3.10):** Vitest `npm test` (`src/lib/__tests__/`, helpers `rig()` and `roundtrip()`), dice through `src/lib/rng.js` (`setRng`, `window.__mechatron.setRng`), Playwright `npm run e2e` (`e2e/smoke.spec.js`, needs a build).
 - **Rulebook:** `Mechatron-livre-md/` at the repo root: the owner's Markdown conversion of the Mechatron rulebook (237 pages, OCR via pymupdf4llm + ocrmypdf, `meta.json`). `INDEX.md` maps chapters to pages; one file per 5 pages (`p0001-0005.md` … `p0236-0237.md`); `<!-- page N -->` markers give PDF page numbers. **Git-ignored** (copyrighted content, not to publish): it exists only on the owner's PC. An agent working from a GitHub clone (cloud) doesn't have it and must ask the owner for the relevant slice.
 - **Key book pages for the tickets** (PDF pages): XP p.26 · chassis parts and "two players may not choose the same part" p.18 · energy points and charging p.72 · range, movement and fleeing p.82 · cover p.91 · DEV levels p.107-108 · base stations and energy as currency p.112 · black market p.116-117 · **goods and services price list p.234**.

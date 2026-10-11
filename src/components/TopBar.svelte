@@ -7,10 +7,6 @@
   const c = $derived(store.c);
   const m = $derived(c && modelOf(c));
   const tpl = $derived(c?.template ? D.npcTemplates.find((t) => t.id === c.template) : null);
-  const themes = ['auto', 'dark', 'light'];
-  const themeLabel = { auto: 'Thème : automatique', dark: 'Thème : sombre', light: 'Thème : clair' };
-  const themeIcon = { auto: 'auto', dark: 'moon', light: 'sun' };
-  const cycle = () => { store.ui.theme = themes[(themes.indexOf(store.ui.theme) + 1) % 3]; store.notify(themeLabel[store.ui.theme]); };
 </script>
 
 <div class="bar">
@@ -19,7 +15,7 @@
     <span class="name"><span class="nm">{c ? c.name || 'Robot sans nom' : 'Aucun robot'}</span><span class="count num"><Icon name="users" size={14} />{store.chars.length}</span></span>
     <span class="sub">{#if c}{c.kind === 'npc' ? 'PNJ, ' : ''}{tpl ? tpl.name : m ? m.name : 'Modèle à choisir'}{#if m}, hiér. {hierarchy(c)}{/if}{:else}Créez votre premier robot{/if}</span>
   </button>
-  <button class="icon-btn" aria-label={themeLabel[store.ui.theme]} title={themeLabel[store.ui.theme]} onclick={cycle}><Icon name={themeIcon[store.ui.theme]} /></button>
+  <button class="icon-btn" aria-label="Menu de la campagne" title="Campagne, sauvegardes, thème" onclick={() => store.open({ type: 'campaign' })}><Icon name="menu" /></button>
   <button class="btn small export" onclick={() => store.open({ type: 'export' })}><Icon name="share" size={18} /><span>Exporter</span></button>
 </div>
 

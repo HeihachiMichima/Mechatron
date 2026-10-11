@@ -156,11 +156,15 @@ réparés, pas de couverture, PE au maximum, armes à énergie rechargées, bonu
 armes du livre rétabli. En combat, il efface aussi les états temporaires (immobilisé, à terre,
 action perdue) mais garde l'initiative. Deuxième appui pour confirmer, et « Annuler » juste après.
 
-**Premier lancement.** L'équipe est vide : créez votre premier robot (ou ajoutez-en un depuis un fichier ou un lien de partage).
+**Premier lancement.** Un écran d'accueil propose *Nouvelle campagne* (donnez-lui un nom, l'équipe est vide : créez ensuite vos robots), *Importer une campagne* (un fichier `.mechatron.json`, ou un robot `.json` qui ouvre une nouvelle campagne) ou *Essayer la démo* (quatre robots joueurs et trois PNJ). Une seule campagne à la fois : pour en changer, exportez-la, puis créez-en une autre ou importez-en une.
+
+**Menu de la campagne** (icône ☰ en haut) : renommer la campagne, *Exporter la campagne*, *Importer* (une campagne remplace l'actuelle après confirmation, avec la proposition de l'exporter d'abord ; un robot s'ajoute à l'équipe), *Nouvelle campagne*, *Restaurer une sauvegarde automatique*, et le thème.
+
+**Sauvegardes automatiques.** Le navigateur garde les 3 dernières copies de la campagne, avec leur date et le nombre de robots : une à l'ouverture si la campagne a changé depuis la précédente, et une avant chaque remplacement (import, nouvelle campagne). Restaurer une copie s'annule comme le reste.
 
 **Annuler.** Chaque action (dégât, PE, import, fiche vierge…) affiche un bandeau *Annuler* (40 retours en arrière au plus ; un texte tapé dans un champ compte pour un seul).
 
-**Thèmes.** Sombre, clair ou automatique (bouton en haut).
+**Thèmes.** Sombre, clair ou automatique (menu de la campagne, ou en haut de l'écran d'accueil).
 
 ## Exports (bouton Exporter)
 
@@ -168,9 +172,9 @@ action perdue) mais garde l'initiative. Deuxième appui pour confirmer, et « An
 - **Lien de partage** : toute la fiche tient dans le lien. Celui qui l'ouvre peut l'importer.
 - **Texte** : résumé à coller dans Discord ou un forum.
 - **Ce robot (.json)** : télécharger, ou ajouter un robot depuis un fichier.
-- **Toute la table (.json)** : toute la campagne (robots, niveaux de développement, journal, combat en cours), pour changer d'appareil.
+- **Toute la campagne (.mechatron.json)** : robots et PNJ, niveaux de développement, journal, combat en cours, pour changer d'appareil ou garder une copie (aussi dans le menu de la campagne).
 
-**Sauvegarde.** Tout est enregistré dans le navigateur, quelques instants après chaque changement et dès qu'on quitte la page. Si le navigateur refuse (navigation privée, stockage plein), un message demande d'exporter la campagne. Les sauvegardes des versions 2.x ne s'ouvrent plus.
+**Sauvegarde.** Tout est enregistré dans le navigateur, quelques instants après chaque changement et dès qu'on quitte la page. Si le navigateur refuse (navigation privée, stockage plein), un message demande d'exporter la campagne. À la création de la première campagne, l'appli demande au navigateur de ne pas effacer ces données. Les sauvegardes des versions 2.x ne s'ouvrent plus.
 - **Imprimer ou PDF** : mise en page A4 dédiée, claire, avec cases à cocher.
 
 ## Modifier les données de jeu

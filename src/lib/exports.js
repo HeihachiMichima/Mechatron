@@ -24,11 +24,6 @@ export async function shareOrDownload(blob, filename, title) {
 
 export const jsonBlob = (c) => new Blob([JSON.stringify(c, null, 2)], { type: 'application/json' });
 
-export async function readJsonFile(file) {
-  const text = await file.text();
-  return JSON.parse(text);
-}
-
 // ---------- share link ----------
 const b64url = (bytes) => { let s = ''; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000)); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
 const unb64url = (s) => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), (ch) => ch.charCodeAt(0));
