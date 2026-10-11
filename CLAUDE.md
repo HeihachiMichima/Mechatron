@@ -40,6 +40,7 @@ code, comments and identifiers are in English.
     │                        PrintSheet, OverheatDice (shows one module activation)
     ├── views/               Welcome (no campaign yet); fiche tabs État, Programmes, Matériel, Robot
     │                        (« Identité »); spaces Energy, Market, Combat, Session, Gm
+    │   ├── energy/          EnergyTransfer (« Donner des PE »), EnergyRules (GM overrides)
     │   ├── combat/          CombatPrep → CombatInit → CombatFight (+ TurnFlow, ActorStats,
     │   │                    LogicConflict, BlowerStep, RecycleStep)
     │   └── creation/        CreationWizard (+ ChassisStep, ProgramStep, ModuleStep)
@@ -357,6 +358,11 @@ Follow `docs/PLAN-COMPAGNON.md` §0: one ticket at a time, in order.
 - v3.4.0 (2026-10-11, plan ticket T07): day/night clock and energy engine (`lib/clock.js`, logic and
   tests only): daily drain, night charge up to the ration, solar cells and Panneaux solaires, Scrap
   Robots without a base station, transfers, E-packs; `c.daily`; GM overrides `rules.energy`.
+- v3.5.0 (2026-10-11, plan ticket T08): Énergie space = the clock (one button per phase: Terminer la
+  journée → Recharger pour la nuit → Nouveau jour, clear-sky toggle, disabled during creation), team
+  table (EP bar, OK / bas / en veille, connected, « exclu cette nuit » / « pas de borne »), last report,
+  ration with its band, transfers and E-packs, DEV levels, GM energy rules with book value and reset;
+  the fiche lost « Nouveau jour (−1) ».
 - v3.2.1 (2026-10-11): from Combat, « Ouvrir la fiche » opens an NPC's full fiche in place, in both
   GM modes, with « Retour au combat » (`ui.peek`): combat is now strictly the same in both modes.
 
