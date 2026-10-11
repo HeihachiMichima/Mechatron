@@ -178,6 +178,19 @@ réparés, pas de couverture, PE au maximum, armes à énergie rechargées, bonu
 armes du livre rétabli. En combat, il efface aussi les états temporaires (immobilisé, à terre,
 action perdue) mais garde l'initiative. Deuxième appui pour confirmer, et « Annuler » juste après.
 
+**Création de l'équipe.** « Nouveau robot » (le « + » des onglets, *Gérer*, ou l'équipe vide) ouvre
+un assistant qui suit l'ordre du livre, un écran par étape : modèle, nom (le numéro de série peut
+être tiré au hasard), châssis (attributs, armure et emplacements calculés en direct), programmes
+(10 points, 3 au plus par programme, le spécialiste au moins à 1 : « Suivant » reste bloqué tant que
+la répartition n'est pas juste), fonction secondaire (une des trois du modèle), modules (autant que
+d'emplacements), équipement de départ du modèle (avec ses choix) et énergie de départ au niveau de
+rationnement, relations et grand rêve, puis un récapitulatif. Une pièce de châssis ou un module
+déjà pris par un autre robot joueur n'est pas disponible, sauf les pièces de ferraille ; en mode
+MJ, on peut passer outre et ouvrir n'importe quelle étape. Pendant la création (ou en mode MJ),
+*Reprendre l'assistant* (onglet Identité) modifie un robot. Le MJ ouvre la partie avec
+*L'équipe est prête* (espace MJ, qui signale les robots pas finis) : le marché noir ouvre, et
+l'entrée va au journal. *Rouvrir la création* fait l'inverse.
+
 **Premier lancement.** Un écran d'accueil propose *Nouvelle campagne* (donnez-lui un nom, l'équipe est vide : créez ensuite vos robots), *Importer une campagne* (un fichier `.mechatron.json`, ou un robot `.json` qui ouvre une nouvelle campagne) ou *Essayer la démo* (quatre robots joueurs et trois PNJ). Une seule campagne à la fois : pour en changer, exportez-la, puis créez-en une autre ou importez-en une.
 
 **Menu de la campagne** (icône ☰ en haut) : renommer la campagne, *Exporter la campagne*, *Importer* (une campagne remplace l'actuelle après confirmation, avec la proposition de l'exporter d'abord ; un robot s'ajoute à l'équipe), *Nouvelle campagne*, *Restaurer une sauvegarde automatique*, le *Mode MJ* et le thème.
@@ -226,6 +239,7 @@ e2e/                     test Playwright de l'appli construite
 src/lib/store.svelte.js  état, sauvegarde auto, annulation
 src/lib/exports.js       PNG, lien, texte, JSON
 src/views/               les espaces (Équipe, Énergie, Marché, Combat, Séance, MJ) et les onglets de fiche
+src/views/creation/      l'assistant de création (règles dans src/lib/creation.js)
 src/sheets/              panneaux (dés, module, arme, sélecteur, exports)
 src/components/          plaque d'état, navigation, jauges, fiche imprimable
 ```

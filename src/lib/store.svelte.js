@@ -337,7 +337,8 @@ class Store {
   // npc: the NPC whose fiche is open in the MJ space (null = the NPC list);
   // pc: the last PC shown in Équipe, to come back to it; peek: an NPC whose fiche
   // is open inside Combat (any GM mode), until « Retour au combat ». None is saved.
-  ui = $state({ ...loadUi(), npc: null, pc: null, peek: null, sheet: null, turn: null, turnActor: null });
+  // wizard: the creation wizard in progress { id, step, draft } (T06, lib/creation.js).
+  ui = $state({ ...loadUi(), npc: null, pc: null, peek: null, wizard: null, sheet: null, turn: null, turnActor: null });
   toast = $state(null);
   incoming = $state(null);
   #history = [];
@@ -404,7 +405,7 @@ class Store {
   get fiche() {
     const c = this.c;
     if (!c) return null;
-    if (this.space === 'equipe') return c.kind !== 'npc' ? c : null;
+    if (this.space === 'equipe') return c.kind !== 'npc' && !this.ui.wizard ? c : null;
     if (this.space === 'mj') return this.ui.npc && c.id === this.ui.npc && c.kind === 'npc' ? c : null;
     if (this.space === 'combat') return this.ui.peek && c.id === this.ui.peek ? c : null;
     return null;
@@ -466,6 +467,18 @@ class Store {
     else this.ui.pc = id;
     this.go(c.kind === 'npc' ? 'mj' : 'equipe', tab);
     return true;
+  }
+  /**
+   * The campaign's phase (T06): 'creation' until the GM says « L'équipe est
+   * prête », then 'play' (the market opens). Undoable, noted in the journal.
+   */
+  setPhase(phase) {
+    if (phase !== 'creation' && phase !== 'play') return;
+    const play = phase === 'play';
+    this.commitAll(play ? "L'équipe est prête : la partie commence" : "Retour à la création de l'équipe", (d) => {
+      d.campaign.phase = phase;
+      pushJournal(d, play ? "L'équipe est prête, la partie commence." : "Retour à la création de l'équipe.");
+    });
   }
   /** « Mode MJ » switch (per device). Turning it off leaves the MJ space. */
   setGm(on) {

@@ -2,16 +2,16 @@
   // Shown in place of a robot's fiche when the team is empty (clean first launch,
   // or the last robot deleted). The welcome screen (T04) comes before this.
   import Icon from './Icon.svelte';
-  import { store, blankCharacter } from '../lib/store.svelte.js';
-  function create() { store.openFiche(store.addChar(blankCharacter('pc'), { label: 'Nouveau robot créé' }), 'robot'); }
+  import { store } from '../lib/store.svelte.js';
+  import { startWizard } from '../lib/creation.js';
 </script>
 
 <section class="panel empty">
   <Icon name="robot" size={40} />
   <h2>Créez votre premier robot</h2>
-  <p>L'équipe est vide. Créez un robot joueur, ou ajoutez-en un depuis un fichier (.json) ou un lien de partage.</p>
+  <p>L'équipe est vide. L'assistant vous guide étape par étape, dans l'ordre du livre ; vous pouvez aussi ajouter un robot depuis un fichier (.json) ou un lien de partage.</p>
   <div class="acts">
-    <button class="btn primary" onclick={create}><Icon name="plus" size={18} />Nouveau robot</button>
+    <button class="btn primary" onclick={() => startWizard()}><Icon name="plus" size={18} />Nouveau robot</button>
     <button class="btn" onclick={() => store.open({ type: 'export' })}>Ajouter depuis un fichier</button>
   </div>
 </section>

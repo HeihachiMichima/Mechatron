@@ -48,7 +48,8 @@ export const GAME_DATA = {
       secondary: ["Prise de commandement", "Caméra IR", "Anatomie robotique"],
       secondaryEn: ["Command Override", "IR Camera", "Robot Anatomy"],
       hierarchy: 2,
-      startingGear: "E-pack, lunette thermique, et au choix : pistolet laser ou vibro-couteau"
+      startingGear: "E-pack, lunette thermique, et au choix : pistolet laser ou vibro-couteau",
+      gear: [["E-pack"], ["Lunette thermique"], ["Pistolet laser", "Vibro-couteau"]]
     },
     {
       id: "cleaning",
@@ -60,7 +61,8 @@ export const GAME_DATA = {
       secondary: ["Revêtement caoutchouté", "Souffleur de déchets", "Recycleur de déchets"],
       secondaryEn: ["Rubberized", "Trash Blower", "Waste Recycler"],
       hierarchy: 1,
-      startingGear: "Élastique"
+      startingGear: "Élastique",
+      gear: [["Élastique"]]
     },
     {
       id: "companion",
@@ -72,7 +74,8 @@ export const GAME_DATA = {
       secondary: ["Morphing d'apparence", "Traits humains", "Infiltrateur"],
       secondaryEn: ["Appearance Morph", "Human Features", "Infiltrator"],
       hierarchy: 1,
-      startingGear: "Chewing-gum"
+      startingGear: "Chewing-gum",
+      gear: [["Chewing-gum"]]
     },
     {
       id: "coordination",
@@ -84,7 +87,8 @@ export const GAME_DATA = {
       secondary: ["Commandant de bataille", "Tactiques SWAT", "Unité d'élite"],
       secondaryEn: ["Battle Commander", "SWAT Tactics", "Top-Tier Unit"],
       hierarchy: 5,
-      startingGear: "Pistolet laser ou pistolet maser, E-pack"
+      startingGear: "Pistolet laser ou pistolet maser, E-pack",
+      gear: [["Pistolet laser", "Pistolet maser"], ["E-pack"]]
     },
     {
       id: "industrial",
@@ -96,7 +100,8 @@ export const GAME_DATA = {
       secondary: ["Production de masse", "Outils montés", "Résistant"],
       secondaryEn: ["Mass Production", "Mounted Tools", "Resistant"],
       hierarchy: 2,
-      startingGear: "Fer à souder laser, outil électrique, E-pack"
+      startingGear: "Fer à souder laser, outil électrique, E-pack",
+      gear: [["Fer à souder laser"], ["Outil électrique"], ["E-pack"]]
     },
     {
       id: "protocol",
@@ -108,7 +113,8 @@ export const GAME_DATA = {
       secondary: ["Support de coordination", "Interprète", "Archiviste hors pair"],
       secondaryEn: ["Coordination Support", "Interpreter", "Ultimate Clerk"],
       hierarchy: 3,
-      startingGear: "E-pack"
+      startingGear: "E-pack",
+      gear: [["E-pack"]]
     },
     {
       id: "scrap",
@@ -120,7 +126,8 @@ export const GAME_DATA = {
       secondary: ["Outil de coupe", "Module factice", "Compagnon de ferraille"],
       secondaryEn: ["Chopping Tool", "Dummy Module", "Scrap Companion"],
       hierarchy: 0,
-      startingGear: "Aucun"
+      startingGear: "Aucun",
+      gear: []
     },
     {
       id: "security",
@@ -132,7 +139,8 @@ export const GAME_DATA = {
       secondary: ["Clé de bras", "Prise de commandement", "Sirènes"],
       secondaryEn: ["Armlock", "Command Override", "Sirens"],
       hierarchy: 4,
-      startingGear: "Matraque électrique ou pistolet paralysant, verrou de blocage"
+      startingGear: "Matraque électrique ou pistolet paralysant, verrou de blocage",
+      gear: [["Matraque électrique", "Pistolet paralysant"], ["Verrou de blocage"]]
     }
   ],
 
@@ -140,7 +148,8 @@ export const GAME_DATA = {
   // Chassis parts catalogue: Tête (head), Torse (torso), Support
   // (undercarriage) — full tables from p.18-19 of the book. Each part
   // contributes to the four attributes, to the number of module slots
-  // (emplacements) and to the Protection (Armor Rating).
+  // (emplacements) and to the Protection (Armor Rating). `scrap: true`: a Scrap
+  // part can always be found, so several PCs may share it (p.18).
   // ---------------------------------------------------------------------
   chassis: {
     heads: [
@@ -149,7 +158,7 @@ export const GAME_DATA = {
       { name: "Phoenix MK43 \"Rey\"", manufacturer: null, servos: 1, stabilite: 2, processeur: 2, reseau: 0, slots: 0, armor: 3, desc: "Une tête de qualité militaire au blindage épais." },
       { name: "Solun \"Emina\"", manufacturer: null, servos: 0, stabilite: 0, processeur: 2, reseau: 2, slots: 1, armor: 1, desc: "Une tête volumineuse offrant de la place pour des unités de calcul puissantes." },
       { name: "Kordura MOD 022", manufacturer: null, servos: 1, stabilite: 0, processeur: 1, reseau: 2, slots: 1, armor: 1, desc: "Une tête métallique aux traits humanoïdes." },
-      { name: "Scrap Head", manufacturer: null, servos: 0, stabilite: 1, processeur: 2, reseau: 0, slots: 2, armor: 2, desc: "Un crâne difforme, assemblé à partir de ferraille diverse." },
+      { name: "Scrap Head", scrap: true, manufacturer: null, servos: 0, stabilite: 1, processeur: 2, reseau: 0, slots: 2, armor: 2, desc: "Un crâne difforme, assemblé à partir de ferraille diverse." },
       { name: "Pashin Ama 9", manufacturer: null, servos: 1, stabilite: 2, processeur: 1, reseau: 0, slots: 1, armor: 1, desc: "Une tête plate et arrondie, presque entièrement intégrée au torse." },
       { name: "Mumla PX-01", manufacturer: null, servos: 2, stabilite: 0, processeur: 0, reseau: 2, slots: 1, armor: 2, desc: "Une tête vaguement humanoïde au blindage épais." }
     ],
@@ -159,7 +168,7 @@ export const GAME_DATA = {
       { name: "Ganymeda Nava PRS", manufacturer: null, servos: 2, stabilite: 2, processeur: 0, reseau: 1, slots: 1, armor: 3, desc: "Un torse filiforme et osseux, aux servomoteurs et pistons apparents." },
       { name: "Modessi RK \"Una\"", manufacturer: null, servos: 1, stabilite: 2, processeur: 2, reseau: 1, slots: 0, armor: 2, desc: "Un torse léger, en forme de tonneau, aux bras fins." },
       { name: "Özkun TN75", manufacturer: null, servos: 1, stabilite: 1, processeur: 1, reseau: 2, slots: 1, armor: 2, desc: "Un noyau vaguement humanoïde aux bras fins." },
-      { name: "Scrap Torso", manufacturer: null, servos: 1, stabilite: 1, processeur: 1, reseau: 1, slots: 2, armor: 1, desc: "Un torse difforme, assemblé à partir de pièces détachées et de ferraille." },
+      { name: "Scrap Torso", scrap: true, manufacturer: null, servos: 1, stabilite: 1, processeur: 1, reseau: 1, slots: 2, armor: 1, desc: "Un torse difforme, assemblé à partir de pièces détachées et de ferraille." },
       { name: "Kleenkorp PTU5", manufacturer: null, servos: 1, stabilite: 2, processeur: 1, reseau: 1, slots: 1, armor: 1, desc: "Un torse large et robuste, en forme de tonneau, aux bras courts." },
       { name: "Pylon \"Unorma\"", manufacturer: null, servos: 2, stabilite: 2, processeur: 1, reseau: 1, slots: 0, armor: 2, desc: "Un torse large aux épaulières surdimensionnées." }
     ],
@@ -169,7 +178,7 @@ export const GAME_DATA = {
       { name: "Methusalem MOD 12", manufacturer: null, servos: 1, stabilite: 2, processeur: 1, reseau: 1, slots: 0, armor: 3, desc: "Une paire de jambes squelettiques se terminant par de lourdes bottes militaires." },
       { name: "Lagos MD-18", manufacturer: null, servos: 1, stabilite: 1, processeur: 2, reseau: 1, slots: 0, armor: 1, desc: "Un support compact équipé de réacteurs, permettant un déplacement en vol stationnaire." },
       { name: "Orion V \"Bolo\"", manufacturer: null, servos: 0, stabilite: 1, processeur: 2, reseau: 2, slots: 0, armor: 1, desc: "Une paire de jambes longues et fines." },
-      { name: "Scrap Legs", manufacturer: null, servos: 1, stabilite: 0, processeur: 1, reseau: 1, slots: 2, armor: 1, desc: "Une paire de jambes de ferraille inégales, aux pieds massifs." },
+      { name: "Scrap Legs", scrap: true, manufacturer: null, servos: 1, stabilite: 0, processeur: 1, reseau: 1, slots: 2, armor: 1, desc: "Une paire de jambes de ferraille inégales, aux pieds massifs." },
       { name: "Rougell Mark 19", manufacturer: null, servos: 1, stabilite: 2, processeur: 0, reseau: 1, slots: 1, armor: 4, desc: "Un support robuste équipé de trois roues caoutchoutées." },
       { name: "LBM Terra 004", manufacturer: null, servos: 2, stabilite: 1, processeur: 1, reseau: 0, slots: 1, armor: 2, desc: "Une paire de jambes épaisses se terminant par des pieds lourds." }
     ]
