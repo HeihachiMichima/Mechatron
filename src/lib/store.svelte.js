@@ -335,8 +335,9 @@ class Store {
   /** False until a campaign exists (welcome screen; no autosave meanwhile). */
   started = $state(false);
   // npc: the NPC whose fiche is open in the MJ space (null = the NPC list);
-  // pc: the last PC shown in Équipe, to come back to it. Neither is saved.
-  ui = $state({ ...loadUi(), npc: null, pc: null, sheet: null, turn: null, turnActor: null });
+  // pc: the last PC shown in Équipe, to come back to it; peek: an NPC whose fiche
+  // is open inside Combat (any GM mode), until « Retour au combat ». None is saved.
+  ui = $state({ ...loadUi(), npc: null, pc: null, peek: null, sheet: null, turn: null, turnActor: null });
   toast = $state(null);
   incoming = $state(null);
   #history = [];
@@ -405,6 +406,7 @@ class Store {
     if (!c) return null;
     if (this.space === 'equipe') return c.kind !== 'npc' ? c : null;
     if (this.space === 'mj') return this.ui.npc && c.id === this.ui.npc && c.kind === 'npc' ? c : null;
+    if (this.space === 'combat') return this.ui.peek && c.id === this.ui.peek ? c : null;
     return null;
   }
   /**
@@ -414,6 +416,7 @@ class Store {
   go(space, tab) {
     if (!SPACES.includes(space) || (space === 'mj' && !this.ui.gm)) space = 'equipe';
     this.ui.space = space;
+    this.ui.peek = null; // any move (Combat included) closes an NPC fiche opened in Combat
     if (FICHE_TABS.includes(tab)) this.ui.tab = tab;
     this.syncFiche();
     if (typeof window !== 'undefined') window.scrollTo?.({ top: 0 });
@@ -435,15 +438,29 @@ class Store {
       if (!n) this.ui.npc = null;
       else if (n.kind !== 'npc') { this.ui.npc = null; this.openFiche(n.id); }
       else if (this.data.activeId !== n.id) this.data.activeId = n.id;
+    } else if (this.space === 'combat' && this.ui.peek) {
+      const n = this.char(this.ui.peek);
+      if (!n) this.ui.peek = null;
+      else if (this.data.activeId !== n.id) this.data.activeId = n.id;
     }
   }
   /**
-   * Open robot `id`'s fiche where it lives: PCs in Équipe, NPCs in MJ.
-   * An NPC's fiche needs GM mode; returns false when it can't be opened.
+   * Open robot `id`'s fiche where it lives: PCs in Équipe, NPCs in MJ. From
+   * Combat, an NPC's fiche opens in place, in both GM modes (combat is the same
+   * for everyone). Elsewhere an NPC's fiche needs GM mode; returns false when it
+   * can't be opened.
    */
   openFiche(id, tab) {
     const c = this.char(id);
-    if (!c || (c.kind === 'npc' && !this.ui.gm)) return false;
+    if (!c) return false;
+    if (c.kind === 'npc' && this.space === 'combat') {
+      this.data.activeId = id;
+      this.ui.peek = id;
+      if (FICHE_TABS.includes(tab)) this.ui.tab = tab;
+      if (typeof window !== 'undefined') window.scrollTo?.({ top: 0 });
+      return true;
+    }
+    if (c.kind === 'npc' && !this.ui.gm) return false;
     this.data.activeId = id;
     if (c.kind === 'npc') this.ui.npc = id;
     else this.ui.pc = id;

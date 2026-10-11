@@ -172,3 +172,25 @@ test('outside GM mode, an NPC is never shown or exported from Équipe', async ({
   expect(errors).toEqual([]);
   await ctx.close();
 });
+
+test('outside GM mode, an NPC fiche still opens from Combat, then « Retour au combat »', async ({ browser }) => {
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await ctx.newPage();
+  const errors = watch(page);
+  await page.goto(url);
+  await page.getByRole('button', { name: 'Ouvrir la démo' }).click();
+  await nav(page, 'Combat').click();
+  await page.getByRole('button', { name: 'Depuis les modèles du livre' }).click();
+  await page.getByRole('dialog').locator('button.item').first().click();
+  await page.getByRole('button', { name: /^Modifier / }).first().click();
+  await page.getByRole('button', { name: 'Ouvrir la fiche complète' }).click();
+  await expect(page.getByRole('button', { name: 'Retour au combat', exact: true })).toBeVisible();
+  await expect(page.getByRole('tab', { name: 'Identité' })).toHaveAttribute('aria-selected', 'true');
+  await expect(nav(page, 'MJ')).toHaveCount(0); // GM mode stays off
+  await page.screenshot({ path: 'e2e/screenshots/combat-npc-fiche-390.png' });
+  await page.getByRole('button', { name: 'Retour au combat', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Initiative', exact: true })).toBeVisible();
+  expect(errors).toEqual([]);
+  await ctx.close();
+});
+

@@ -49,7 +49,7 @@ Repo: `HeihachiMichima/Mechatron` (local: `G:\MYZ\mechatron-sheet`) · Baseline:
 
 ---
 
-## 1. Current state (verified against the code; as of v3.2.0, after T05)
+## 1. Current state (verified against the code; as of v3.2.1, after T05)
 
 - **Stack:** Svelte 5 (runes), Vite 8, `vite-plugin-singlefile` → a single `dist/index.html` (about 624 kB) with scripts, CSS, fonts and logo inlined. French UI, mobile-first, side rail at ≥ 960 px.
 - **Layout and deploy (T00, v2.3.8):** the app lives at the repo root (`index.html` = Vite entry, `src/`, `package.json`). `.github/workflows/deploy.yml` builds and deploys `dist/` to GitHub Pages on each push to `main`; `dist/` is git-ignored. Paths below are relative to the root (`src/...`); before T00 they were under `svelte/`.
@@ -70,7 +70,7 @@ Repo: `HeihachiMichima/Mechatron` (local: `G:\MYZ\mechatron-sheet`) · Baseline:
   - Marché: `MarketView` placeholder (« Le marché noir ouvre une fois l'équipe créée » during creation).
   - Séance: `SessionView`: XP questions per PC (`XpSheet cid`), DEV wear −1D6 (also written to the journal), campaign journal (list newest first + add).
   - MJ (GM mode): `GmView` = NPC roster (`RobotList`, *Nouveau PNJ*, *Tout remettre à neuf*) + placeholders (market, house rules, encounters); an NPC's fiche opens there with « Tous les PNJ » to go back.
-  - GM mode hides tools, not information: combat is identical; outside GM mode the « Ouvrir la fiche » buttons for NPCs (combatant and quick-edit sheets) and the PJ/PNJ switch (Identité) are hidden.
+  - GM mode hides tools, not information: combat is identical in both modes. From Combat, « Ouvrir la fiche » opens an NPC's fiche in place (`ui.peek`, v3.2.1) with « Retour au combat ». Outside GM mode the PJ/PNJ switch (Identité) is hidden.
   - The robot's own notes (`c.notes`) moved from Collectif to Identité; the « Fin de séance » button left État (Séance has it).
 - **Energy:** in StateView: ±1, "Recharger jusqu'à {ration}", "Soleil (+1)" when `c.online` is false (outside), and "Nouveau jour (−1)". There is no clock.
 - **XP:** `XpSheet` has 6 questions from `data.js`, 1 XP each, applied **to one robot** (opened per robot from Séance). `xpPerUpgrade: 5` is fixed. The "Dépenser 5 PX" button only subtracts XP.
@@ -682,6 +682,7 @@ campaign.xp.log = [{ at, awards: [{ cid, total, items }] }]
 - 2026-10-11: the owner checked garbled OCR values in the PDF: scrap club 1 EP, vibro knife 3 EP (p.234), steel door cover 5 (p.91).
 - 2026-10-11: **plan agreed** → commits and pushes allowed, following §0.1.
 - 2026-10-11: crop the logo to remove the « Road to Eden » line (v3.0.1, before T04).
+- 2026-10-11: T05 merged; NPC fiches open in place from Combat in both GM modes (option chosen over hiding the buttons or switching GM mode on).
 - **Still open:** none blocking. If a ticket raises a question, the agent asks before choosing.
 
 ---

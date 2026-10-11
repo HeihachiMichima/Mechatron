@@ -74,8 +74,10 @@
     <header class="head" style="--pc:{fiche?.kind !== 'npc' && fiche?.color ? fiche.color : 'var(--line)'}; --accent:{fiche?.kind !== 'npc' && fiche?.color ? fiche.color : 'var(--amber)'}">
       <TopBar />
       {#if space === 'equipe'}<PcTabs />{/if}
-      {#if space === 'mj' && fiche}
+      {#if fiche && space === 'mj'}
         <div class="npcbar"><button class="btn small ghost" onclick={() => (store.ui.npc = null)}><Icon name="back" size={18} />Tous les PNJ</button></div>
+      {:else if fiche && space === 'combat'}
+        <div class="npcbar"><button class="btn small ghost" onclick={() => store.go('combat')}><Icon name="back" size={18} />Retour au combat</button></div>
       {/if}
       {#if fiche}<VitalsPlate /><FicheTabs />{/if}
     </header>

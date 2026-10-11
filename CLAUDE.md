@@ -106,7 +106,7 @@ no backend. Output must stay a **static page** that opens by double-click, offli
 ## Architecture notes
 
 **Store (`store.svelte.js`).** `store.data = { version: 3, campaign, chars[], activeId, combat }`,
-`store.ui = { space, tab, theme, gm, npc, pc, sheet, turn, turnActor }`. Mutate only through
+`store.ui = { space, tab, theme, gm, npc, pc, peek, sheet, turn, turnActor }`. Mutate only through
 `commit(label, fn)`, `commitOn(charId, label, fn(char, data))` or `commitAll` — they
 snapshot for undo (40 steps), autosave and toast. Text fields use `store.type(charId, field, fn)`
 (`value` + `oninput`, never `bind:value={store.c.*}`): keystrokes in one field coalesce into one
@@ -116,8 +116,10 @@ undo step. `store.open(type, props)` / `store.close()` drive bottom sheets; **pr
   `FICHE_TABS` (`etat programmes materiel robot`), `ui.gm` = « Mode MJ »; these and the theme are the
   UI prefs (`cleanUi()`), per device, never in the campaign. Read the space with `store.space` (`mj`
   falls back to `equipe` without GM mode) and the robot on screen with `store.fiche`: the active PC
-  in Équipe, the open NPC (`ui.npc`) in MJ, else `null`. Navigate with `store.go(space, tab)` (Équipe
-  makes a PC active) and `store.openFiche(id, tab)` (PC → Équipe, NPC → MJ; refused without GM mode).
+  in Équipe, the open NPC (`ui.npc`) in MJ, the NPC opened from Combat (`ui.peek`, any GM mode, closed
+  by any `go()`) in Combat, else `null`. Navigate with `store.go(space, tab)` (Équipe makes a PC
+  active) and `store.openFiche(id, tab)` (PC → Équipe; NPC → in place from Combat, else MJ, refused
+  without GM mode).
   `store.setGm(on)`. App runs `store.syncFiche()` in an effect to keep the active robot in line with
   the space (an undo or a combat sheet can activate another robot): Équipe comes back to the last PC
   seen there (`ui.pc`, not saved). Sheets about « the robot on screen » (ExportSheet) read
@@ -324,6 +326,8 @@ Follow `docs/PLAN-COMPAGNON.md` §0: one ticket at a time, in order.
   journal) and the campaign journal; Énergie = DEV levels + connection of each robot; PC notes moved
   to Identité; the roster sheet is PCs only (`RobotList` shared with the MJ space); « remettre à
   neuf » is scoped there (team / NPCs).
+- v3.2.1 (2026-10-11): from Combat, « Ouvrir la fiche » opens an NPC's full fiche in place, in both
+  GM modes, with « Retour au combat » (`ui.peek`): combat is now strictly the same in both modes.
 
 ## Ideas not done yet
 
