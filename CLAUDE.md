@@ -158,6 +158,12 @@ undo step. `store.open(type, props)` / `store.close()` drive bottom sheets; **pr
   house / none. House defaults in `house.js` (`HOUSE.market`: sellRate 0.5, sellMin 1, rarities with
   daily chances, rarity by kind). `setPhase('play')` opens the market, `'creation'` closes it; the
   demo starts open. GM editor: `views/gm/MarketEditor.svelte` in the MJ space.
+  T10: `market.draw = { day, ids }` (`drawMarket` through rng; `store.ensureDraw()` draws once per
+  in-game day when the Marché space shows, not an undo step; `store.redraw()` for the GM);
+  `listing.force` ('in'|'out'|null); `isAvailable`; `buyBlock` (closed, no price, not today, EP via
+  `availableEp`, module slots, duplicate module) → `buy(data, id, cid, { pay: payEp, ep: availableEp })`
+  (item added: module, weapon, else equipment; a part goes to the equipment); `sellables` / `sell`
+  (`sellPrice`, never above `epMax`, back in stock). Both write `market.ledger` (300 last) and the journal.
 - **`store.started`** is false while no campaign exists (clean profile, or a save of another
   version): App shows `WelcomeView` and nothing is saved. `store.start(raw, label)` opens the first
   campaign (new, demo, file, backup) with no undo back to the welcome screen, saves at once and
@@ -377,6 +383,10 @@ Follow `docs/PLAN-COMPAGNON.md` §0: one ticket at a time, in order.
   p.234, house rarities and sell-back rate, `null` price = not for sale), GM editor in the MJ space
   (search, filters, inline price/rarity/stock/on sale/hidden, custom items, reset, JSON export and
   import, market house rules), open/closed switch, read-only catalog in the Marché space.
+- v3.7.0 (2026-10-11, plan ticket T10): black market shop: daily draw by rarity (reproducible with
+  `setRng`), GM redraw / whole catalog / force in or out, buyer picker with EP, buy with clear blocking
+  reasons (EP, slots, duplicate module), weapon comparison, sell back at the house rate, ledger and
+  journal, every purchase and sale undoable.
 - v3.2.1 (2026-10-11): from Combat, « Ouvrir la fiche » opens an NPC's full fiche in place, in both
   GM modes, with « Retour au combat » (`ui.peek`): combat is now strictly the same in both modes.
 
