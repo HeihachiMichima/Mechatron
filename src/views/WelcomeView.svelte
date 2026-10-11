@@ -16,11 +16,11 @@
   const campaign = (n, extra = {}) => ({ ...blankCampaign(n), ...extra });
   function create(e) {
     e.preventDefault();
-    if (store.start({ version: VERSION, campaign: campaign(name.trim()), chars: [], activeId: null }, 'Campagne créée')) store.ui.tab = 'etat';
+    if (store.start({ version: VERSION, campaign: campaign(name.trim()), chars: [], activeId: null }, 'Campagne créée')) store.go('equipe', 'etat');
   }
   function demo() {
     store.start({ version: VERSION, campaign: campaign('Démo', { phase: 'play' }), ...demoParty() }, 'Démo chargée : 4 robots et 3 PNJ');
-    store.ui.tab = 'etat';
+    store.go('equipe', 'etat');
   }
   async function openFile(e) {
     const f = e.currentTarget.files[0];
@@ -30,7 +30,7 @@
     if (kind === 'campaign') store.start(data, `Campagne « ${data.campaign.name || 'sans nom'} » importée`);
     else if (kind === 'robot') store.start({ version: VERSION, campaign: campaign(''), chars: [{ ...data, id: undefined }] }, `${data.name || 'Robot'} ajouté à une nouvelle campagne`);
     else store.notify(kind === 'old' ? OLD_SAVE : NOT_MECHATRON);
-    if (store.started) store.ui.tab = 'etat';
+    if (store.started) store.go('equipe', 'etat');
   }
 </script>
 
@@ -69,7 +69,7 @@
   {#if hasBackups}
     <section class="panel">
       <h2>Sauvegardes automatiques</h2>
-      <BackupList onrestore={() => (store.ui.tab = 'etat')} />
+      <BackupList onrestore={() => (store.go('equipe', 'etat'))} />
     </section>
   {/if}
 

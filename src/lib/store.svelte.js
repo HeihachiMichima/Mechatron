@@ -19,6 +19,11 @@ const UNDO_LIMIT = 40;
 export const THEME_LABEL = { auto: 'Thème : automatique', dark: 'Thème : sombre', light: 'Thème : clair' };
 export const THEME_ICON = { auto: 'auto', dark: 'moon', light: 'sun' };
 
+/** The app's spaces, in the order of play (T05). `mj` only exists in GM mode. */
+export const SPACES = ['equipe', 'energie', 'marche', 'combat', 'seance', 'mj'];
+/** The four parts of a robot's fiche (segmented control). */
+export const FICHE_TABS = ['etat', 'programmes', 'materiel', 'robot'];
+
 export const newId = () => Math.random().toString(36).slice(2, 10);
 
 export function blankCharacter(kind = 'pc') {
@@ -282,9 +287,22 @@ function load() {
   return { data: normalizeAll({}), started: false };
 }
 
+/**
+ * UI prefs of this device (never in the campaign): space, fiche tab, theme and
+ * GM mode. Unknown values fall back to the defaults.
+ */
+export function cleanUi(raw) {
+  const r = isObj(raw) ? raw : {};
+  return {
+    space: SPACES.includes(r.space) ? r.space : 'equipe',
+    tab: FICHE_TABS.includes(r.tab) ? r.tab : 'etat',
+    theme: ['auto', 'dark', 'light'].includes(r.theme) ? r.theme : 'auto',
+    gm: r.gm === true
+  };
+}
 function loadUi() {
-  try { return { tab: 'etat', theme: 'auto', ...JSON.parse(localStorage.getItem(UI_KEY) || '{}') }; }
-  catch { return { tab: 'etat', theme: 'auto' }; }
+  try { return cleanUi(JSON.parse(localStorage.getItem(UI_KEY) || '{}')); }
+  catch { return cleanUi({}); }
 }
 
 /** Pay EP for a robot: NPCs draw from the GM pool when it's enabled (p.73). */
@@ -313,7 +331,8 @@ class Store {
   data = $state(null);
   /** False until a campaign exists (welcome screen; no autosave meanwhile). */
   started = $state(false);
-  ui = $state({ ...loadUi(), sheet: null, turn: null, turnActor: null });
+  // npc: the NPC whose fiche is open in the MJ space (null = the NPC list).
+  ui = $state({ ...loadUi(), npc: null, sheet: null, turn: null, turnActor: null });
   toast = $state(null);
   incoming = $state(null);
   #history = [];
@@ -339,8 +358,8 @@ class Store {
         this.#saveTimer = setTimeout(() => this.flush(), 300);
       });
       $effect(() => {
-        const { tab, theme } = this.ui;
-        try { localStorage.setItem(UI_KEY, JSON.stringify({ tab, theme })); } catch {}
+        const { space, tab, theme, gm } = this.ui;
+        try { localStorage.setItem(UI_KEY, JSON.stringify({ space, tab, theme, gm })); } catch {}
       });
     });
     if (typeof window !== 'undefined') {
@@ -370,6 +389,52 @@ class Store {
   get combat() { return this.data.combat; }
   get campaign() { return this.data.campaign; }
   char(id) { return this.data.chars.find((x) => x.id === id); }
+
+  /** The space shown: `mj` falls back to `equipe` outside GM mode. */
+  get space() { return this.ui.space === 'mj' && !this.ui.gm ? 'equipe' : this.ui.space; }
+  /**
+   * The robot whose fiche is on screen: the active PC in Équipe, the open NPC in
+   * MJ (GM mode), otherwise null (the other spaces have no fiche).
+   */
+  get fiche() {
+    const c = this.c;
+    if (!c) return null;
+    if (this.space === 'equipe') return c.kind !== 'npc' ? c : null;
+    if (this.space === 'mj') return this.ui.npc && c.id === this.ui.npc && c.kind === 'npc' ? c : null;
+    return null;
+  }
+  /**
+   * Go to a space (and optionally a fiche tab). Équipe only shows PCs: an
+   * active NPC gives way to the first PC. MJ needs GM mode.
+   */
+  go(space, tab) {
+    if (!SPACES.includes(space) || (space === 'mj' && !this.ui.gm)) space = 'equipe';
+    this.ui.space = space;
+    if (FICHE_TABS.includes(tab)) this.ui.tab = tab;
+    if (space === 'equipe' && this.c?.kind === 'npc') {
+      const pc = this.data.chars.find((x) => x.kind !== 'npc');
+      if (pc) this.data.activeId = pc.id;
+    }
+    if (typeof window !== 'undefined') window.scrollTo?.({ top: 0 });
+  }
+  /**
+   * Open robot `id`'s fiche where it lives: PCs in Équipe, NPCs in MJ.
+   * An NPC's fiche needs GM mode; returns false when it can't be opened.
+   */
+  openFiche(id, tab) {
+    const c = this.char(id);
+    if (!c || (c.kind === 'npc' && !this.ui.gm)) return false;
+    this.data.activeId = id;
+    if (c.kind === 'npc') this.ui.npc = id;
+    this.go(c.kind === 'npc' ? 'mj' : 'equipe', tab);
+    return true;
+  }
+  /** « Mode MJ » switch (per device). Turning it off leaves the MJ space. */
+  setGm(on) {
+    this.ui.gm = !!on;
+    if (!on) { this.ui.npc = null; if (this.ui.space === 'mj') this.go('equipe'); }
+    this.notify(on ? 'Mode MJ activé' : 'Mode MJ désactivé');
+  }
 
   snapshot() { return this.c ? JSON.stringify($state.snapshot(this.c)) : 'null'; }
   #push(full = false) {

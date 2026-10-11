@@ -85,7 +85,7 @@
     <section class="panel energy">
       <div class="panel-head"><h2>Énergie</h2><span class="meta">PNJ</span></div>
       <p class="pool">Ce PNJ paie ses modules et ses jets forcés dans la <b>réserve du MJ</b> : <b class="num">{store.combat.gmPool} PE</b>.</p>
-      <button class="btn small" onclick={() => (store.ui.tab = 'combat')}>Gérer la réserve (onglet Combat)</button>
+      <button class="btn small" onclick={() => store.go('combat')}>Gérer la réserve (espace Combat)</button>
     </section>
     {:else}
     <section class="panel energy">
@@ -140,12 +140,11 @@
     <section class="panel">
       <div class="panel-head">
         <h2>Expérience</h2>
-        <span class="meta">{per} PX = un programme +1 ou une fonction</span>
+        <span class="meta">{per} PX = un programme +1 ou une fonction ; gains en fin de séance</span>
       </div>
       <div class="xp-row">
         <Stepper value={c.xp.current} min={0} max={999} label="Expérience" onchange={(v) => store.commit(`Expérience : ${v} PX`, (s) => (s.xp.current = v))} />
         <button class="btn small" disabled={c.xp.current < per} onclick={() => store.commit(`${per} PX dépensés`, (s) => (s.xp.current -= per))}>Dépenser {per} PX</button>
-        <button class="btn small primary" onclick={() => store.open({ type: 'xp' })}>Fin de séance</button>
       </div>
     </section>
     {/if}

@@ -1,7 +1,7 @@
 <script>
-  // Top bar menu: the campaign (rename, export, import, new, automatic backups)
-  // and the display theme. Replacing the campaign asks first and offers to
-  // export it; every replacement is undoable and backed up (T04).
+  // Top bar menu: the campaign (rename, export, import, new, automatic backups),
+  // the « Mode MJ » switch and the display theme (both per device).
+  // Replacing the campaign asks first and offers to export it; every replacement is undoable and backed up (T04).
   import Sheet from '../components/Sheet.svelte';
   import Icon from '../components/Icon.svelte';
   import BackupList from '../components/BackupList.svelte';
@@ -33,7 +33,7 @@
     if (!f) return;
     const { kind, data } = await readImport(f);
     if (kind === 'campaign') { exported = false; confirm = { kind: 'import', data }; }
-    else if (kind === 'robot') { store.close(); store.addChar({ ...data, id: undefined }, { label: `${data.name || 'Robot'} ajouté à vos robots` }); }
+    else if (kind === 'robot') { store.close(); store.openFiche(store.addChar({ ...data, id: undefined }, { label: `${data.name || 'Robot'} ajouté à vos robots` })); }
     else store.notify(kind === 'old' ? OLD_SAVE : NOT_MECHATRON);
   }
   function askNew() { exported = false; newName = ''; confirm = { kind: 'new' }; }
@@ -42,7 +42,7 @@
     confirm = null;
     store.close();
     if (c.kind === 'import') store.replaceAll(c.data, `Campagne « ${c.data.campaign.name || 'sans nom'} » importée`);
-    else { store.replaceAll({ version: VERSION, campaign: blankCampaign(newName.trim()), chars: [], activeId: null }, 'Nouvelle campagne créée'); store.ui.tab = 'etat'; }
+    else { store.replaceAll({ version: VERSION, campaign: blankCampaign(newName.trim()), chars: [], activeId: null }, 'Nouvelle campagne créée'); store.go('equipe', 'etat'); }
   }
 </script>
 
@@ -76,6 +76,7 @@
     <li><button class="row" onclick={askNew}><Icon name="plus" /><span><b>Nouvelle campagne</b><small>Repartir d'une équipe vide.</small></span></button></li>
     <li><button class="row" aria-expanded={showBackups} onclick={() => (showBackups = !showBackups)}><Icon name="history" /><span><b>Restaurer une sauvegarde automatique</b><small>Les 3 dernières copies de ce navigateur.</small></span></button>
       {#if showBackups}<div class="sub"><BackupList onrestore={() => store.close()} /></div>{/if}</li>
+    <li><button class="row" role="switch" aria-checked={store.ui.gm} onclick={() => store.setGm(!store.ui.gm)}><Icon name="mj" /><span><b>Mode MJ</b><small>Affiche l'espace MJ : PNJ et outils du meneur. Sur cet appareil seulement ; le combat ne change pas.</small></span><i class="sw" class:on={store.ui.gm} aria-hidden="true"></i></button></li>
     <li><button class="row" onclick={() => store.cycleTheme()}><Icon name={THEME_ICON[store.ui.theme]} /><span><b>{THEME_LABEL[store.ui.theme]}</b><small>Automatique, sombre ou clair : touchez pour changer.</small></span></button></li>
   </ul>
 </Sheet>
@@ -91,6 +92,10 @@
   .row b { font-family: var(--display); font-weight: 600; font-size: 1.02rem; }
   .row small { font-size: .85rem; color: var(--muted); overflow-wrap: anywhere; }
   .sub { padding: 0 0 8px 36px; }
+  .sw { flex: none; margin-left: auto; width: 44px; height: 26px; border-radius: 13px; background: var(--line); position: relative; transition: background .15s; }
+  .sw::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--hull); transition: translate .15s; }
+  .sw.on { background: var(--amber); }
+  .sw.on::after { translate: 18px 0; }
   .confirm { margin-bottom: 14px; padding: 12px; border-left: 3px solid var(--amber); background: var(--abyss); }
   .confirm p { margin: 0 0 8px; }
   .confirm .field { margin-bottom: 8px; }

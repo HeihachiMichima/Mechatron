@@ -6,8 +6,6 @@
   import { chassis, status, attrCurrent, ATTRS } from '../lib/rules.js';
 
   const pcs = $derived(store.chars.filter((c) => c.kind !== 'npc'));
-  const npcs = $derived(store.chars.filter((c) => c.kind === 'npc'));
-  const npcActive = $derived(store.c?.kind === 'npc');
   let scroller;
 
   const state = (c) => {
@@ -18,7 +16,7 @@
     return '';
   };
   function go(id) { store.activate(id); }
-  function add() { store.addChar(blankCharacter('pc'), { label: 'Nouveau PJ créé' }); store.ui.tab = 'robot'; }
+  function add() { store.openFiche(store.addChar(blankCharacter('pc'), { label: 'Nouveau robot créé' }), 'robot'); }
 
   // keep the active tab visible
   $effect(() => {
@@ -35,11 +33,6 @@
 
 <nav class="pctabs" aria-label="Robots des joueurs">
   <div class="scroller" bind:this={scroller} role="tablist" tabindex="-1" onkeydown={keys}>
-    {#if npcActive}
-      <button class="tab npc active" data-id={store.c.id} role="tab" aria-selected="true" onclick={() => store.open({ type: 'roster' })}>
-        <span class="tag">PNJ</span><span class="nm">{store.c.name || 'Sans nom'}</span>
-      </button>
-    {/if}
     {#each pcs as c (c.id)}
       {@const s = state(c)}
       <button class="tab" class:active={c.id === store.c?.id} class:down={s === 'down'} data-id={c.id} role="tab"
@@ -51,11 +44,9 @@
         {#if s === 'hurt'}<span class="hurt" aria-label="endommagé"></span>{/if}
       </button>
     {/each}
-    <button class="tab add" aria-label="Nouveau robot joueur" title="Nouveau PJ" onclick={add}><Icon name="plus" size={18} /></button>
+    <button class="tab add" aria-label="Nouveau robot joueur" title="Nouveau robot" onclick={add}><Icon name="plus" size={18} /></button>
   </div>
-  {#if npcs.length}
-    <button class="npcs" onclick={() => store.open({ type: 'roster' })} title="PNJ du MJ">PNJ <b class="num">{npcs.length}</b></button>
-  {/if}
+  <button class="manage" onclick={() => store.open({ type: 'roster' })} aria-label="Gérer l'équipe" title="Gérer l'équipe"><Icon name="users" size={18} /><span>Gérer</span></button>
 </nav>
 
 <style>
@@ -79,11 +70,10 @@
   .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
   .tab.down .nm { text-decoration: line-through; opacity: .7; }
   .hurt { width: 7px; height: 7px; border-radius: 50%; background: var(--fault); flex: none; }
-  .tab.npc { --tc: var(--muted); }
-  .tag { font-family: var(--body); font-size: .7rem; font-weight: 600; padding: 1px 5px; border-radius: 3px; background: var(--hull-2); color: var(--muted); }
   .tab.add { padding: 0 12px; color: var(--muted); }
   .tab.add::after { display: none; }
-  .npcs { flex: none; display: inline-flex; align-items: center; gap: 5px; padding: 0 12px; background: none; border: 0; border-left: 1px solid var(--line); color: var(--muted); font-size: .82rem; }
-  .npcs b { color: var(--text); }
+  .manage { flex: none; display: inline-flex; align-items: center; gap: 6px; min-width: 44px; padding: 0 12px; background: none; border: 0; border-left: 1px solid var(--line); color: var(--muted); font-size: .85rem; }
+  .manage:hover { color: var(--text); }
+  @media (max-width: 380px) { .manage span { display: none; } }
   @media (min-width: 720px) { .scroller { padding: 0 14px; } .tab { max-width: 240px; } }
 </style>

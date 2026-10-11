@@ -9,7 +9,12 @@
   import ProgramsView from './views/ProgramsView.svelte';
   import GearView from './views/GearView.svelte';
   import RobotView from './views/RobotView.svelte';
-  import CollectiveView from './views/CollectiveView.svelte';
+  import EnergyView from './views/EnergyView.svelte';
+  import MarketView from './views/MarketView.svelte';
+  import SessionView from './views/SessionView.svelte';
+  import GmView from './views/GmView.svelte';
+  import FicheTabs from './components/FicheTabs.svelte';
+  import Icon from './components/Icon.svelte';
   import RollSheet from './sheets/RollSheet.svelte';
   import ModuleSheet from './sheets/ModuleSheet.svelte';
   import WeaponSheet from './sheets/WeaponSheet.svelte';
@@ -30,10 +35,24 @@
   import { store } from './lib/store.svelte.js';
   import { parseShareHash } from './lib/exports.js';
 
-  const views = { combat: CombatView, etat: StateView, programmes: ProgramsView, materiel: GearView, robot: RobotView, collectif: CollectiveView };
-  // The fiche views need a robot; Combat and Collectif work with an empty team.
-  const needsRobot = new Set(['etat', 'programmes', 'materiel', 'robot']);
-  const View = $derived(!store.c && needsRobot.has(store.ui.tab || 'etat') ? EmptyTeam : views[store.ui.tab] || StateView);
+  // Spaces (T05): Équipe and MJ show a robot's fiche (four tabs); the others are one view each.
+  const fiches = { etat: StateView, programmes: ProgramsView, materiel: GearView, robot: RobotView };
+  const spaces = { energie: EnergyView, marche: MarketView, combat: CombatView, seance: SessionView };
+  const space = $derived(store.space);
+  const fiche = $derived(store.fiche);
+  const View = $derived(fiche ? fiches[store.ui.tab] || StateView : space === 'equipe' ? EmptyTeam : space === 'mj' ? GmView : spaces[space]);
+  // Keep the active robot in line with the space: Équipe shows PCs only (an undo or
+  // a combat sheet can make an NPC active), the MJ fiche is the open NPC's.
+  $effect(() => {
+    if (space === 'equipe' && store.c?.kind === 'npc') {
+      const pc = store.chars.find((x) => x.kind !== 'npc');
+      if (pc) store.activate(pc.id);
+    } else if (space === 'mj' && store.ui.npc) {
+      const n = store.char(store.ui.npc);
+      if (!n || n.kind !== 'npc') store.ui.npc = null;
+      else if (store.data.activeId !== n.id) store.activate(n.id);
+    }
+  });
   // Sheets about one robot can't stay open once there is none.
   const robotSheets = new Set(['roll', 'module', 'damage', 'weapon', 'xp']);
   const orphan = $derived(!store.c && !!store.ui.sheet && robotSheets.has(store.ui.sheet.type));
@@ -61,13 +80,16 @@
 <div class="app">
   <Nav />
   <div class="main">
-    <header class="head" style="--pc:{store.c?.color || 'var(--line)'}">
+    <header class="head" style="--pc:{fiche?.kind !== 'npc' && fiche?.color ? fiche.color : 'var(--line)'}">
       <TopBar />
-      <PcTabs />
-      {#if store.c}<VitalsPlate />{/if}
+      {#if space === 'equipe'}<PcTabs />{/if}
+      {#if space === 'mj' && fiche}
+        <div class="npcbar"><button class="btn small ghost" onclick={() => (store.ui.npc = null)}><Icon name="back" size={18} />Tous les PNJ</button></div>
+      {/if}
+      {#if fiche}<VitalsPlate /><FicheTabs />{/if}
     </header>
     <main id="contenu">
-      {#key store.ui.tab}<View />{/key}
+      {#key `${space}:${fiche ? store.ui.tab : ''}`}<View />{/key}
     </main>
   </div>
 </div>
@@ -85,13 +107,15 @@
 {:else if sheet?.type === 'picker'}<PickerSheet {...sheet} />
 {:else if sheet?.type === 'export'}<ExportSheet />
 {:else if sheet?.type === 'campaign'}{#key sheet}<CampaignSheet pending={sheet.pending} />{/key}
-{:else if sheet?.type === 'xp'}<XpSheet />
+{:else if sheet?.type === 'xp'}{#key sheet}<XpSheet cid={sheet.cid} />{/key}
 {:else if sheet?.type === 'incoming' && store.incoming}<IncomingSheet />{/if}
 
 <Toast />
 <PrintSheet />
 
 <style>
+  .npcbar { display: flex; align-items: center; padding: 0 6px; min-height: 44px; background: var(--hull); border-top: 1px solid var(--line); }
+  .npcbar .btn { color: var(--muted); gap: 4px; }
   .head { position: sticky; top: 0; z-index: 20; box-shadow: 0 6px 18px rgb(3 14 16 / .25); }
   /* No max width: on a big screen the views spread over the whole window (extra columns below). */
   main { padding: 14px 12px calc(var(--nav-h) + 28px + env(safe-area-inset-bottom)); }

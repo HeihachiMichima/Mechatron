@@ -3,7 +3,7 @@
   // or the last robot deleted). The welcome screen (T04) comes before this.
   import Icon from './Icon.svelte';
   import { store, blankCharacter } from '../lib/store.svelte.js';
-  function create() { store.addChar(blankCharacter('pc'), { label: 'Nouveau robot créé' }); store.ui.tab = 'robot'; }
+  function create() { store.openFiche(store.addChar(blankCharacter('pc'), { label: 'Nouveau robot créé' }), 'robot'); }
 </script>
 
 <section class="panel empty">
