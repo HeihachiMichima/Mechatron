@@ -33,14 +33,15 @@ code, comments and identifiers are in English.
     │   │                    lookup, energy-weapon power sources, E-packs, blasts
     │   ├── exports.js       JSON / text / share-link / PNG card exports
     │   └── pickers.js       list builders for the picker sheets
-    ├── components/          TopBar, PcTabs, VitalsPlate, Nav, Sheet, Stepper, EmptyTeam, BackupList,
-    │                        Segments, Toast, Icon, Avatar, DiceTray, CombatGuide, PrintSheet,
-    │                        OverheatDice (shows one module activation)
-    ├── views/               Welcome (no campaign yet), État, Programmes, Matériel, Robot, Collectif, Combat
+    ├── components/          TopBar, PcTabs, VitalsPlate, FicheTabs, Nav, RobotList, Sheet, Stepper,
+    │                        EmptyTeam, BackupList, Segments, Toast, Icon, Avatar, DiceTray, CombatGuide,
+    │                        PrintSheet, OverheatDice (shows one module activation)
+    ├── views/               Welcome (no campaign yet); fiche tabs État, Programmes, Matériel, Robot
+    │                        (« Identité »); spaces Energy, Market, Combat, Session, Gm
     │   └── combat/          CombatPrep → CombatInit → CombatFight (+ TurnFlow, ActorStats,
     │                        LogicConflict, BlowerStep, RecycleStep)
     └── sheets/              bottom-sheet dialogs (Roll, Damage, Module, Picker, Weapon,
-                             Template, Roster, Export, Incoming, Xp, Combatant, EnemyEdit, Duplicate,
+                             Template, Roster (« Gérer l'équipe », PCs), Export, Incoming, Xp, Combatant, EnemyEdit, Duplicate,
                              Campaign = the top bar menu: rename, export, import, new, backups, theme)
 ```
 
@@ -105,12 +106,20 @@ no backend. Output must stay a **static page** that opens by double-click, offli
 ## Architecture notes
 
 **Store (`store.svelte.js`).** `store.data = { version: 3, campaign, chars[], activeId, combat }`,
-`store.ui = { tab, theme, sheet, turn, turnActor }`. Mutate only through
+`store.ui = { space, tab, theme, gm, npc, sheet, turn, turnActor }`. Mutate only through
 `commit(label, fn)`, `commitOn(charId, label, fn(char, data))` or `commitAll` — they
 snapshot for undo (40 steps), autosave and toast. Text fields use `store.type(charId, field, fn)`
 (`value` + `oninput`, never `bind:value={store.c.*}`): keystrokes in one field coalesce into one
 undo step. `store.open(type, props)` / `store.close()` drive bottom sheets; **props vanish after
 `close()`**, so capture them in consts first.
+- **Spaces (T05).** `ui.space` ∈ `SPACES` (`equipe energie marche combat seance mj`), `ui.tab` ∈
+  `FICHE_TABS` (`etat programmes materiel robot`), `ui.gm` = « Mode MJ »; these and the theme are the
+  UI prefs (`cleanUi()`), per device, never in the campaign. Read the space with `store.space` (`mj`
+  falls back to `equipe` without GM mode) and the robot on screen with `store.fiche`: the active PC
+  in Équipe, the open NPC (`ui.npc`) in MJ, else `null`. Navigate with `store.go(space, tab)` (Équipe
+  makes a PC active) and `store.openFiche(id, tab)` (PC → Équipe, NPC → MJ; refused without GM mode).
+  `store.setGm(on)`. App keeps the active robot in line with the space (an undo can activate an NPC).
+  GM mode hides tools (MJ space, NPC fiches, the PC/NPC switch), never combat information.
 - **`store.started`** is false while no campaign exists (clean profile, or a save of another
   version): App shows `WelcomeView` and nothing is saved. `store.start(raw, label)` opens the first
   campaign (new, demo, file, backup) with no undo back to the welcome screen, saves at once and
@@ -304,6 +313,12 @@ Follow `docs/PLAN-COMPAGNON.md` §0: one ticket at a time, in order.
   `<nom>.mechatron.json`, import (campaign replaces after a confirmation, robot is added), new
   campaign, restore one of the 3 automatic backups, theme; « Télécharger la table » became
   « Exporter la campagne »; `navigator.storage.persist()` on the first campaign.
+- v3.2.0 (2026-10-11, plan ticket T05): navigation by spaces (Équipe · Énergie · Marché · Combat ·
+  Séance · MJ) with the fiche's segmented control (État · Programmes · Matériel · Identité);
+  « Mode MJ » switch in the menu (UI prefs): MJ space with the NPC roster and NPC fiches, placeholders
+  for the GM tools; Séance = XP questions per robot (`XpSheet` takes `cid`), DEV wear (logged to the
+  journal) and the campaign journal; Énergie = DEV levels + connection of each robot; PC notes moved
+  to Identité; the roster sheet is PCs only (`RobotList` shared with the MJ space).
 
 ## Ideas not done yet
 

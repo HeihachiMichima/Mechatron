@@ -49,7 +49,7 @@ Repo: `HeihachiMichima/Mechatron` (local: `G:\MYZ\mechatron-sheet`) · Baseline:
 
 ---
 
-## 1. Current state (verified against the code; as of v3.1.0, after T04)
+## 1. Current state (verified against the code; as of v3.2.0, after T05)
 
 - **Stack:** Svelte 5 (runes), Vite 8, `vite-plugin-singlefile` → a single `dist/index.html` (about 624 kB) with scripts, CSS, fonts and logo inlined. French UI, mobile-first, side rail at ≥ 960 px.
 - **Layout and deploy (T00, v2.3.8):** the app lives at the repo root (`index.html` = Vite entry, `src/`, `package.json`). `.github/workflows/deploy.yml` builds and deploys `dist/` to GitHub Pages on each push to `main`; `dist/` is git-ignored. Paths below are relative to the root (`src/...`); before T00 they were under `svelte/`.
@@ -62,12 +62,18 @@ Repo: `HeihachiMichima/Mechatron` (local: `G:\MYZ\mechatron-sheet`) · Baseline:
   - Journal: `campaign.journal`, `pushJournal()` / `store.addJournal()` (no UI before T05). Text fields go through `store.type()` (one undo step per field edit).
   - Autosave 300 ms + flush on `pagehide`/hidden tab, error toast; undo 40 steps without maps/encounters.
 - **First launch (T04, v3.1.0):** `WelcomeView` while no campaign exists (`store.started` false: clean profile or a save of another version; nothing is saved meanwhile): *Nouvelle campagne* (name → empty team, `phase: 'creation'`), *Importer une campagne*, *Essayer la démo* (`demoParty()`, campaign « Démo », `phase: 'play'`), plus the automatic backups when there are any. `store.start()` opens it (no undo back to the welcome screen) and calls `navigator.storage.persist()`.
-- **Campaign menu (T04):** the ☰ button in the top bar (it replaced the theme button) opens `CampaignSheet`: rename, *Exporter la campagne* (`<nom>.mechatron.json`, `store.exportData()`), *Importer* (`classifyImport`: a v3 campaign replaces after a confirmation offering to export first; a robot is added), *Nouvelle campagne*, *Restaurer une sauvegarde automatique*, theme. T05 adds the « Mode MJ » switch here.
+- **Campaign menu (T04):** the ☰ button in the top bar (it replaced the theme button) opens `CampaignSheet`: rename, *Exporter la campagne* (`<nom>.mechatron.json`, `store.exportData()`), *Importer* (`classifyImport`: a v3 campaign replaces after a confirmation offering to export first; a robot is added), *Nouvelle campagne*, *Restaurer une sauvegarde automatique*, the « Mode MJ » switch (T05), theme.
 - **Automatic backups (T04):** `mechatron-v3-backup-1…3` (`src/lib/campaign.js`): one at startup if the save changed, one before each replacement (import, new campaign); `store.backup(reason)` for T11; `store.restoreBackup(n)` is undoable.
-- **"Notes et journal"** in Collectif is still the active robot's notes (now through `store.type`); the campaign journal gets its UI in T05.
-- **Tabs:** État · Combat · Programmes · Matériel · Robot · Collectif, plus colored PC tabs and the roster sheet (PCs and NPCs).
+- **Spaces (T05, v3.2.0):** bottom nav / side rail `Équipe · Énergie · Marché · Combat · Séance · (MJ)`; `ui.space`, `ui.tab`, `ui.gm` are UI prefs (`cleanUi`, per device). `store.space`, `store.fiche`, `store.go(space, tab)`, `store.openFiche(id, tab)`, `store.setGm(on)`.
+  - Équipe: PC tabs (+ new, *Gérer* = `RosterSheet`, PCs only), vitals plate, `FicheTabs` (État · Programmes · Matériel · Identité = `RobotView`). NPCs never show there.
+  - Énergie: `EnergyView` (DEV levels + each robot's connection; NPCs listed in GM mode). T08 adds the clock.
+  - Marché: `MarketView` placeholder (« Le marché noir ouvre une fois l'équipe créée » during creation).
+  - Séance: `SessionView`: XP questions per PC (`XpSheet cid`), DEV wear −1D6 (also written to the journal), campaign journal (list newest first + add).
+  - MJ (GM mode): `GmView` = NPC roster (`RobotList`, *Nouveau PNJ*, *Tout remettre à neuf*) + placeholders (market, house rules, encounters); an NPC's fiche opens there with « Tous les PNJ » to go back.
+  - GM mode hides tools, not information: combat is identical; outside GM mode the « Ouvrir la fiche » buttons for NPCs (combatant and quick-edit sheets) and the PJ/PNJ switch (Identité) are hidden.
+  - The robot's own notes (`c.notes`) moved from Collectif to Identité; the « Fin de séance » button left État (Séance has it).
 - **Energy:** in StateView: ±1, "Recharger jusqu'à {ration}", "Soleil (+1)" when `c.online` is false (outside), and "Nouveau jour (−1)". There is no clock.
-- **XP:** `XpSheet` has 6 questions from `data.js`, 1 XP each, applied **to the active robot only**. `xpPerUpgrade: 5` is fixed. The "Dépenser 5 PX" button only subtracts XP.
+- **XP:** `XpSheet` has 6 questions from `data.js`, 1 XP each, applied **to one robot** (opened per robot from Séance). `xpPerUpgrade: 5` is fixed. The "Dépenser 5 PX" button only subtracts XP.
 - **Combat:** preparation → initiative → guided turn (`TurnFlow.svelte`, about 1,060 lines).
   - Range is chosen by hand (`shootRanges`).
   - Cover is **a state of the robot** (`c.cover`): set by the "se mettre à couvert" maneuver (chips), and worn down by hits (`t.cover = res.newCover`).
