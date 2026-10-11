@@ -26,6 +26,8 @@ code, comments and identifiers are in English.
     │   ├── creation.js      creation wizard: STEPS, stepErrors, buildRobot/applyDraft, start/finishWizard
     │   ├── clock.js         day/night clock + energy engine: endDay, nightCharge, startDay, transfer, drainPack
     │   ├── market.js        black market: catalog (defaultListings), normalizeMarket, prices, sell price, file
+    │   ├── tactics/         square-grid map: terrain.js (TERRAIN, map format, parseMap, edits) and
+    │   │                    geometry.js (distance, line, los, suggestCover, bandOf, reach, blastVictims)
     │   ├── xp.js            XP rules (xpRules ← campaign.rules.xp), session draft/apply, spendProgram/Secondary
     │   ├── campaign.js      campaign files (classifyImport, readImport, file name) + automatic backups
     │   ├── rules.js         pure rules functions (chassis, pools, dice, damage…)
@@ -72,7 +74,7 @@ from a GitHub clone doesn't have it and must ask the user for the pages it needs
 ```bash
 npm install
 npm run dev       # Vite dev server
-npm run build     # → dist/index.html (single file, ~624 kB)
+npm run build     # → dist/index.html (single file, ~750 kB)
 npm run preview
 npm test          # Vitest unit tests (src/**/__tests__/*.test.js)
 npm run e2e       # Playwright smoke test of the build (run npm run build first)
@@ -174,6 +176,19 @@ undo step. `store.open(type, props)` / `store.close()` drive bottom sheets; **pr
   relations, `xp.log` entry with `day` and market `ledger` length, journal; `sinceLast` gives the
   days and deals since the previous session). Spending: `XpSpendSheet` → `spendProgram` (max
   `programMax`) / `spendSecondary` (any model), logged in `xp.spent` and the journal.
+- **Square grid (T12, `lib/tactics/`).** Pure functions, no state. A map is `{ w, h, cells }`: one
+  terrain character per cell, row by row (`.` sol, `#` mur, `m` meuble, `d` porte fermée, `/` porte
+  ouverte, `b` porte blindée, `:` difficile, `~` eau, `a`/`e` ally/enemy spawn), max 32 × 24.
+  `TERRAIN[ch] = { block (sight), cost (Infinity = impassable), cover (coverPresets name) }`; cover
+  ratings are read from `coverPresets` (book), movement costs are ours. Diagonals count 1; a ray or a
+  step can't squeeze between two diagonal blockers. `los` = corner-to-centre rays cast both ways (8,
+  symmetric: `visible`, `partial`, `blocked`); `suggestCover` = best of furniture / steel door next to
+  the target on the shot's line (a corner only when squeezed between two), or a wall next to it when
+  it hides ≥ 2 of the target's 4 corners from the attacker (Mur); `bandOf(squares)`
+  with `getRules().grid.bands` (house: Bras 1, Proche 3, Courte 12, 1 square = 2 m); `reach` =
+  Dijkstra, `moveSquares` (4) per maneuver; `blastVictims` = tokens at Bras/Proche/Courte in sight of
+  the centre (feed `band` to `blastDice`). Everything is a suggestion: never change a robot from here.
+  Tests draw grids in ASCII (`parseMap`: capitals are tokens).
 - **`store.started`** is false while no campaign exists (clean profile, or a save of another
   version): App shows `WelcomeView` and nothing is saved. `store.start(raw, label)` opens the first
   campaign (new, demo, file, backup) with no undo back to the welcome screen, saves at once and
@@ -403,6 +418,10 @@ Follow `docs/PLAN-COMPAGNON.md` §0: one ticket at a time, in order.
   with override, relations, summary with days and market deals, export), XP spending (program +1 up
   to 5, secondary function of any model), session history; the per-robot XpSheet and the separate
   DEV wear button are gone.
+- v3.9.0 (2026-10-11, plan ticket T12): square-grid geometry (`lib/tactics/`, logic and tests
+  only): map format and terrain, distance, line, line of sight with partial sight, suggested cover
+  (Meuble 3, Porte blindée 5, Mur 7 from the book), range band from squares, reach by maneuvers,
+  blast victims; house grid values (`HOUSE.grid`: 2 m squares, band edges, 4 squares per maneuver).
 - v3.2.1 (2026-10-11): from Combat, « Ouvrir la fiche » opens an NPC's full fiche in place, in both
   GM modes, with « Retour au combat » (`ui.peek`): combat is now strictly the same in both modes.
 
