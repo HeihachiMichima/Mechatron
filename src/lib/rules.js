@@ -2,6 +2,7 @@
 // and GAME_DATA; nothing here touches the DOM or storage.
 import { GAME_DATA as D } from './data.js';
 import { d6, pick } from './rng.js';
+import { getRules, getDev } from './settings.js';
 
 export const ATTRS = ['servos', 'stabilite', 'processeur', 'reseau'];
 export const DEV_KEYS = ['Energie', 'Production', 'Défense', 'Information'];
@@ -52,8 +53,8 @@ export function armorCurrent(c, ch) {
 }
 
 export function epMax(c) {
-  if (c.statMode === 'direct' && c.kind === 'npc' && hasSecondary(c, 'Alimentation de secours')) return D.rules.epBackup;
-  return hasSecondary(c, 'Alimentation de secours') ? D.rules.epBackup : D.rules.epBase;
+  const R = getRules();
+  return hasSecondary(c, 'Alimentation de secours') ? R.epBackup : R.epBase;
 }
 
 export function autoHierarchy(c) {
@@ -85,8 +86,9 @@ export function programPoints(c) {
 }
 
 export function devModFor(c, prog) {
+  // The collective's levels are shared (campaign.dev); only connected robots get the bonus.
   if (!prog.devBonus || !c.online) return 0;
-  return devBand(c.dev[prog.devBonus]).bonus;
+  return devBand(getDev()[prog.devBonus]).bonus;
 }
 
 // ---------- dice (all through rng.js) ----------
@@ -104,7 +106,7 @@ export function rollPool({ base, prog, gear, neg = 0 }) {
 
 export function canReroll(die) {
   if (die.v === 6) return false;
-  if (die.v === 1 && D.rules.pushKeepsOnes && (die.t === 'base' || die.t === 'gear')) return false;
+  if (die.v === 1 && getRules().pushKeepsOnes && (die.t === 'base' || die.t === 'gear')) return false;
   return true;
 }
 

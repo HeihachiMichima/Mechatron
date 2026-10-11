@@ -24,12 +24,17 @@
   import EnemyEditSheet from './sheets/EnemyEditSheet.svelte';
   import DuplicateSheet from './sheets/DuplicateSheet.svelte';
   import CombatView from './views/CombatView.svelte';
+  import EmptyTeam from './components/EmptyTeam.svelte';
   import { store } from './lib/store.svelte.js';
   import { parseShareHash } from './lib/exports.js';
 
   const views = { combat: CombatView, etat: StateView, programmes: ProgramsView, materiel: GearView, robot: RobotView, collectif: CollectiveView };
-  const View = $derived(views[store.ui.tab] || StateView);
-  const sheet = $derived(store.ui.sheet);
+  // The fiche views need a robot; Combat and Collectif work with an empty team.
+  const needsRobot = new Set(['etat', 'programmes', 'materiel', 'robot']);
+  const View = $derived(!store.c && needsRobot.has(store.ui.tab || 'etat') ? EmptyTeam : views[store.ui.tab] || StateView);
+  // Sheets about one robot can't stay open once there is none.
+  const robotSheets = new Set(['roll', 'module', 'damage', 'weapon', 'xp']);
+  const sheet = $derived(store.ui.sheet && (store.c || !robotSheets.has(store.ui.sheet.type)) ? store.ui.sheet : null);
 
   $effect(() => {
     document.documentElement.dataset.theme = store.ui.theme;
@@ -49,10 +54,10 @@
 <div class="app">
   <Nav />
   <div class="main">
-    <header class="head" style="--pc:{store.c.color || 'var(--line)'}">
+    <header class="head" style="--pc:{store.c?.color || 'var(--line)'}">
       <TopBar />
       <PcTabs />
-      <VitalsPlate />
+      {#if store.c}<VitalsPlate />{/if}
     </header>
     <main id="contenu">
       {#key store.ui.tab}<View />{/key}

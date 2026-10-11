@@ -7,6 +7,8 @@
   import { partItems } from '../lib/pickers.js';
 
   const c = $derived(store.c);
+  // Typed text: one undo step per field edit.
+  const typed = (field) => (e) => store.type(c.id, field, (s) => (s[field] = e.currentTarget.value));
   const ch = $derived(chassis(c));
   const m = $derived(modelOf(c));
   const slots = [
@@ -41,8 +43,8 @@
 <div class="grid">
   <section class="panel">
     <div class="panel-head"><h2>Identité</h2></div>
-    <label class="field"><span>Nom et numéro de série</span><input class="input" bind:value={store.c.name} placeholder="ex. Rani NON-836" autocomplete="off" /></label>
-    <label class="field"><span>Joueur</span><input class="input" bind:value={store.c.player} autocomplete="off" /></label>
+    <label class="field"><span>Nom et numéro de série</span><input class="input" value={c.name} oninput={typed('name')} placeholder="ex. Rani NON-836" autocomplete="off" /></label>
+    <label class="field"><span>Joueur</span><input class="input" value={c.player} oninput={typed('player')} autocomplete="off" /></label>
     {#if c.kind !== 'npc'}
       <div class="field">
         <span>Couleur de l'onglet</span>
@@ -57,7 +59,7 @@
     {/if}
     <label class="field">
       <span>Hiérarchie {#if autoHierarchy(c) != null}<em class="muted">(automatique : {autoHierarchy(c)})</em>{/if}</span>
-      <input class="input" bind:value={store.c.hierarchy} inputmode="numeric" placeholder={autoHierarchy(c) != null ? `${autoHierarchy(c)}, laissez vide pour l'automatique` : '0 à 10'} />
+      <input class="input" value={c.hierarchy} oninput={typed('hierarchy')} inputmode="numeric" placeholder={autoHierarchy(c) != null ? `${autoHierarchy(c)}, laissez vide pour l'automatique` : '0 à 10'} />
     </label>
   </section>
 
@@ -145,13 +147,13 @@
   <section class="panel wide">
     <div class="panel-head"><h2>{c.kind === 'npc' ? 'Notes du MJ' : 'Relations et rêve'}</h2></div>
     {#if c.kind === 'npc'}
-      <textarea class="input" bind:value={store.c.notes} placeholder="Motivation, ordres, équipement…" aria-label="Notes du PNJ"></textarea>
+      <textarea class="input" value={c.notes} oninput={typed('notes')} placeholder="Motivation, ordres, équipement…" aria-label="Notes du PNJ"></textarea>
     {:else}
     <div class="rel">
-      <label class="field"><span>Mon binôme</span><input class="input" bind:value={store.c.buddy} /></label>
-      <label class="field"><span>Je déteste</span><input class="input" bind:value={store.c.hate} /></label>
-      <label class="field"><span>Je dois protéger</span><input class="input" bind:value={store.c.protect} /></label>
-      <label class="field"><span>Mon grand rêve</span><input class="input" bind:value={store.c.dream} /></label>
+      <label class="field"><span>Mon binôme</span><input class="input" value={c.buddy} oninput={typed('buddy')} /></label>
+      <label class="field"><span>Je déteste</span><input class="input" value={c.hate} oninput={typed('hate')} /></label>
+      <label class="field"><span>Je dois protéger</span><input class="input" value={c.protect} oninput={typed('protect')} /></label>
+      <label class="field"><span>Mon grand rêve</span><input class="input" value={c.dream} oninput={typed('dream')} /></label>
     </div>
     {/if}
   </section>

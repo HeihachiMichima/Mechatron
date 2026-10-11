@@ -1,6 +1,6 @@
 <script>
   import Sheet from '../components/Sheet.svelte';
-  import { store, normalize, ensureColor } from '../lib/store.svelte.js';
+  import { store, normalize, ensureColor, VERSION, OLD_SAVE } from '../lib/store.svelte.js';
   import { downloadBlob as dl } from '../lib/exports.js';
   import { slug, jsonBlob, downloadBlob, shareOrDownload, readJsonFile, shareUrl, toText, cardBlob } from '../lib/exports.js';
 
@@ -13,6 +13,7 @@
 
   $effect(() => {
     let url;
+    if (!c) return;
     const snap = JSON.parse(store.snapshot());
     cardBlob(snap).then((b) => { blob = b; url = URL.createObjectURL(b); preview = url; });
     return () => url && URL.revokeObjectURL(url);
@@ -68,13 +69,15 @@
     try {
       const data = await readJsonFile(f);
       if (!Array.isArray(data?.chars)) throw new Error();
+      if (data.version !== VERSION) { store.notify(OLD_SAVE); return; }
       if (!confirmReset) { confirmReset = data; return; }
     } catch { store.notify("Ce fichier n'est pas une sauvegarde de table (.json)."); }
   }
   function confirmRestore() { const d = confirmReset; confirmReset = false; store.close(); store.replaceAll(d, 'Table restaurée'); }
 </script>
 
-<Sheet title="Exporter et partager" subtitle={c.name || 'Robot sans nom'} wide>
+<Sheet title="Exporter et partager" subtitle={c ? c.name || 'Robot sans nom' : 'Aucun robot pour l’instant'} wide>
+  {#if c}
   <h3 class="sec">Partager</h3>
   <div class="opt card-opt">
     <div class="thumb">{#if preview}<img src={preview} alt="Aperçu de la carte du robot" />{/if}</div>
@@ -103,18 +106,21 @@
     </div>
   </div>
 
+  {/if}
+
   <h3 class="sec">Sauvegarder</h3>
   <div class="opt">
     <div class="txt">
-      <b>Ce robot (.json)</b>
-      <p>Tout est déjà enregistré dans ce navigateur. Le fichier sert de copie ou à donner ce robot à quelqu'un. Ouvrir un fichier l'ajoute à vos robots (compatible avec l'ancienne fiche).</p>
+      <b>{c ? 'Ce robot (.json)' : 'Un robot (.json)'}</b>
+      <p>Tout est déjà enregistré dans ce navigateur. Le fichier sert de copie ou à donner un robot à quelqu'un. Ouvrir un fichier l'ajoute à vos robots.</p>
       <div class="acts">
-        <button class="btn small" onclick={saveJson}>Télécharger ce robot</button>
+        {#if c}<button class="btn small" onclick={saveJson}>Télécharger ce robot</button>{/if}
         <button class="btn small" onclick={() => fileInput.click()}>Ajouter depuis un fichier</button>
         <input type="file" accept="application/json,.json" hidden bind:this={fileInput} onchange={openJson} />
       </div>
     </div>
   </div>
+  {#if c}
   <div class="opt">
     <div class="txt">
       <b>Fiche imprimable</b>
@@ -122,11 +128,12 @@
       <div class="acts"><button class="btn small" onclick={print}>Imprimer ou PDF</button></div>
     </div>
   </div>
+  {/if}
 
   <div class="opt">
     <div class="txt">
       <b>Toute la table</b>
-      <p>Tous vos robots (équipe et PNJ) et le combat en cours dans un seul fichier, pour changer d'appareil ou faire une copie de sécurité.</p>
+      <p>Toute la campagne (robots de l'équipe et PNJ, niveaux de développement, journal, combat en cours) dans un seul fichier, pour changer d'appareil ou faire une copie de sécurité.</p>
       <div class="acts">
         <button class="btn small" onclick={saveAll}>Télécharger la table</button>
         <button class="btn small" onclick={restoreAll}>Restaurer une table</button>
@@ -134,7 +141,7 @@
       </div>
       {#if confirmReset}
         <div class="confirm">
-          <p>Remplacer tous vos robots par les {confirmReset.chars.length} du fichier ? Annulable juste après.</p>
+          <p>Remplacer toute la campagne par celle du fichier ({confirmReset.chars.length} robot{confirmReset.chars.length > 1 ? 's' : ''}) ? Annulable juste après.</p>
           <div class="acts"><button class="btn small" onclick={() => (confirmReset = false)}>Garder les miens</button><button class="btn small primary" onclick={confirmRestore}>Remplacer</button></div>
         </div>
       {/if}

@@ -5,7 +5,8 @@
   import { isEnergyWeapon, weaponPower, POWER } from '../lib/energy.js';
   let { index: indexProp } = $props();
   const index = indexProp; // captured: props vanish once the sheet closes
-  const w = $derived(store.c.weapons[index]);
+  const w = $derived(store.c?.weapons[index]);
+  const typed = (field) => (e) => store.type(store.c.id, `w${index}.${field}`, (s) => (s.weapons[index][field] = e.currentTarget.value));
   const ranges = ['Bras', 'Proche', 'Courte', 'Longue', 'Lointaine'];
   const ref = $derived(w ? findWeapon(w.name) : null);
   function remove() { const n = w.name; store.close(); store.commit(`${n} retirée`, (s) => s.weapons.splice(index, 1)); }
@@ -14,13 +15,13 @@
 
 {#if w}
 <Sheet title="Modifier l'arme">
-  <label class="field"><span>Nom</span><input class="input" bind:value={store.c.weapons[index].name} /></label>
+  <label class="field"><span>Nom</span><input class="input" value={w.name} oninput={typed('name')} /></label>
   <div class="row">
-    <label class="field"><span>Bonus</span><input class="input num" inputmode="numeric" bind:value={store.c.weapons[index].bonus} /></label>
-    <label class="field"><span>Dégâts</span><input class="input num" inputmode="numeric" bind:value={store.c.weapons[index].degats} /></label>
+    <label class="field"><span>Bonus</span><input class="input num" inputmode="numeric" value={w.bonus} oninput={typed('bonus')} /></label>
+    <label class="field"><span>Dégâts</span><input class="input num" inputmode="numeric" value={w.degats} oninput={typed('degats')} /></label>
   </div>
   <label class="field"><span>Portée</span>
-    <select class="input" bind:value={store.c.weapons[index].portee}>
+    <select class="input" value={w.portee} onchange={(e) => store.commit(`Portée : ${e.currentTarget.value}`, (s) => (s.weapons[index].portee = e.currentTarget.value))}>
       {#each ranges as r (r)}<option value={r}>{r}</option>{/each}
       {#if w.portee && !ranges.includes(w.portee)}<option value={w.portee}>{w.portee}</option>{/if}
     </select>

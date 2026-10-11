@@ -1,8 +1,9 @@
 <script>
   import Sheet from '../components/Sheet.svelte';
   import { store } from '../lib/store.svelte.js';
-  import { GAME_DATA as D } from '../lib/data.js';
-  let checked = $state(D.xpQuestions.map((_, i) => i === 0));
+  import { getRules } from '../lib/settings.js';
+  const questions = getRules().xpQuestions;
+  let checked = $state(questions.map((_, i) => i === 0));
   const n = $derived(checked.filter(Boolean).length);
   function award() {
     const k = n;
@@ -13,7 +14,7 @@
 
 <Sheet title="Fin de séance" subtitle="1 PX par réponse « oui ». Le MJ a le dernier mot.">
   <ul class="list">
-    {#each D.xpQuestions as q, i (i)}
+    {#each questions as q, i (i)}
       <li><label><input type="checkbox" bind:checked={checked[i]} /><span>{q}</span></label></li>
     {/each}
   </ul>

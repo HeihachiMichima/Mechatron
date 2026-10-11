@@ -1,18 +1,24 @@
-// Single source of truth: every robot (PCs and GM NPCs), the active one,
-// and the combat in progress. Autosaves to localStorage; commit() makes
-// discrete changes undoable. normalize() accepts v1/v2 character saves.
+// Single source of truth: the campaign (shared DEV levels, journal, GM rules…),
+// every robot (PCs and GM NPCs), the active one and the combat in progress.
+// Autosaves to localStorage (debounced, flushed when the page is hidden);
+// commit*() make discrete changes undoable. No support for older saves (§2.5).
 import { GAME_DATA as D } from './data.js';
-import { chassis, ATTRS, epMax, findWeapon } from './rules.js';
+import { ATTRS, epMax, findWeapon } from './rules.js';
 import { random } from './rng.js';
+import { bindCampaign, defaultDev, getRules } from './settings.js';
 
-const KEY = 'mechatron-roster-v3';
-const OLD_KEYS = ['mechatron-sheet-v2', 'mechatron-sheet-v1'];
-const UI_KEY = 'mechatron-ui-v2';
+export const VERSION = 3;
+const KEY = 'mechatron-v3';
+const UI_KEY = 'mechatron-ui-v3';
+// Keys of earlier versions: deleted at startup, never read (no user base to migrate).
+const OLD_KEYS = ['mechatron-roster-v3', 'mechatron-ui-v2', 'mechatron-sheet-v2', 'mechatron-sheet-v1'];
+export const OLD_SAVE = "Sauvegarde d'une ancienne version, impossible à ouvrir";
+const SAVE_FAILED = 'Sauvegarde impossible : exportez la campagne';
+const UNDO_LIMIT = 40;
 
 export const newId = () => Math.random().toString(36).slice(2, 10);
 
 export function blankCharacter(kind = 'pc') {
-  const dd = D.defaults.devDefault;
   return {
     version: 2, id: newId(), kind, color: '', body: 'robot', statMode: 'chassis', group: '', template: '',
     direct: { servos: 0, stabilite: 0, processeur: 0, reseau: 0, armor: 0, slots: 0 },
@@ -22,26 +28,18 @@ export function blankCharacter(kind = 'pc') {
     hierarchy: '',
     damage: { servos: 0, stabilite: 0, processeur: 0, reseau: 0 },
     armorDamage: 0, cover: 0,
-    ep: { current: D.rules.startEp }, xp: { current: 0 },
+    ep: { current: getRules().startEp }, xp: { current: 0 },
     programRatings: {}, specialRating: 0, customPrograms: [],
     secondary: [], modules: [], brokenModules: [], equipment: [], weapons: [],
-    notes: '', online: true,
-    dev: { Energie: dd, Production: dd, 'Défense': dd, Information: dd }
+    notes: '', online: true
   };
-}
-
-function prefill() {
-  const c = blankCharacter('pc');
-  c.model = 'battle';
-  c.head = 'Pashin Ama 9';
-  c.weapons = [{ name: 'Pistolet laser', bonus: 3, degats: 2, portee: 'Longue' }];
-  c.modules = ['Lance-grenades', 'Accélérateur', 'Armure réactive'];
-  return c;
 }
 
 const num = (v, d = 0) => (Number.isFinite(Number(v)) && v !== '' && v !== null ? Number(v) : d);
 const arr = (v) => (Array.isArray(v) ? v : []);
 const str = (v) => (typeof v === 'string' ? v : v == null ? '' : String(v));
+const isObj = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
+const copy = (v) => JSON.parse(JSON.stringify(v));
 
 export function normalize(raw) {
   const b = blankCharacter();
@@ -69,25 +67,10 @@ export function normalize(raw) {
   c.online = raw.online !== false;
   c.ep = { current: num(raw.ep?.current, b.ep.current) };
   c.xp = { current: num(raw.xp?.current) };
-  c.dev = { ...b.dev };
-  if (raw.dev && typeof raw.dev === 'object') Object.keys(b.dev).forEach((k) => {
-    const v = raw.dev[k];
-    c.dev[k] = typeof v === 'boolean' ? (v ? 75 : b.dev[k]) : Math.max(0, Math.min(100, num(v, b.dev[k])));
-  });
-  if (raw.version === 2) {
-    c.hierarchy = str(raw.hierarchy);
-    ATTRS.forEach((a) => (c.damage[a] = Math.max(0, num(raw.damage?.[a]))));
-    c.armorDamage = Math.max(0, num(raw.armorDamage));
-    c.cover = num(raw.cover);
-  } else {
-    const ch = chassis(c);
-    ATTRS.forEach((a) => { const v = num(raw.attributes?.[a]); c.damage[a] = v > 0 ? Math.max(0, ch.attrMax[a] - v) : 0; });
-    const prot = typeof raw.protection === 'number' ? { cover: 0 } : raw.protection || {};
-    c.cover = num(prot.cover);
-    const m = D.models.find((x) => x.id === c.model);
-    const h = str(raw.hierarchy);
-    c.hierarchy = m && h === String(m.hierarchy) ? '' : h;
-  }
+  c.hierarchy = str(raw.hierarchy);
+  ATTRS.forEach((a) => (c.damage[a] = Math.max(0, num(raw.damage?.[a]))));
+  c.armorDamage = Math.max(0, num(raw.armorDamage));
+  c.cover = num(raw.cover);
   c.equipment = c.equipment.filter((e) => e.name);
   c.weapons = c.weapons.filter((w) => w.name);
   return c;
@@ -207,26 +190,81 @@ export function ensureColor(chars, c) {
   c.color = (free ?? D.pcColors[chars.filter((x) => x.kind !== 'npc').indexOf(c) % D.pcColors.length] ?? D.pcColors[0]).hex;
 }
 
+// ---------- campaign ----------
+// clock (T07), market (T09), xp (T11), maps (T13) and encounters (T15) are
+// placeholders until their ticket: kept as plain JSON so nothing is lost.
+
+/** A new, empty campaign (DEV levels at the book's starting value). */
+export function blankCampaign(name = '') {
+  const now = new Date().toISOString();
+  return {
+    name, createdAt: now, updatedAt: now,
+    phase: 'creation',
+    dev: defaultDev(),
+    rules: {},
+    journal: [],
+    clock: null, market: null, xp: { log: [] },
+    maps: [], encounters: []
+  };
+}
+
+function normalizeJournal(list) {
+  return arr(list).filter(isObj).map((j) => {
+    const e = { at: str(j.at), text: str(j.text) };
+    if (j.day != null && j.day !== '' && Number.isFinite(Number(j.day))) e.day = Number(j.day);
+    return e;
+  }).filter((e) => e.text);
+}
+
+export function normalizeCampaign(raw) {
+  const b = blankCampaign();
+  if (!isObj(raw)) return b;
+  const dev = {};
+  Object.keys(b.dev).forEach((k) => (dev[k] = Math.max(0, Math.min(D.defaults.devMax, num(raw.dev?.[k], b.dev[k])))));
+  return {
+    name: str(raw.name),
+    createdAt: str(raw.createdAt) || b.createdAt,
+    updatedAt: str(raw.updatedAt) || b.updatedAt,
+    phase: raw.phase === 'play' ? 'play' : 'creation',
+    dev,
+    rules: isObj(raw.rules) ? copy(raw.rules) : {},
+    journal: normalizeJournal(raw.journal),
+    clock: isObj(raw.clock) ? copy(raw.clock) : null,
+    market: isObj(raw.market) ? copy(raw.market) : null,
+    xp: { log: arr(raw.xp?.log).filter(isObj).map(copy) },
+    maps: arr(raw.maps).filter(isObj).map(copy),
+    encounters: arr(raw.encounters).filter(isObj).map(copy)
+  };
+}
+
+/** Append a journal line (inside a commit). extra: { day } */
+export function pushJournal(data, text, extra = {}) {
+  const e = { at: new Date().toISOString(), text: str(text).trim() };
+  if (extra.day != null) e.day = num(extra.day);
+  if (e.text) data.campaign.journal.push(e);
+}
+
+/** Rebuild a whole save from its known fields. No robot is created: the team can be empty. */
 export function normalizeAll(raw) {
   const chars = arr(raw?.chars).map(normalize);
-  if (!chars.length) chars.push(prefill());
   chars.forEach((c) => ensureColor(chars, c));
   const seen = new Set();
   chars.forEach((c) => { while (seen.has(c.id)) c.id = newId(); seen.add(c.id); });
-  const activeId = seen.has(raw?.activeId) ? raw.activeId : chars[0].id;
-  return { version: 3, chars, activeId, combat: normalizeCombat(raw?.combat, seen) };
+  const activeId = seen.has(raw?.activeId) ? raw.activeId : chars[0]?.id ?? null;
+  return { version: VERSION, campaign: normalizeCampaign(raw?.campaign), chars, activeId, combat: normalizeCombat(raw?.combat, seen) };
 }
 
 function load() {
   try {
+    for (const k of OLD_KEYS) localStorage.removeItem(k);
     const raw = localStorage.getItem(KEY);
-    if (raw) return normalizeAll(JSON.parse(raw));
-    for (const k of OLD_KEYS) {
-      const old = localStorage.getItem(k);
-      if (old) { const c = normalize(JSON.parse(old)); return normalizeAll({ chars: [c], activeId: c.id }); }
+    if (raw) {
+      const d = JSON.parse(raw);
+      if (d?.version === VERSION) return { data: normalizeAll(d) };
+      return { data: normalizeAll({}), stale: true };
     }
   } catch (e) { /* storage blocked or corrupt — start fresh */ }
-  return normalizeAll({});
+  return { data: normalizeAll({}) };
 }
 
 function loadUi() {
@@ -244,59 +282,121 @@ export function availableEp(data, c) {
   return c.kind === 'npc' && data.combat.usePool ? data.combat.gmPool : c.ep.current;
 }
 
+/** Undo snapshot: the whole save minus maps and encounters (they keep their own saves, T13/T15). */
+function snapshotOf(data) {
+  const s = $state.snapshot(data);
+  const { maps, encounters, ...campaign } = s.campaign;
+  return JSON.stringify({ ...s, campaign });
+}
+
 class Store {
-  data = $state(load());
+  data = $state(null);
   ui = $state({ ...loadUi(), sheet: null, turn: null, turnActor: null });
   toast = $state(null);
   incoming = $state(null);
   #history = [];
   #timer;
+  #typingKey = null;
+  #pending = null;
+  #saveTimer;
+  #saveFailed = false;
 
   constructor() {
+    const { data, stale } = load();
+    this.data = data;
+    bindCampaign(() => this.data.campaign);
+    if (stale) queueMicrotask(() => this.notify(OLD_SAVE));
     $effect.root(() => {
+      // Autosave: serialize on every change (deep tracking), write after 300 ms of calm.
       $effect(() => {
-        const json = JSON.stringify(this.data);
-        try { localStorage.setItem(KEY, json); } catch {}
+        this.#pending = JSON.stringify(this.data);
+        clearTimeout(this.#saveTimer);
+        this.#saveTimer = setTimeout(() => this.flush(), 300);
       });
       $effect(() => {
         const { tab, theme } = this.ui;
         try { localStorage.setItem(UI_KEY, JSON.stringify({ tab, theme })); } catch {}
       });
     });
+    if (typeof window !== 'undefined') {
+      window.addEventListener('pagehide', () => this.flush());
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') this.flush(); });
+    }
   }
 
-  get c() { return this.data.chars.find((x) => x.id === this.data.activeId) ?? this.data.chars[0]; }
+  /** Write the pending save now (also on pagehide / tab hidden). */
+  flush() {
+    clearTimeout(this.#saveTimer);
+    if (this.#pending == null) return;
+    const json = this.#pending;
+    this.#pending = null;
+    try {
+      localStorage.setItem(KEY, json);
+      this.#saveFailed = false;
+    } catch {
+      if (!this.#saveFailed) this.notify(SAVE_FAILED);
+      this.#saveFailed = true;
+    }
+  }
+
+  /** The active robot, or null when the team is empty. */
+  get c() { return this.data.chars.find((x) => x.id === this.data.activeId) ?? this.data.chars[0] ?? null; }
   get chars() { return this.data.chars; }
   get combat() { return this.data.combat; }
+  get campaign() { return this.data.campaign; }
   char(id) { return this.data.chars.find((x) => x.id === id); }
 
-  snapshot() { return JSON.stringify($state.snapshot(this.c)); }
-  #snapAll() { return JSON.stringify($state.snapshot(this.data)); }
-  #push() { this.#history.push(this.#snapAll()); if (this.#history.length > 80) this.#history.shift(); }
+  snapshot() { return this.c ? JSON.stringify($state.snapshot(this.c)) : 'null'; }
+  #push() {
+    this.#typingKey = null;
+    this.#history.push(snapshotOf(this.data));
+    if (this.#history.length > UNDO_LIMIT) this.#history.shift();
+  }
+  #touch() { this.data.campaign.updatedAt = new Date().toISOString(); }
 
-  /** Discrete change to the active robot; undoable. */
-  commit(label, fn) { this.commitOn(this.c.id, label, fn); }
+  /** Discrete change to the active robot; undoable. Does nothing when there is no robot. */
+  commit(label, fn) { if (this.c) this.commitOn(this.c.id, label, fn); }
   /** Discrete change to a given robot. fn(char, data). */
   commitOn(id, label, fn) {
-    this.#push();
     const ch = this.char(id) ?? this.c;
+    if (!ch) return;
+    this.#push();
     fn(ch, this.data);
+    this.#touch();
     if (label) this.notify(label, true);
   }
-  /** Discrete change to the whole table (roster, combat). */
+  /** Discrete change to the whole table (campaign, roster, combat). */
   commitAll(label, fn) {
     this.#push();
     fn(this.data);
+    this.#touch();
     if (label) this.notify(label, true);
+  }
+  /**
+   * Text typed into a field of robot `id`: consecutive keystrokes in the same
+   * field make a single undo step (no toast). fn(char, data).
+   */
+  type(id, field, fn) {
+    const ch = this.char(id);
+    if (!ch) return;
+    const key = `${id}:${field}`;
+    if (this.#typingKey !== key) { this.#push(); this.#typingKey = key; }
+    fn(ch, this.data);
+    this.#touch();
+  }
+
+  /** Add a line to the campaign journal (undoable). extra: { day } */
+  addJournal(text, extra) {
+    if (!str(text).trim()) return;
+    this.commitAll('Ajouté au journal', (d) => pushJournal(d, text, extra));
   }
 
   /** Add a robot (imported, blank or from a template); optionally make it active. */
   addChar(raw, { activate = true, label } = {}) {
     const c = normalize(raw);
     while (this.char(c.id)) c.id = newId();
-    if (this.c) c.dev = { ...$state.snapshot(this.c.dev) };
     ensureColor(this.data.chars, c);
-    this.commitAll(label ?? null, (d) => { d.chars.push(c); if (activate) d.activeId = c.id; });
+    this.commitAll(label ?? null, (d) => { d.chars.push(c); if (activate || !d.activeId) d.activeId = c.id; });
     return c.id;
   }
   activate(id) { if (this.char(id)) this.data.activeId = id; }
@@ -306,14 +406,16 @@ class Store {
     this.commitAll(`${c.name || 'Robot'} supprimé`, (d) => {
       d.chars = d.chars.filter((x) => x.id !== id);
       d.combat.combatants = d.combat.combatants.filter((x) => x.cid !== id);
-      if (!d.chars.length) d.chars.push(blankCharacter('pc'));
-      if (d.activeId === id) d.activeId = d.chars[0].id;
+      if (d.activeId === id) d.activeId = d.chars[0]?.id ?? null;
     });
   }
+  /** Replace the whole save (campaign file). Refuses other versions; returns true when done. */
   replaceAll(raw, label) {
+    if (raw?.version !== VERSION) { this.notify(OLD_SAVE); return false; }
     this.#push();
     this.data = normalizeAll(raw);
     if (label) this.notify(label, true);
+    return true;
   }
 
   log(text) {
@@ -325,7 +427,11 @@ class Store {
   undo() {
     const prev = this.#history.pop();
     if (!prev) return;
-    this.data = normalizeAll(JSON.parse(prev));
+    this.#typingKey = null;
+    const d = JSON.parse(prev);
+    // Maps and encounters are not part of the undo history: keep the current ones.
+    d.campaign = { ...d.campaign, maps: $state.snapshot(this.data.campaign.maps), encounters: $state.snapshot(this.data.campaign.encounters) };
+    this.data = normalizeAll(d);
     this.notify('Annulé', false);
   }
 
@@ -340,4 +446,3 @@ class Store {
 }
 
 export const store = new Store();
-export { prefill };

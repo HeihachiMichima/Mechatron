@@ -39,9 +39,9 @@
       {#each g.list as c (c.id)}
         {@const ch = chassis(c)}
         {@const st = status(c, ch)}
-        <li class="row" class:active={c.id === store.c.id}>
+        <li class="row" class:active={c.id === store.c?.id}>
           <button class="main" onclick={() => pick(c.id)}>
-            <span class="name">{#if c.kind !== 'npc'}<span class="cdot" style="background:{c.color}"></span>{/if}{c.name || 'Sans nom'}{#if c.id === store.c.id}<Icon name="check" size={16} />{/if}</span>
+            <span class="name">{#if c.kind !== 'npc'}<span class="cdot" style="background:{c.color}"></span>{/if}{c.name || 'Sans nom'}{#if c.id === store.c?.id}<Icon name="check" size={16} />{/if}</span>
             <span class="sub">{sub(c)}{#if inCombat(c.id)}<em class="tag">en combat</em>{/if}{#if st.deactivated}<em class="tag bad">{c.body === 'creature' ? 'hors de combat' : 'désactivé'}</em>{/if}</span>
             <span class="stats num">
               {#each shownAttrs(c, ch) as a (a)}

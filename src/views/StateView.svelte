@@ -4,19 +4,20 @@
   import Icon from '../components/Icon.svelte';
   import { store } from '../lib/store.svelte.js';
   import { GAME_DATA as D } from '../lib/data.js';
+  import { getRules, getDev } from '../lib/settings.js';
   import { ATTRS, chassis, attrCurrent, armorTotal, armorCurrent, epMax, devBand, hasSecondary, shownAttrs, attrLabels } from '../lib/rules.js';
 
   const c = $derived(store.c);
   const ch = $derived(chassis(c));
   const maxEp = $derived(epMax(c));
-  const ration = $derived(Math.min(devBand(c.dev.Energie).energyEp, maxEp));
-  const solar = D.rules.outsideSolarEp;
+  const ration = $derived(Math.min(devBand(getDev().Energie).energyEp, maxEp));
+  const solar = $derived(getRules().outsideSolarEp);
 
   const L = $derived(attrLabels(c));
   const attrs = $derived(shownAttrs(c, ch));
   const npcPool = $derived(c.kind === 'npc' && store.combat.usePool);
   const creature = $derived(c.body === 'creature');
-  const per = D.rules.xpPerUpgrade;
+  const per = $derived(getRules().xpPerUpgrade);
 
   function setAttr(a, cur) {
     const max = ch.attrMax[a];
@@ -109,7 +110,7 @@
         {/if}
         <button class="btn small" disabled={c.ep.current <= 0} onclick={() => setEp(c.ep.current - 1, 'Nouveau jour : −1 PE')}>Nouveau jour (−1)</button>
       </div>
-      <p class="hint">{#if c.online}Une borne recharge jusqu'au niveau de rationnement (Énergie {c.dev.Energie}), jamais au-delà.{:else}Hors du collectif, chaque robot regagne 1 PE par jour en plein air.{/if} Un PE par jour pour fonctionner ; à 0 PE, le robot passe en veille.</p>
+      <p class="hint">{#if c.online}Une borne recharge jusqu'au niveau de rationnement (Énergie {getDev().Energie}), jamais au-delà.{:else}Hors du collectif, chaque robot regagne 1 PE par jour en plein air.{/if} Un PE par jour pour fonctionner ; à 0 PE, le robot passe en veille.</p>
     </section>
     {/if}
 

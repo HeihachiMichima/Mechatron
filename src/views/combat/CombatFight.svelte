@@ -6,6 +6,7 @@
   import TurnFlow from './TurnFlow.svelte';
   import ResetAllButton from '../../components/ResetAllButton.svelte';
   import { flip } from 'svelte/animate';
+  import { getDev } from '../../lib/settings.js';
   import { store, blankCombat } from '../../lib/store.svelte.js';
   import { order, current, isDown, sideCounts } from '../../lib/combat.js';
   import { status, devBand, epMax } from '../../lib/rules.js';
@@ -30,7 +31,7 @@
   let trackEl = $state(null);
   // Keep the active robot in sight: the lane itself scrolls back to its start.
   $effect(() => { cur?.x.id; trackEl?.scrollTo({ left: 0, behavior: reduced ? 'auto' : 'smooth' }); });
-  const supply = $derived(devBand(store.c.dev.Energie).energyEp);
+  const supply = $derived(devBand(getDev().Energie).energyEp);
   let confirmEnd = $state(false);
   let logOpen = $state(true);
 
@@ -40,7 +41,7 @@
       if (cleanup) {
         const dead = new Set(d.combat.combatants.map((x) => d.chars.find((c) => c.id === x.cid)).filter((c) => c && c.kind === 'npc' && status(c).deactivated).map((c) => c.id));
         d.chars = d.chars.filter((c) => !dead.has(c.id));
-        if (!d.chars.some((c) => c.id === d.activeId)) d.activeId = d.chars[0]?.id;
+        if (!d.chars.some((c) => c.id === d.activeId)) d.activeId = d.chars[0]?.id ?? null;
       }
       d.combat = { ...blankCombat(), gmPool: d.combat.gmPool, usePool: d.combat.usePool };
     });

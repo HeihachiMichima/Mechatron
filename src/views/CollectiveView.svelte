@@ -6,37 +6,38 @@
   import { d6 } from '../lib/rng.js';
 
   const c = $derived(store.c);
+  // The collective's levels are stored once, in the campaign: every robot shares them.
+  const dev = $derived(store.campaign.dev);
   const linked = (k) => D.programs.filter((p) => p.devBonus === k).map((p) => p.label);
   function decay() {
     const rolls = DEV_KEYS.map(() => d6());
-    store.commitAll(`Usure : ${DEV_KEYS.map((k, i) => `${DEV_LABELS[k]} −${rolls[i]}`).join(', ')}`, (d) => { const base = { ...store.c.dev }; d.chars.forEach((s) => DEV_KEYS.forEach((k, i) => (s.dev[k] = Math.max(0, base[k] - rolls[i])))); });
+    store.commitAll(`Usure : ${DEV_KEYS.map((k, i) => `${DEV_LABELS[k]} −${rolls[i]}`).join(', ')}`, (d) => DEV_KEYS.forEach((k, i) => (d.campaign.dev[k] = Math.max(0, d.campaign.dev[k] - rolls[i]))));
   }
-  // The collective is shared: every robot on the table sees the same levels.
-  const setDev = (k, v) => store.commitAll(`${DEV_LABELS[k]} : ${v}`, (d) => d.chars.forEach((s) => (s.dev[k] = Math.max(0, Math.min(100, v)))));
+  const setDev = (k, v) => store.commitAll(`${DEV_LABELS[k]} : ${v}`, (d) => (d.campaign.dev[k] = Math.max(0, Math.min(D.defaults.devMax, v))));
 </script>
 
 <div class="grid">
   <section class="panel wide">
     <div class="panel-head">
       <h2>Niveaux de développement</h2>
-      <label class="toggle">
+      {#if c}<label class="toggle">
         <input type="checkbox" checked={c.online} onchange={(e) => store.commit(e.currentTarget.checked ? 'Connecté au collectif' : 'Hors ligne : bonus désactivés', (s) => (s.online = e.currentTarget.checked))} />
         <span>Connecté au collectif</span>
-      </label>
+      </label>{/if}
     </div>
     <p class="hint top">Partagés par tous vos robots. Tous commencent à 50 et baissent de 1D6 après chaque séance ; les ordres de travail les remontent. Hors ligne, les programmes ne reçoivent plus de bonus.</p>
     <button class="btn small decay" onclick={decay}>Fin de séance : −1D6 à chaque niveau</button>
     <div class="devs">
       {#each DEV_KEYS as k (k)}
-        {@const band = devBand(c.dev[k])}
+        {@const band = devBand(dev[k])}
         <div class="dev">
           <h3>{DEV_LABELS[k]}</h3>
           <div class="dev-val">
-            <input class="input num" type="number" min="0" max="100" value={c.dev[k]} aria-label="Niveau {DEV_LABELS[k]}"
+            <input class="input num" type="number" min="0" max="100" value={dev[k]} aria-label="Niveau {DEV_LABELS[k]}"
               onchange={(e) => setDev(k, parseInt(e.currentTarget.value) || 0)} />
-            <Stepper value={c.dev[k]} min={0} max={100} label={DEV_LABELS[k]} onchange={(v) => setDev(k, v)} size="sm" />
+            <Stepper value={dev[k]} min={0} max={100} label={DEV_LABELS[k]} onchange={(v) => setDev(k, v)} size="sm" />
           </div>
-          <div class="bar" aria-hidden="true"><span style="width:{c.dev[k]}%"></span></div>
+          <div class="bar" aria-hidden="true"><span style="width:{dev[k]}%"></span></div>
           <p class="effect">
             {#if k === 'Energie'}<b class="num">{band.energyEp} PE</b> de recharge par jour
             {:else}<b class="num" class:neg={band.bonus < 0}>{fmtBonus(band.bonus)}</b> à {linked(k).join(' et ')}{/if}
@@ -46,10 +47,10 @@
     </div>
   </section>
 
-  <section class="panel wide">
+  {#if c}<section class="panel wide">
     <div class="panel-head"><h2>Notes et journal</h2></div>
-    <textarea class="input" bind:value={store.c.notes} placeholder="Ordres de travail, PNJ rencontrés, secrets de la Fraternité, indices sur les humains…" aria-label="Notes"></textarea>
-  </section>
+    <textarea class="input" value={c.notes} oninput={(e) => store.type(c.id, 'notes', (s) => (s.notes = e.currentTarget.value))} placeholder="Ordres de travail, PNJ rencontrés, secrets de la Fraternité, indices sur les humains…" aria-label="Notes"></textarea>
+  </section>{/if}
 </div>
 
 <style>

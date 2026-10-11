@@ -21,7 +21,8 @@ code, comments and identifiers are in English.
     ├── lib/
     │   ├── data.js          GAME_DATA — every game number, from the book only
     │   ├── house.js         house rules: values the book doesn't give (« règle maison », GM-editable)
-    │   ├── settings.js      getRules(): book ← house ← campaign overrides
+    │   ├── settings.js      getRules() (book ← house ← campaign overrides), getDev() (campaign.dev)
+    │   ├── demo.js          demoParty(): the demo team (T04)
     │   ├── rules.js         pure rules functions (chassis, pools, dice, damage…)
     │   ├── rng.js           every random draw: d6(), random(), pick(), setRng(seed)
     │   ├── __tests__/       Vitest tests (*.test.js) + helpers.js (rig dice) + roundtrip.js
@@ -31,7 +32,7 @@ code, comments and identifiers are in English.
     │   │                    lookup, energy-weapon power sources, E-packs, blasts
     │   ├── exports.js       JSON / text / share-link / PNG card exports
     │   └── pickers.js       list builders for the picker sheets
-    ├── components/          TopBar, PcTabs, VitalsPlate, Nav, Sheet, Stepper,
+    ├── components/          TopBar, PcTabs, VitalsPlate, Nav, Sheet, Stepper, EmptyTeam,
     │                        Segments, Toast, Icon, Avatar, DiceTray, CombatGuide, PrintSheet,
     │                        OverheatDice (shows one module activation)
     ├── views/               État, Programmes, Matériel, Robot, Collectif, Combat
@@ -85,7 +86,8 @@ no backend. Output must stay a **static page** that opens by double-click, offli
 - **Every persisted field goes through `normalize()` / `normalizeAll()` / `normalizeCombat()`.**
   They rebuild objects from a fixed list of fields, and undo/reload pass through them: a field
   they don't know disappears. Add a save → reload → undo test for each new field.
-  Current keys: `mechatron-roster-v3`, UI prefs `mechatron-ui-v2` (T03 replaces them).
+  Keys: save `mechatron-v3`, UI prefs `mechatron-ui-v3` (per device, never exported). Older keys are
+  deleted at startup; a save whose `version` isn't 3 is refused (« Sauvegarde d'une ancienne version… »).
 - **House rules.** `data.js` holds book values only. A value the book doesn't give goes in
   `src/lib/house.js`, is shown with a « règle maison » badge and is GM-editable; read rule
   values through `getRules()` (`src/lib/settings.js`).
@@ -99,11 +101,31 @@ no backend. Output must stay a **static page** that opens by double-click, offli
 
 ## Architecture notes
 
-**Store (`store.svelte.js`).** `store.data = { version: 3, chars[], activeId, combat }`,
+**Store (`store.svelte.js`).** `store.data = { version: 3, campaign, chars[], activeId, combat }`,
 `store.ui = { tab, theme, sheet, turn, turnActor }`. Mutate only through
 `commit(label, fn)`, `commitOn(charId, label, fn(char, data))` or `commitAll` — they
-snapshot for undo, autosave and toast. `store.open(type, props)` / `store.close()`
-drive bottom sheets; **props vanish after `close()`**, so capture them in consts first.
+snapshot for undo (40 steps), autosave and toast. Text fields use `store.type(charId, field, fn)`
+(`value` + `oninput`, never `bind:value={store.c.*}`): keystrokes in one field coalesce into one
+undo step. `store.open(type, props)` / `store.close()` drive bottom sheets; **props vanish after
+`close()`**, so capture them in consts first.
+- **`store.c` can be `null`** (empty team: clean first launch, last robot deleted). `activeId` is
+  then `null`; `commit()` does nothing; App shows `EmptyTeam` instead of the fiche views and closes
+  the robot sheets (roll, module, damage, weapon, xp). Combat and Collectif work with no robot.
+- **Campaign** (`campaign`, normalised by `normalizeCampaign`): `name, createdAt, updatedAt,
+  phase ('creation'|'play'), dev {Energie, Production, Défense, Information}, rules {} (GM
+  overrides), journal [{at, day?, text}], clock, market, xp {log}, maps [], encounters []`.
+  `clock`/`market`/`xp`/`maps`/`encounters` are kept as plain JSON until their ticket (T07…T15).
+  Journal: `pushJournal(data, text, {day})` inside a commit, or `store.addJournal(text)`.
+- **DEV levels live once, in `campaign.dev`** — read them with `getDev()` (`settings.js`), never
+  from a robot. `devModFor(c, prog)` gives the bonus to any `c.online` robot (PC or NPC).
+- **Rule values:** `getRules()` (`settings.js`) = `GAME_DATA.rules` + `xpQuestions` ← `house.js` ←
+  `campaign.rules`. The store binds the campaign with `bindCampaign()`; in unit tests nothing is
+  bound unless a test does it.
+- **Autosave:** 300 ms after the last change, plus a forced `flush()` on `pagehide` and when the
+  tab is hidden; a storage error shows « Sauvegarde impossible : exportez la campagne » (once).
+- **Undo** snapshots leave out `campaign.maps` and `campaign.encounters` (they keep their own saves).
+- `src/lib/demo.js` → `demoParty()`: 4 PCs (Battle, Scrap, Protocol, Cleaning) + 3 book NPCs,
+  built by the creation rules; used by « Essayer la démo » (T04).
 
 **Characters.** `blankCharacter(kind)` with `kind: 'pc' | 'npc'`, `body: robot | drone |
 creature`, `statMode: 'chassis' | 'direct'` (direct = stats typed in, used by NPC
@@ -193,7 +215,7 @@ round), `defenses`, `protectRound` (Protect once per round). Weapons: `power`
   in Claude's cloud workspace (`/opt/pw-browsers`; never run `playwright install` there); on the
   user's PC run `npx playwright install chromium` once.
 - For combat changes, also click through Préparation → Initiative → Combat for a few rounds
-  (seeded) and read the log from `localStorage['mechatron-roster-v3']`.
+  (seeded) and read the log from `localStorage['mechatron-v3']`.
 
 ## Delivering changes
 
@@ -253,6 +275,11 @@ Follow `docs/PLAN-COMPAGNON.md` §0: one ticket at a time, in order.
 - v2.3.10 (2026-10-11, plan ticket T02): tests — Vitest (`npm test`, 34 tests: chassis, dice,
   push, damage, overheating, initiative order, end of turn, normalize, round-trip), seedable dice
   (`rng.js`, `window.__mechatron.setRng`), round-trip helper, Playwright smoke test (`npm run e2e`).
+- v3.0.0 (2026-10-11, plan ticket T03): data model v3 — `campaign` (DEV levels stored once,
+  journal, GM rule overrides, placeholders for clock/market/xp/maps/encounters), key `mechatron-v3`
+  (older keys deleted, other versions refused), no pre-filled robot (empty team + `EmptyTeam`; the
+  demo party moved to `demo.js`), `store.c` nullable, `getRules()`/`getDev()` wired everywhere,
+  typed fields through `store.type`, autosave debounced and flushed on `pagehide`, undo capped at 40.
 
 ## Ideas not done yet
 

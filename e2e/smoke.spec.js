@@ -39,3 +39,48 @@ for (const { w, h } of sizes) {
     });
   }
 }
+
+test('clean profile: no robot, an empty state on every tab, old keys removed', async ({ browser }) => {
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await ctx.newPage();
+  const errors = [];
+  page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+  page.on('pageerror', (e) => errors.push(String(e)));
+  await page.addInitScript(() => { if (!sessionStorage.seeded) { localStorage.setItem('mechatron-roster-v3', '{"version":3,"chars":[]}'); sessionStorage.seeded = 1; } });
+  await page.goto(url);
+
+  for (const tab of ['État', 'Programmes', 'Matériel', 'Robot']) {
+    await page.locator('#app-nav button', { hasText: tab }).click();
+    await expect(page.getByRole('heading', { name: 'Créez votre premier robot' })).toBeVisible();
+  }
+  await page.locator('#app-nav button', { hasText: 'Combat' }).click();
+  await expect(page.getByText('Il faut au moins un allié et un ennemi.')).toBeVisible();
+  await page.locator('#app-nav button', { hasText: 'Collectif' }).click();
+  await expect(page.getByRole('heading', { name: 'Niveaux de développement' })).toBeVisible();
+  await page.screenshot({ path: 'e2e/screenshots/empty-collectif-390.png' });
+  await page.getByRole('button', { name: 'Exporter' }).click();
+  await expect(page.getByText('Aucun robot pour l’instant')).toBeVisible();
+  await page.keyboard.press('Escape');
+
+  // Create a robot, then delete it: the team is empty again.
+  await page.locator('#app-nav button', { hasText: 'État' }).click();
+  await page.getByRole('button', { name: 'Nouveau robot', exact: true }).click();
+  await expect(page.locator('.plate')).toBeVisible();
+  await page.getByRole('button', { name: /Changer de robot/ }).click();
+  await page.getByRole('button', { name: /Supprimer/ }).click();
+  await page.getByRole('button', { name: /Supprimer/ }).click();
+  await page.keyboard.press('Escape');
+  await page.locator('#app-nav button', { hasText: 'État' }).click();
+  await expect(page.getByRole('heading', { name: 'Créez votre premier robot' })).toBeVisible();
+
+  await page.waitForTimeout(400); // debounced autosave
+  const keys = await page.evaluate(() => Object.keys(localStorage).sort());
+  expect(keys).toContain('mechatron-v3');
+  expect(keys).not.toContain('mechatron-roster-v3');
+  const saved = await page.evaluate(() => JSON.parse(localStorage['mechatron-v3']));
+  expect(saved.chars).toEqual([]);
+  expect(saved.activeId).toBe(null);
+  expect(saved.campaign.dev.Energie).toBe(50);
+  expect(errors).toEqual([]);
+  await ctx.close();
+});
