@@ -87,7 +87,8 @@ no backend. Output must stay a **static page** that opens by double-click, offli
   They rebuild objects from a fixed list of fields, and undo/reload pass through them: a field
   they don't know disappears. Add a save → reload → undo test for each new field.
   Keys: save `mechatron-v3`, UI prefs `mechatron-ui-v3` (per device, never exported). Older keys are
-  deleted at startup; a save whose `version` isn't 3 is refused (« Sauvegarde d'une ancienne version… »).
+  deleted at startup; a save that isn't `version: 3` with a `campaign` (`isCurrentSave`) is refused
+  (« Sauvegarde d'une ancienne version… »): 2.x tables also said version 3 but had no campaign.
 - **House rules.** `data.js` holds book values only. A value the book doesn't give goes in
   `src/lib/house.js`, is shown with a « règle maison » badge and is GM-editable; read rule
   values through `getRules()` (`src/lib/settings.js`).

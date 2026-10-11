@@ -1,6 +1,6 @@
 <script>
   import Sheet from '../components/Sheet.svelte';
-  import { store, normalize, ensureColor, VERSION, OLD_SAVE } from '../lib/store.svelte.js';
+  import { store, normalize, ensureColor, isCurrentSave, OLD_SAVE } from '../lib/store.svelte.js';
   import { downloadBlob as dl } from '../lib/exports.js';
   import { slug, jsonBlob, downloadBlob, shareOrDownload, readJsonFile, shareUrl, toText, cardBlob } from '../lib/exports.js';
 
@@ -69,7 +69,7 @@
     try {
       const data = await readJsonFile(f);
       if (!Array.isArray(data?.chars)) throw new Error();
-      if (data.version !== VERSION) { store.notify(OLD_SAVE); return; }
+      if (!isCurrentSave(data)) { store.notify(OLD_SAVE); return; }
       if (!confirmReset) { confirmReset = data; return; }
     } catch { store.notify("Ce fichier n'est pas une sauvegarde de table (.json)."); }
   }

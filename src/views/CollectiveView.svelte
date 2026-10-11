@@ -13,7 +13,10 @@
     const rolls = DEV_KEYS.map(() => d6());
     store.commitAll(`Usure : ${DEV_KEYS.map((k, i) => `${DEV_LABELS[k]} −${rolls[i]}`).join(', ')}`, (d) => DEV_KEYS.forEach((k, i) => (d.campaign.dev[k] = Math.max(0, d.campaign.dev[k] - rolls[i]))));
   }
-  const setDev = (k, v) => store.commitAll(`${DEV_LABELS[k]} : ${v}`, (d) => (d.campaign.dev[k] = Math.max(0, Math.min(D.defaults.devMax, v))));
+  function setDev(k, raw) {
+    const v = Math.max(0, Math.min(D.defaults.devMax, raw));
+    store.commitAll(`${DEV_LABELS[k]} : ${v}`, (d) => (d.campaign.dev[k] = v));
+  }
 </script>
 
 <div class="grid">

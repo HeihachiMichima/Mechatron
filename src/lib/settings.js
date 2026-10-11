@@ -27,7 +27,7 @@ export const getCampaign = () => source();
 export function getRules() { return merge(merge(BOOK, HOUSE), source()?.rules); }
 
 /** Default DEV levels at campaign start (book p.107). */
-export const defaultDev = () => Object.fromEntries(DEV_KEYS.map((k) => [k, D.rules.devStart]));
+export const defaultDev = () => Object.fromEntries(DEV_KEYS.map((k) => [k, getRules().devStart]));
 
 /** The collective's DEV levels, shared by every robot of the campaign. */
 export function getDev() { return source()?.dev ?? defaultDev(); }

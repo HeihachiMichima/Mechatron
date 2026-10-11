@@ -34,7 +34,9 @@
   const View = $derived(!store.c && needsRobot.has(store.ui.tab || 'etat') ? EmptyTeam : views[store.ui.tab] || StateView);
   // Sheets about one robot can't stay open once there is none.
   const robotSheets = new Set(['roll', 'module', 'damage', 'weapon', 'xp']);
-  const sheet = $derived(store.ui.sheet && (store.c || !robotSheets.has(store.ui.sheet.type)) ? store.ui.sheet : null);
+  const orphan = $derived(!store.c && !!store.ui.sheet && robotSheets.has(store.ui.sheet.type));
+  $effect(() => { if (orphan) store.close(); });
+  const sheet = $derived(orphan ? null : store.ui.sheet);
 
   $effect(() => {
     document.documentElement.dataset.theme = store.ui.theme;

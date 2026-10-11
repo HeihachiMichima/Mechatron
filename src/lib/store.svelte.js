@@ -244,6 +244,9 @@ export function pushJournal(data, text, extra = {}) {
   if (e.text) data.campaign.journal.push(e);
 }
 
+/** A save this version can open: version 3 with a campaign (2.x tables also said version 3). */
+export const isCurrentSave = (raw) => raw?.version === VERSION && isObj(raw.campaign);
+
 /** Rebuild a whole save from its known fields. No robot is created: the team can be empty. */
 export function normalizeAll(raw) {
   const chars = arr(raw?.chars).map(normalize);
@@ -260,7 +263,7 @@ function load() {
     const raw = localStorage.getItem(KEY);
     if (raw) {
       const d = JSON.parse(raw);
-      if (d?.version === VERSION) return { data: normalizeAll(d) };
+      if (isCurrentSave(d)) return { data: normalizeAll(d) };
       return { data: normalizeAll({}), stale: true };
     }
   } catch (e) { /* storage blocked or corrupt — start fresh */ }
@@ -282,9 +285,14 @@ export function availableEp(data, c) {
   return c.kind === 'npc' && data.combat.usePool ? data.combat.gmPool : c.ep.current;
 }
 
-/** Undo snapshot: the whole save minus maps and encounters (they keep their own saves, T13/T15). */
-function snapshotOf(data) {
+/**
+ * Undo snapshot: the whole save minus maps and encounters (they keep their own
+ * saves, T13/T15) — except before a whole-campaign replacement (`full`), so
+ * undoing an import also brings the previous maps back.
+ */
+function snapshotOf(data, full = false) {
   const s = $state.snapshot(data);
+  if (full) return JSON.stringify(s);
   const { maps, encounters, ...campaign } = s.campaign;
   return JSON.stringify({ ...s, campaign });
 }
@@ -347,12 +355,16 @@ class Store {
   char(id) { return this.data.chars.find((x) => x.id === id); }
 
   snapshot() { return this.c ? JSON.stringify($state.snapshot(this.c)) : 'null'; }
-  #push() {
+  #push(full = false) {
     this.#typingKey = null;
-    this.#history.push(snapshotOf(this.data));
+    this.#history.push(snapshotOf(this.data, full));
     if (this.#history.length > UNDO_LIMIT) this.#history.shift();
   }
-  #touch() { this.data.campaign.updatedAt = new Date().toISOString(); }
+  /** After any change: date the campaign and keep activeId pointing at a robot (or null). */
+  #touch() {
+    this.data.campaign.updatedAt = new Date().toISOString();
+    if (!this.char(this.data.activeId)) this.data.activeId = this.data.chars[0]?.id ?? null;
+  }
 
   /** Discrete change to the active robot; undoable. Does nothing when there is no robot. */
   commit(label, fn) { if (this.c) this.commitOn(this.c.id, label, fn); }
@@ -380,7 +392,12 @@ class Store {
     const ch = this.char(id);
     if (!ch) return;
     const key = `${id}:${field}`;
-    if (this.#typingKey !== key) { this.#push(); this.#typingKey = key; }
+    if (this.#typingKey !== key) {
+      this.#push();
+      this.#typingKey = key;
+      // The visible « Annuler » would now undo this typing, not the action it names.
+      if (this.toast?.undoable) this.toast = null;
+    }
     fn(ch, this.data);
     this.#touch();
   }
@@ -411,8 +428,8 @@ class Store {
   }
   /** Replace the whole save (campaign file). Refuses other versions; returns true when done. */
   replaceAll(raw, label) {
-    if (raw?.version !== VERSION) { this.notify(OLD_SAVE); return false; }
-    this.#push();
+    if (!isCurrentSave(raw)) { this.notify(OLD_SAVE); return false; }
+    this.#push(true);
     this.data = normalizeAll(raw);
     if (label) this.notify(label, true);
     return true;
@@ -429,8 +446,9 @@ class Store {
     if (!prev) return;
     this.#typingKey = null;
     const d = JSON.parse(prev);
-    // Maps and encounters are not part of the undo history: keep the current ones.
-    d.campaign = { ...d.campaign, maps: $state.snapshot(this.data.campaign.maps), encounters: $state.snapshot(this.data.campaign.encounters) };
+    // Maps and encounters are not in ordinary undo snapshots: keep the current ones.
+    if (!('maps' in d.campaign)) d.campaign.maps = $state.snapshot(this.data.campaign.maps);
+    if (!('encounters' in d.campaign)) d.campaign.encounters = $state.snapshot(this.data.campaign.encounters);
     this.data = normalizeAll(d);
     this.notify('Annulé', false);
   }

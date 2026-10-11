@@ -69,7 +69,22 @@ describe('Store', () => {
   it('a save of another version is refused', () => {
     expect(store.replaceAll({ version: 2, chars: [] })).toBe(false);
     expect(store.toast.text).toBe(OLD_SAVE);
-    expect(store.replaceAll({ version: 3, chars: [blankCharacter()] })).toBe(true);
+    // A 2.x table also said version 3, but had no campaign.
+    expect(store.replaceAll({ version: 3, chars: [blankCharacter()] })).toBe(false);
+    expect(store.replaceAll({ version: 3, campaign: {}, chars: [blankCharacter()] })).toBe(true);
     expect(store.chars).toHaveLength(1);
+  });
+
+  it('undoing an import brings the previous maps back', () => {
+    store.commitAll(null, (d) => d.campaign.maps.push({ id: 'mine' }));
+    store.replaceAll({ version: 3, campaign: { maps: [{ id: 'theirs' }] }, chars: [] });
+    expect(store.campaign.maps).toEqual([{ id: 'theirs' }]);
+    store.undo();
+    expect(store.campaign.maps).toEqual([{ id: 'mine' }]);
+  });
+
+  it('activeId follows the team when robots are added by a raw commit', () => {
+    store.commitAll(null, (d) => d.chars.push(blankCharacter('pc')));
+    expect(store.data.activeId).toBe(store.chars[0].id);
   });
 });
