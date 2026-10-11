@@ -1,23 +1,22 @@
-# Dependencies (reinstall with: cd svelte && npm install)
+# Dependencies (reinstall with: npm install)
 node_modules/
 
-# Vite cache
+# Build output (built and deployed by GitHub Actions, never committed)
+dist/
 .vite/
 
-# Documentation (not needed to run the site)
-*.md
-*.txt
+# The rulebook in Markdown: the owner's copy of a copyrighted book, never versioned
+/Mechatron-livre-md/
 
-# Assets: optional logo exported from the purchased PDFs
-# (the pages fall back to a text title when it is missing)
-assets/
-**/logo.png
-
-# Versioned snapshots of dist/index.html
-svelte/releases/
-
-# v1 legacy vanilla-JS sheet (kept locally in v1/, not versioned)
+# Local-only files: legacy v1 sheet and stray exports (deleted, kept out of git if they come back)
 /v1/
+/assets/
 /app.js
 /data.js
 /style.css
+/svelte/
+**/logo.png
+!src/assets/logo.png
+
+# Scratch files
+*.txt
