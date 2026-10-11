@@ -60,7 +60,7 @@
   {#snippet footer()}
     <button class="btn small danger-soft" onclick={() => store.open({ type: 'damage', cid: c.id })}>Subir des dégâts</button>
     {#if c.kind === 'npc'}<button class="btn small" onclick={() => store.open({ type: 'enemyEdit', cid: c.id })}>Modifier</button>{/if}
-    {#if c.kind !== 'npc' || store.ui.gm}<button class="btn small ghost" onclick={openSheet}>Ouvrir la fiche</button>{/if}
+    <button class="btn small ghost" onclick={openSheet}>Ouvrir la fiche</button>
     <button class="btn small ghost" onclick={remove}>Retirer</button>
   {/snippet}
 </Sheet>

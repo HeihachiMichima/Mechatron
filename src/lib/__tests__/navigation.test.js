@@ -5,7 +5,7 @@ import { store, normalizeAll, blankCharacter, cleanUi, restoreAll } from '../sto
 let pc, pc2, npc;
 beforeEach(() => {
   store.data = normalizeAll({});
-  Object.assign(store.ui, { space: 'equipe', tab: 'etat', gm: false, npc: null, pc: null, sheet: null });
+  Object.assign(store.ui, { space: 'equipe', tab: 'etat', gm: false, npc: null, pc: null, peek: null, sheet: null });
   pc = store.addChar({ ...blankCharacter('pc'), name: 'Brise-Fer' });
   pc2 = store.addChar({ ...blankCharacter('pc'), name: 'Clou' }, { activate: false });
   npc = store.addChar({ ...blankCharacter('npc'), name: 'Garde' }, { activate: false });
@@ -62,6 +62,30 @@ describe('Spaces', () => {
     store.setGm(true);
     expect(store.openFiche(npc, 'robot')).toBe(true);
     expect([store.space, store.ui.tab, store.ui.npc, store.fiche.id]).toEqual(['mj', 'robot', npc, npc]);
+  });
+
+  it('from Combat, an NPC fiche opens in place in both GM modes, and any move closes it', () => {
+    for (const gm of [false, true]) {
+      store.ui.gm = gm;
+      store.go('combat');
+      expect(store.openFiche(npc, 'materiel')).toBe(true);
+      expect([store.space, store.ui.tab, store.fiche?.id]).toEqual(['combat', 'materiel', npc]);
+      store.go('combat'); // « Retour au combat » or the Combat tab
+      expect(store.fiche).toBe(null);
+      expect(store.ui.peek).toBe(null);
+    }
+    // A PC still opens in Équipe.
+    store.go('combat');
+    store.openFiche(pc2);
+    expect([store.space, store.fiche.id]).toEqual(['equipe', pc2]);
+  });
+
+  it('an NPC fiche open in Combat closes if the NPC is deleted', () => {
+    store.go('combat');
+    store.openFiche(npc);
+    store.removeChar(npc);
+    store.syncFiche();
+    expect(store.fiche).toBe(null);
   });
 
   it('turning GM mode off leaves the MJ space and closes the NPC fiche', () => {

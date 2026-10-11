@@ -42,7 +42,8 @@ Sur une fiche, une **plaque d'état** reste toujours visible : les 4 attributs, 
 **Mode MJ.** Un interrupteur dans le menu ☰, propre à l'appareil (il n'est pas dans la campagne
 ni dans les exports). Il affiche l'espace MJ et les outils du meneur ; il cache des outils, pas des
 informations : le combat est le même dans les deux modes. Hors mode MJ, les PNJ n'apparaissent pas
-dans l'Équipe et leur fiche complète ne s'ouvre pas (en combat, la modification rapide reste là).
+dans l'Équipe. En combat, « Ouvrir la fiche » montre la fiche complète d'un PNJ sur place, quel que
+soit le mode, avec « Retour au combat » pour revenir.
 Pas de code : un appareil partagé à la table suffit.
 
 **Calculs automatiques.** Les attributs, l'armure et les emplacements viennent du châssis. La
