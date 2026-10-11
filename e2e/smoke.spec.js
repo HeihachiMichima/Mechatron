@@ -31,7 +31,7 @@ for (const { w, h } of sizes) {
       await page.getByRole('button', { name: 'Ouvrir la démo' }).click();
       await expect(page.locator('#app-nav')).toBeVisible();
       expect(await page.evaluate(() => typeof window.__mechatron?.setRng)).toBe('function');
-      await page.screenshot({ path: `e2e/screenshots/etat-${w}-${theme}.png` });
+      await page.screenshot({ path: `e2e/screenshots/equipe-${w}-${theme}.png` });
 
       await page.locator('#app-nav button', { hasText: 'Combat' }).click();
       await expect(page.getByRole('button', { name: 'Initiative', exact: true })).toBeVisible();
@@ -71,25 +71,25 @@ test('clean profile: welcome screen, then a new campaign with an empty team', as
 
   await page.getByLabel('Nom de la campagne').fill('Opération Test');
   await page.getByRole('button', { name: 'Créer la campagne' }).click();
-  for (const tab of ['État', 'Programmes', 'Matériel', 'Robot']) {
-    await page.locator('#app-nav button', { hasText: tab }).click();
-    await expect(page.getByRole('heading', { name: 'Créez votre premier robot' })).toBeVisible();
-  }
+  await expect(page.getByRole('heading', { name: 'Créez votre premier robot' })).toBeVisible();
   await page.locator('#app-nav button', { hasText: 'Combat' }).click();
   await expect(page.getByText('Il faut au moins un allié et un ennemi.')).toBeVisible();
-  await page.locator('#app-nav button', { hasText: 'Collectif' }).click();
+  await page.locator('#app-nav button', { hasText: 'Énergie' }).click();
   await expect(page.getByRole('heading', { name: 'Niveaux de développement' })).toBeVisible();
-  await page.screenshot({ path: 'e2e/screenshots/empty-collectif-390.png' });
+  await page.locator('#app-nav button', { hasText: 'Marché' }).click();
+  await expect(page.getByText("Le marché noir ouvre une fois l'équipe créée.")).toBeVisible();
+  await page.locator('#app-nav button', { hasText: 'Séance' }).click();
+  await expect(page.getByText('Le journal est vide.')).toBeVisible();
+  await page.screenshot({ path: 'e2e/screenshots/empty-seance-390.png' });
 
   // Create a robot, then delete it: the team is empty again.
-  await page.locator('#app-nav button', { hasText: 'État' }).click();
+  await page.locator('#app-nav button', { hasText: 'Équipe' }).click();
   await page.getByRole('button', { name: 'Nouveau robot', exact: true }).click();
   await expect(page.locator('.plate')).toBeVisible();
-  await page.getByRole('button', { name: /Changer de robot/ }).click();
+  await page.getByRole('button', { name: "Gérer l'équipe", exact: true }).click();
   await page.getByRole('button', { name: /Supprimer/ }).click();
   await page.getByRole('button', { name: /Supprimer/ }).click();
   await page.keyboard.press('Escape');
-  await page.locator('#app-nav button', { hasText: 'État' }).click();
   await expect(page.getByRole('heading', { name: 'Créez votre premier robot' })).toBeVisible();
 
   await page.waitForTimeout(400); // debounced autosave
@@ -141,7 +141,7 @@ test('export the demo campaign, import it in a clean profile, restore a backup',
   await pb.waitForTimeout(350);
   await pb.screenshot({ path: 'e2e/screenshots/backups-1280.png' });
   await pb.getByRole('button', { name: 'Restaurer', exact: true }).first().click();
-  await expect(pb.getByRole('button', { name: /Changer de robot \(7\)/ })).toBeVisible();
+  await expect(pb.getByRole('button', { name: "Gérer l'équipe (4)" })).toBeVisible();
   expect(errors).toEqual([]);
   await a.close(); await b.close();
 });

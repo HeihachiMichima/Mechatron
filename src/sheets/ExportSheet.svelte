@@ -4,7 +4,8 @@
   import { slug, jsonBlob, downloadBlob, shareOrDownload, shareUrl, toText, cardBlob } from '../lib/exports.js';
   import { readImport, campaignFileName, NOT_MECHATRON } from '../lib/campaign.js';
 
-  const c = $derived(store.c);
+  // The robot whose fiche is on screen (never a hidden NPC).
+  const c = $derived(store.fiche);
   let preview = $state(null);
   let blob = null;
   let fileInput;
@@ -44,7 +45,7 @@
     e.currentTarget.value = '';
     if (!f) return;
     const { kind, data } = await readImport(f);
-    if (kind === 'robot') { store.close(); store.addChar({ ...data, id: undefined }, { label: `${data.name || 'Robot'} ajouté à vos robots` }); }
+    if (kind === 'robot') { store.close(); store.openFiche(store.addChar({ ...data, id: undefined }, { label: `${data.name || 'Robot'} ajouté à vos robots` })); }
     // A campaign file replaces the campaign: confirm in the campaign menu.
     else if (kind === 'campaign') store.open({ type: 'campaign', pending: data });
     else store.notify(kind === 'old' ? OLD_SAVE : NOT_MECHATRON);

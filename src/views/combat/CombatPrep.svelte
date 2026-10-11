@@ -42,7 +42,7 @@
         {#if entry(c.id)}<span class="tick"><Icon name="check" size={14} /></span>{/if}
       </button>
     {/each}
-    {#if pcs.length === 0}<p class="muted">Aucun personnage joueur. Créez-en un avec « + » dans les onglets du haut.</p>{/if}
+    {#if pcs.length === 0}<p class="muted">Aucun personnage joueur. Créez-en un dans l'espace Équipe.</p>{/if}
   </div>
 </section>
 

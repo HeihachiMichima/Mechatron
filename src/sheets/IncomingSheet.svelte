@@ -9,7 +9,7 @@
     const d = store.incoming; store.incoming = null; clearHash(); store.close();
     // From the welcome screen: the robot starts a new campaign.
     if (!store.started) store.start({ version: VERSION, campaign: blankCampaign(''), chars: [{ ...d, id: undefined }] }, `${d.name || 'Robot'} ajouté à une nouvelle campagne`);
-    else store.addChar({ ...d, id: undefined }, { label: `${d.name || 'Robot'} ajouté à vos robots` });
+    else store.openFiche(store.addChar({ ...d, id: undefined }, { label: `${d.name || 'Robot'} ajouté à vos robots` }));
   }
   function decline() { store.incoming = null; clearHash(); store.close(); }
 </script>

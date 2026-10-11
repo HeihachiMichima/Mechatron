@@ -28,9 +28,8 @@
         d.chars.push(c);
         if (mode === 'combat') d.combat.combatants.push(newCombatant(c.id, side));
       });
-      if (mode === 'roster' && qty === 1) d.activeId = made[0].id;
     });
-    if (mode === 'roster' && qty === 1) store.ui.tab = 'robot';
+    if (mode === 'roster' && qty === 1) store.openFiche(made[0].id, 'robot');
   }
   const fromT = (t) => create(() => fromTemplate(t), t.name);
   function blank(body) {

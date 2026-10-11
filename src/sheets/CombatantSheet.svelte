@@ -16,7 +16,7 @@
   const covers = [{ name: 'À découvert', armor: 0 }, ...D.coverPresets];
   const setX = (patch, label) => store.commitAll(label, (d) => Object.assign(d.combat.combatants.find((y) => y.id === xid), patch));
   function remove() { const n = c.name; store.close(); store.commitAll(`${n || 'Robot'} retiré du combat`, (d) => (d.combat.combatants = d.combat.combatants.filter((y) => y.id !== xid))); }
-  function openSheet() { const id = c.id; store.close(); store.activate(id); store.ui.tab = 'etat'; window.scrollTo({ top: 0 }); }
+  function openSheet() { const id = c.id; store.close(); store.openFiche(id, 'etat'); }
   function shootNow() { store.close(); store.ui.turn = null; store.ui.turnActor = xid; window.scrollTo({ top: 0, behavior: 'smooth' }); }
 </script>
 
@@ -60,7 +60,7 @@
   {#snippet footer()}
     <button class="btn small danger-soft" onclick={() => store.open({ type: 'damage', cid: c.id })}>Subir des dégâts</button>
     {#if c.kind === 'npc'}<button class="btn small" onclick={() => store.open({ type: 'enemyEdit', cid: c.id })}>Modifier</button>{/if}
-    <button class="btn small ghost" onclick={openSheet}>Ouvrir la fiche</button>
+    {#if c.kind !== 'npc' || store.ui.gm}<button class="btn small ghost" onclick={openSheet}>Ouvrir la fiche</button>{/if}
     <button class="btn small ghost" onclick={remove}>Retirer</button>
   {/snippet}
 </Sheet>

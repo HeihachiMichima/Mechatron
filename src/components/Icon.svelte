@@ -27,6 +27,12 @@
     upload: 'M12 15V3M7 8l5-5 5 5M5 15v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4',
     download: 'M12 3v12M7 10l5 5 5-5M5 15v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4',
     history: 'M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5M12 7v5l3 2',
+    // Spaces (T05): a battery, a trader's bag, the session logbook, the GM screen.
+    energie: 'M3 8h15v8H3zM18 10.5h2.5v3H18M11.5 9.5 8.5 12h3l-3 2.5',
+    marche: 'M5 8h14l-1.2 12H6.2zM9 8V6.5a3 3 0 0 1 6 0V8M9 12h.01M15 12h.01',
+    seance: 'M12 7a3 3 0 0 0-3-2H4v13h5a3 3 0 0 1 3 2 3 3 0 0 1 3-2h5V5h-5a3 3 0 0 0-3 2zM12 7v13',
+    mj: 'M3 6.5 9 4v14l-6 2.5zM9 4l6 2.5v14L9 18zM15 6.5 21 4v14l-6 2.5z',
+    back: 'M15 6l-6 6 6 6',
     users: 'M16 20v-1a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v1M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM22 20v-1a4 4 0 0 0-3-3.8M16 4.2a3.5 3.5 0 0 1 0 6.6'
   };
 </script>

@@ -25,7 +25,13 @@
       onpick: (name) => store.commit(name ? `${s.label} : ${name}` : `${s.label} retiré`, (st) => (st[s.key] = name))
     });
   }
-  const setKind = (k) => store.commit(k === 'npc' ? 'Fiche passée en PNJ' : 'Fiche passée en PJ', (s, d) => { s.kind = k; ensureColor(d.chars, s); });
+  // GM mode only: the fiche then moves to its space (PC → Équipe, NPC → MJ).
+  function setKind(k) {
+    if (k === (c.kind === 'npc' ? 'npc' : 'pc')) return;
+    const id = c.id;
+    store.commit(k === 'npc' ? 'Fiche passée en PNJ' : 'Fiche passée en PJ', (s, d) => { s.kind = k; ensureColor(d.chars, s); });
+    store.openFiche(id, 'robot');
+  }
   const setBody = (b) => store.commit(null, (s) => { s.body = b; if (b !== 'robot') s.statMode = 'direct'; if (b === 'creature') s.online = false; });
   function setMode(m) {
     store.commit(m === 'direct' ? 'Statistiques saisies directement' : 'Statistiques calculées par le châssis', (s) => {
@@ -66,12 +72,12 @@
   <section class="panel">
     <div class="panel-head"><h2>Type de fiche</h2></div>
     <div class="opts">
-      <div><span class="ol">Joué par</span>
+      {#if store.ui.gm}<div><span class="ol">Joué par</span>
         <div class="chips">
           <button class="chip" aria-pressed={c.kind !== 'npc'} onclick={() => setKind('pc')}>Joueur (PJ)</button>
           <button class="chip" aria-pressed={c.kind === 'npc'} onclick={() => setKind('npc')}>MJ (PNJ)</button>
         </div>
-      </div>
+      </div>{/if}
       <div><span class="ol">Corps</span>
         <div class="chips">
           <button class="chip" aria-pressed={c.body === 'robot'} onclick={() => setBody('robot')}>Robot</button>
@@ -155,6 +161,7 @@
       <label class="field"><span>Je dois protéger</span><input class="input" value={c.protect} oninput={typed('protect')} /></label>
       <label class="field"><span>Mon grand rêve</span><input class="input" value={c.dream} oninput={typed('dream')} /></label>
     </div>
+    <label class="field notes"><span>Notes</span><textarea class="input" value={c.notes} oninput={typed('notes')} placeholder="Ce que ce robot sait, ses ordres, ses secrets…"></textarea></label>
     {/if}
   </section>
 </div>
@@ -196,6 +203,8 @@
   .direct { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
   .dc { display: grid; gap: 4px; }
   .dc span { font-size: .85rem; color: var(--muted); }
+  .notes { margin-bottom: 0; }
+  .notes textarea { min-height: 110px; }
   .rel { display: grid; gap: 0 12px; }
   @media (min-width: 720px) { .rel { grid-template-columns: 1fr 1fr; } }
 </style>

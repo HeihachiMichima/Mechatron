@@ -27,7 +27,7 @@
   {/each}
   <span class="sep" aria-hidden="true"></span>
   {#if showEp && pool}
-    <button class="cell ep" onclick={() => (store.ui.tab = 'combat')} aria-label="Réserve du MJ {store.combat.gmPool} PE">
+    <button class="cell ep" onclick={() => store.go('combat')} aria-label="Réserve du MJ {store.combat.gmPool} PE">
       <span class="lbl">PE MJ</span>
       <span class="val num">{store.combat.gmPool}</span>
     </button>

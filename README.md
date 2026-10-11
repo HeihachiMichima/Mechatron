@@ -16,17 +16,34 @@ Le logo (`src/assets/logo.png`, versionné dans le dépôt) est intégré au fic
 
 ## Ce qui change
 
-**Organisation pour le téléphone.** Une barre d'onglets en bas, à portée de pouce :
+**Organisation par espaces, dans l'ordre du jeu.** Une barre en bas, à portée de pouce (sur
+ordinateur, une colonne à gauche) :
+
+| Espace | Rôle |
+|---|---|
+| Équipe | Les fiches des robots joueurs : onglets de couleur, plaque d'état, puis *État · Programmes · Matériel · Identité*, et *Gérer* (la liste de l'équipe) |
+| Énergie | Niveaux de développement du collectif, et quels robots y sont connectés |
+| Marché | Le marché noir : fermé tant que l'équipe est en création, il arrive dans une prochaine version |
+| Combat | Préparation, initiative et tours guidés (inchangé) |
+| Séance | Fin de séance : questions de PX par robot, usure des niveaux (−1D6), journal de campagne |
+| MJ | En mode MJ seulement : les PNJ et leurs fiches, et la place des futurs outils du meneur |
+
+Les quatre parties d'une fiche :
 
 | Onglet | Rôle |
 |---|---|
 | État | Ce qu'on touche en partie : dégâts d'attributs, énergie, armure, couverture, PX, jet libre |
 | Programmes | Les 12 programmes groupés par attribut, le spécialiste, les personnalisés, les fonctions secondaires. Touchez un programme pour lancer les dés |
 | Matériel | Modules (bouton Activer), armes (touchez pour attaquer), équipement |
-| Robot | Identité, modèle, châssis avec les statistiques de chaque pièce, relations |
-| Collectif | Niveaux de développement, connexion au collectif, notes |
+| Identité | Nom, modèle, châssis avec les statistiques de chaque pièce, relations, notes |
 
-En haut, une **plaque d'état** reste toujours visible : les 4 attributs, les PE et l'armure, en jauges.
+Sur une fiche, une **plaque d'état** reste toujours visible : les 4 attributs, les PE et l'armure, en jauges.
+
+**Mode MJ.** Un interrupteur dans le menu ☰, propre à l'appareil (il n'est pas dans la campagne
+ni dans les exports). Il affiche l'espace MJ et les outils du meneur ; il cache des outils, pas des
+informations : le combat est le même dans les deux modes. Hors mode MJ, les PNJ n'apparaissent pas
+dans l'Équipe et leur fiche complète ne s'ouvre pas (en combat, la modification rapide reste là).
+Pas de code : un appareil partagé à la table suffit.
 
 **Calculs automatiques.** Les attributs, l'armure et les emplacements viennent du châssis. La
 hiérarchie vient du modèle (+2 avec Unité d'élite). Le max de PE passe à 12 avec Alimentation de
@@ -52,20 +69,23 @@ fiche d'artefact ; la fiche garde la table et signale l'écart.
 
 **Outils de séance.** *Dégât localisé* lance le D6 de localisation et retire le point.
 *Recharger jusqu'à N* suit la règle de la borne (on remonte au niveau de rationnement, jamais
-au-delà) ; hors ligne, le bouton devient *Soleil (+1)*. *Fin de séance* coche les questions de PX ;
-l'onglet Collectif retire 1D6 à chaque niveau de développement en un geste.
+au-delà) ; hors ligne, le bouton devient *Soleil (+1)*. L'espace Séance pose les questions de PX
+à chaque robot et retire 1D6 à chaque niveau de développement en un geste (le résultat va au
+journal). Le **journal de campagne** (espace Séance) garde les notes de la table, les plus récentes
+en haut.
 
-**Plusieurs robots.** Touchez le nom en haut pour ouvrir *Vos robots* : l'équipe (PJ) et les PNJ du
-MJ, chacun avec sa fiche complète. *Nouveau PNJ* propose les 25 robots et 6 créatures du chapitre
+**Plusieurs robots.** Dans l'Équipe, *Gérer* (ou le nom en haut) ouvre la liste des robots
+joueurs : ouvrir, dupliquer, supprimer, créer. Les PNJ du MJ ont leur liste dans l'espace MJ,
+chacun avec sa fiche complète. *Nouveau PNJ* propose les 25 robots et 6 créatures du chapitre
 « Robots et monstres » (garde, sentinelle, Avenger, Methusalem, Digamax, Dévoreur…), ou un robot,
 drone ou créature vierge. Les PNJ ont leurs statistiques saisies directement (sans châssis) ; un drone
 n'a ni Processeur ni Réseau et a sa propre table de localisation ; une créature utilise Force,
 Agilité, Intellect et Empathie. Les niveaux du collectif sont enregistrés une seule fois, dans la campagne : ils valent pour tous les robots connectés.
 
 **Onglets de couleur.** Sous la barre du haut, un onglet par robot joueur, chacun de sa couleur
-(attribuée automatiquement, modifiable dans l'onglet Robot). Le liseré de la plaque d'état prend
+(attribuée automatiquement, modifiable dans l'onglet Identité). Le liseré de la plaque d'état prend
 la couleur du robot affiché. Un point rouge signale un robot endommagé ; un nom barré, un robot
-désactivé. « + » crée un PJ, « PNJ » ouvre la liste des PNJ. Sur ordinateur, les flèches gauche
+désactivé. « + » crée un PJ, *Gérer* ouvre la liste de l'équipe. Sur ordinateur, les flèches gauche
 et droite passent d'un onglet à l'autre.
 
 **Combat.** Un guide pas à pas en trois étapes.
@@ -150,15 +170,16 @@ action, un robot peut transférer des PE à un allié par câble.
 **Grand écran.** Sur ordinateur, les pages occupent toute la largeur de la fenêtre ; au-delà de
 1500 px, les onglets passent à trois colonnes.
 
-**Tout remettre à neuf.** Un bouton (préparation du combat, bas de l'écran de combat, liste
-des robots) remet tous les robots, PJ et PNJ, en parfait état : aucun dégât, armure et modules
+**Tout remettre à neuf.** Un bouton (préparation du combat, bas de l'écran de combat) remet tous
+les robots, PJ et PNJ, en parfait état ; *Remettre l'équipe à neuf* (liste de l'équipe) et
+*Remettre les PNJ à neuf* (espace MJ) ne touchent que leur groupe. Parfait état : aucun dégât, armure et modules
 réparés, pas de couverture, PE au maximum, armes à énergie rechargées, bonus d'équipement des
 armes du livre rétabli. En combat, il efface aussi les états temporaires (immobilisé, à terre,
 action perdue) mais garde l'initiative. Deuxième appui pour confirmer, et « Annuler » juste après.
 
 **Premier lancement.** Un écran d'accueil propose *Nouvelle campagne* (donnez-lui un nom, l'équipe est vide : créez ensuite vos robots), *Importer une campagne* (un fichier `.mechatron.json`, ou un robot `.json` qui ouvre une nouvelle campagne) ou *Essayer la démo* (quatre robots joueurs et trois PNJ). Une seule campagne à la fois : pour en changer, exportez-la, puis créez-en une autre ou importez-en une.
 
-**Menu de la campagne** (icône ☰ en haut) : renommer la campagne, *Exporter la campagne*, *Importer* (une campagne remplace l'actuelle après confirmation, avec la proposition de l'exporter d'abord ; un robot s'ajoute à l'équipe), *Nouvelle campagne*, *Restaurer une sauvegarde automatique*, et le thème.
+**Menu de la campagne** (icône ☰ en haut) : renommer la campagne, *Exporter la campagne*, *Importer* (une campagne remplace l'actuelle après confirmation, avec la proposition de l'exporter d'abord ; un robot s'ajoute à l'équipe), *Nouvelle campagne*, *Restaurer une sauvegarde automatique*, le *Mode MJ* et le thème.
 
 **Sauvegardes automatiques.** Le navigateur garde les 3 dernières copies de la campagne, avec leur date et le nombre de robots : une à l'ouverture si la campagne a changé depuis la précédente, et une avant chaque remplacement (import, nouvelle campagne). Restaurer une copie s'annule comme le reste.
 
@@ -166,7 +187,7 @@ action perdue) mais garde l'initiative. Deuxième appui pour confirmer, et « An
 
 **Thèmes.** Sombre, clair ou automatique (menu de la campagne, ou en haut de l'écran d'accueil).
 
-## Exports (bouton Exporter)
+## Exports (bouton Exporter, sur une fiche)
 
 - **Carte image PNG** : résumé visuel pour Discord ou le MJ (partage natif sur téléphone).
 - **Lien de partage** : toute la fiche tient dans le lien. Celui qui l'ouvre peut l'importer.
@@ -203,7 +224,7 @@ src/lib/__tests__/       tests Vitest
 e2e/                     test Playwright de l'appli construite
 src/lib/store.svelte.js  état, sauvegarde auto, annulation
 src/lib/exports.js       PNG, lien, texte, JSON
-src/views/               les onglets
+src/views/               les espaces (Équipe, Énergie, Marché, Combat, Séance, MJ) et les onglets de fiche
 src/sheets/              panneaux (dés, module, arme, sélecteur, exports)
 src/components/          plaque d'état, navigation, jauges, fiche imprimable
 ```

@@ -23,7 +23,7 @@
     store.open({ type: 'picker', title: 'Ajouter un module', items: moduleItems(), search: true,
       onpick: (name) => { store.commitOn(cid, `${name} ajouté`, (s) => { s.modules.push(name); if (s.statMode === 'direct') s.direct.slots = Math.max(s.direct.slots || 0, s.modules.length); }); store.open({ type: 'enemyEdit', cid }); } });
   }
-  function openSheet() { store.close(); store.activate(cid); store.ui.tab = 'robot'; window.scrollTo({ top: 0 }); }
+  function openSheet() { store.close(); store.openFiche(cid, 'robot'); }
 </script>
 
 {#if c}
@@ -68,7 +68,8 @@
   </div>
 
   {#snippet footer()}
-    <button class="btn ghost" onclick={openSheet}>Ouvrir la fiche complète</button>
+    <!-- An NPC's full fiche lives in the MJ space (GM mode). -->
+    {#if c.kind !== 'npc' || store.ui.gm}<button class="btn ghost" onclick={openSheet}>Ouvrir la fiche complète</button>{/if}
     {#if c.kind === 'npc'}<button class="btn" onclick={() => store.open({ type: 'duplicate', cid })}><Icon name="copy" size={16} />Dupliquer</button>{/if}
     <button class="btn primary" style="margin-left:auto" onclick={() => store.close()}>Terminé</button>
   {/snippet}
