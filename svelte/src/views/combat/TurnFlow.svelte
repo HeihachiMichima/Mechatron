@@ -472,6 +472,11 @@
   }
 </script>
 
+<!-- Stats of the robot being targeted, under every target picker. -->
+{#snippet tstats(c)}
+  <div class="tstats"><span class="lbl">Statistiques de {nm(c)}</span><ActorStats {c} /></div>
+{/snippet}
+
 {#if !actor}
   <section class="panel turn"><p class="muted">Personne ne peut agir.</p></section>
 {:else if T}
@@ -574,6 +579,7 @@
         {/each}
         {#if !opponents.length}<p class="muted">Aucune cible debout.</p>{/if}
       </div>
+      {#if target}{@render tstats(target.c)}{/if}
       {#if grappling}<p class="hint">{nm(target.c)} est immobilisé par vous : attaque d'immobilisation, sans arme, +2, impossible à parer.</p>{/if}
       {#if T.bonus === 'Accélérateur'}<p class="hint">Accélérateur : même cible, sans manœuvre en plus.</p>{:else if T.bonus === 'Bras supplémentaires'}<p class="hint">Bras supplémentaires : ce 2e Assaut coûte aussi la manœuvre du tour.</p>{/if}
 
@@ -765,6 +771,7 @@
         {#each opponents as o (o.x.id)}<button class="tg" aria-pressed={T.targetId === o.c.id} onclick={() => set({ targetId: o.c.id, atk: null })}><Avatar c={o.c} side={o.x.side} size={44} selected={T.targetId === o.c.id} /></button>{/each}
       </div>
       {#if target}
+        {@render tstats(target.c)}
         <DiceTray cid={actor.c.id} title="{nm(actor.c)} : Cible" pool={poolFor(actor.c, '__special')} onresult={(t) => set({ atk: t, lockStunts: Array.from({ length: Math.max(0, t.successes - 1) }, () => 'atk') })} />
         {#if T.atk && T.atk.successes > 0}
           {#if T.atk.successes > 1}
@@ -818,6 +825,7 @@
             {/each}
             {#if !cand.length}<p class="muted">{f.kind === 'fatigue' ? 'Aucun être vivant en face : les robots ne subissent jamais de fatigue.' : f.robotOnly ? 'Aucun robot en face.' : 'Aucune cible.'}</p>{/if}
           </div>
+          {#if fxTarget}{@render tstats(fxTarget.c)}{/if}
         {/if}
         {#if f.kind === 'blast'}
           {#each T.fxTargets as id (id)}
@@ -892,6 +900,7 @@
         {#if T.droneAct.works && !T.droneDone}
           <span class="lbl">Cible du drone</span>
           <div class="targets">{#each opponents as o (o.x.id)}<button class="tg" aria-pressed={T.droneTarget === o.c.id} onclick={() => set({ droneTarget: o.c.id })}><Avatar c={o.c} side={o.x.side} size={44} selected={T.droneTarget === o.c.id} /></button>{/each}</div>
+          {#if T.droneTarget && ord.find((o) => o.c.id === T.droneTarget)}{@render tstats(ord.find((o) => o.c.id === T.droneTarget).c)}{/if}
           <div class="chips">{#each D.shootRanges.filter((r) => !r.gm) as r (r.id)}<button class="chip" aria-pressed={T.droneRange === r.id} onclick={() => set({ droneRange: r.id, droneRoll: null })}>{r.label} {fmtBonus(r.mod)}</button>{/each}</div>
           {#if T.droneTarget}
             {#key T.droneRange}<DiceTray cid={actor.c.id} title="Drone : Tir" pool={dronePool} noPush onresult={(t) => set({ droneRoll: t })} />{/key}
@@ -977,6 +986,8 @@
   .steps li.done { border-color: color-mix(in srgb, var(--amber) 45%, var(--line)); }
   .steps li.on { border-color: var(--amber); color: var(--text); font-weight: 600; }
   .lbl { display: block; font-size: .82rem; color: var(--muted); margin-top: 4px; }
+  .tstats { display: grid; gap: 4px; }
+  .tstats > :global(.stats) { border-left: 3px solid var(--muted); }
   .banner { margin: 0; padding: 10px 12px; border-left: 3px solid var(--amber); background: var(--abyss); display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
   .banner.bad { border-color: var(--fault); }
   .manoeuvre { display: grid; gap: 6px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }

@@ -1,7 +1,8 @@
 <script>
-  // Stats of the robot (or creature) whose turn it is, shown at the top of its
-  // turn: attributes, armor and cover, energy, combat programs, weapons, modules.
-  // The header plate shows the robot selected in the tabs, not the one acting.
+  // Stats of a robot (or creature) in combat: attributes, armor and cover, energy,
+  // combat programs, weapons, modules. Shown at the top of the actor's turn and
+  // under every target picker (TurnFlow, LogicConflict). The header plate shows
+  // the robot selected in the tabs, not the one acting.
   import Segments from '../../components/Segments.svelte';
   import { store, availableEp } from '../../lib/store.svelte.js';
   import { chassis, attrCurrent, armorCurrent, armorTotal, epMax, shownAttrs, attrLabels, programs, combatWeapons } from '../../lib/rules.js';

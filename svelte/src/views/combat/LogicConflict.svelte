@@ -7,6 +7,7 @@
   import Icon from '../../components/Icon.svelte';
   import Stepper from '../../components/Stepper.svelte';
   import DiceTray from '../../components/DiceTray.svelte';
+  import ActorStats from './ActorStats.svelte';
   import { store } from '../../lib/store.svelte.js';
   import { poolFor, hierarchy, chassis, attrCurrent, attrLabel, fmtBonus } from '../../lib/rules.js';
 
@@ -76,6 +77,8 @@
   {#if !targets.length}<p class="muted">Aucun robot à raisonner.</p>{/if}
 </div>
 {#if tgt}
+  <span class="lbl">Statistiques de {nm(tgt.c)}</span>
+  <div class="tstats"><ActorStats c={tgt.c} /></div>
   {#if locked}<p class="banner bad">{nm(tgt.c)} vous a pris pour cible : impossible de l'Interagir ou de le Manipuler.</p>{/if}
   {#if canManip && !living}
     <div class="chips"><button class="chip" aria-pressed={prog === 'interaction'} onclick={() => (prog = 'interaction')}>Interaction</button><button class="chip" aria-pressed={prog === '__special'} onclick={() => (prog = '__special')}>Manipuler (sans Hiérarchie)</button></div>
@@ -118,6 +121,7 @@
 
 <style>
   .lbl { display: block; font-size: .82rem; color: var(--muted); margin-top: 4px; }
+  .tstats > :global(.stats) { border-left: 3px solid var(--muted); }
   .targets { display: flex; flex-wrap: wrap; gap: 4px; }
   .tg { display: grid; justify-items: center; background: none; border: 0; padding: 4px; border-radius: 8px; }
   .tg[aria-pressed='true'] { background: var(--hull-2); }
