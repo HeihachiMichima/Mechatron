@@ -1,7 +1,7 @@
 # Compagnon Mechatron
 
 Compagnon de jeu *mobile d'abord* pour **Mutant : Année Zéro, Mechatron** : la fiche de chaque
-robot, l'énergie, le combat guidé, et bientôt le marché noir et la carte tactique.
+robot, l'énergie, le marché noir, le combat guidé et sa carte tactique facultative.
 
 Outil de fan, non officiel, sans lien avec Free League Publishing.
 
@@ -24,9 +24,9 @@ ordinateur, une colonne à gauche) :
 | Équipe | Les fiches des robots joueurs : onglets de couleur, plaque d'état, puis *État · Programmes · Matériel · Identité*, et *Gérer* (la liste de l'équipe) |
 | Énergie | L'horloge jour/nuit de Mechatron-7, l'énergie de l'équipe, le rationnement, les transferts de PE, les niveaux de développement |
 | Marché | Le marché noir : ce qui est en vente aujourd'hui, acheter et vendre (fermé pendant la création ou si le MJ le ferme) |
-| Combat | Préparation, initiative et tours guidés (inchangé) |
+| Combat | Préparation, initiative et tours guidés, avec une carte tactique facultative |
 | Séance | *Terminer la séance* (PX de toute l'équipe, usure des niveaux, relations, résumé), PX à dépenser, historique, journal |
-| MJ | En mode MJ seulement : les PNJ et leurs fiches, et la place des futurs outils du meneur |
+| MJ | En mode MJ seulement : les PNJ et leurs fiches, la création de l'équipe, le marché noir, les règles d'expérience, les cartes |
 
 Les quatre parties d'une fiche :
 
@@ -140,6 +140,25 @@ Les robots désactivés sont sautés. Un appui sur une pastille de la piste ouvr
 (dégâts manuels, initiative, couverture, état, ouvrir la fiche, retirer). Les PNJ paient leurs PE
 dans la *réserve du MJ*. Journal du combat et aide-mémoire (tour, corps à corps, tir, dégâts,
 énergie et modules, déplacement, surprise) inclus. *Terminer* peut supprimer les PNJ détruits.
+
+**Carte tactique (facultative).** Le livre joue aux portées ; une carte en cases (1 case = 2 m,
+règle maison) aide à les visualiser. Dès que la campagne a une carte, le panneau *Carte* de *Combat*
+choisit celle du combat (ou aucune),
+puis on place chaque combattant : touchez-le dans « À placer », puis une case (ou glissez un pion
+déjà posé ; au clavier, les flèches le déplacent). *Placer sur les zones de départ* pose tout le
+monde d'un geste. Le pion sélectionné (ou celui qui joue) montre au choix : les *portées* (Bras,
+Proche, Courte), le *déplacement* possible en 1 ou 2 manœuvres (4 cases par manœuvre, règle maison)
+et les *lignes de vue* vers les adversaires, avec la couverture suggérée (Meuble 3, Porte blindée 5,
+Mur 7 : la table du livre). Ce ne sont que des suggestions : la table décide. Un doigt déplace la
+carte, deux doigts (ou la molette) zooment, *Recentrer* revient à la vue entière. Sur téléphone, la
+carte se replie ; sur grand écran, elle passe à gauche du tour de jeu.
+
+En mode MJ, *MJ → Cartes* dessine les cartes (jusqu'à 32 × 24 cases) : sol, mur, porte fermée ou
+ouverte, porte blindée (bouclier), meuble, terrain difficile, eau, zones de départ alliée et ennemie ;
+pinceau ou rectangle, *Annuler*, taille, nom, dupliquer, supprimer. Les *Règles de la grille* (taille
+d'une case, limites de Proche et de Courte, cases par manœuvre) se changent pour la campagne. Les
+cartes sont enregistrées à part : *Annuler* (en bas de l'écran) ne défait pas un dessin, mais défait
+le déplacement d'un pion. Elles partent avec *Exporter la campagne*.
 
 **Modules en combat.** Chaque module intervient là où le livre le prévoit, et chaque activation
 lance ses dés de surchauffe (un par PE ; Économiseur d'énergie : un dé de plus, un 6 retire 1 PE) :

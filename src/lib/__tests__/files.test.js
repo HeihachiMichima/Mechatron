@@ -101,7 +101,7 @@ describe('Store: campaign lifecycle', () => {
     store.data = normalizeAll({}); store.started = false;
     store.start(file);
     expect(strip(store.exportData())).toEqual(before);
-    expect(store.campaign.maps).toEqual([{ id: 'm1' }]);
+    expect(store.campaign.maps.map((m) => m.id)).toEqual(['m1']);
   });
 
   it('a failed import changes nothing', () => {

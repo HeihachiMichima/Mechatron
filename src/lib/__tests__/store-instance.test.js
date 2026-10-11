@@ -63,7 +63,7 @@ describe('Store', () => {
     store.commitAll(null, (d) => { d.campaign.maps.push({ id: 'm1' }); d.campaign.dev.Information = 10; });
     store.undo();
     expect(store.campaign.dev.Information).toBe(50);
-    expect(store.campaign.maps).toEqual([{ id: 'm1' }]);
+    expect(store.campaign.maps.map((m) => m.id)).toEqual(['m1']);
   });
 
   it('a save of another version is refused', () => {
@@ -78,9 +78,9 @@ describe('Store', () => {
   it('undoing an import brings the previous maps back', () => {
     store.commitAll(null, (d) => d.campaign.maps.push({ id: 'mine' }));
     store.replaceAll({ version: 3, campaign: { maps: [{ id: 'theirs' }] }, chars: [] });
-    expect(store.campaign.maps).toEqual([{ id: 'theirs' }]);
+    expect(store.campaign.maps.map((m) => m.id)).toEqual(['theirs']);
     store.undo();
-    expect(store.campaign.maps).toEqual([{ id: 'mine' }]);
+    expect(store.campaign.maps.map((m) => m.id)).toEqual(['mine']);
   });
 
   it('activeId follows the team when robots are added by a raw commit', () => {

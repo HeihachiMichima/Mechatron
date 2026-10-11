@@ -49,7 +49,7 @@ Repo: `HeihachiMichima/Mechatron` (local: `G:\MYZ\mechatron-sheet`) · Baseline:
 
 ---
 
-## 1. Current state (verified against the code; as of v3.9.0, after T12)
+## 1. Current state (verified against the code; as of v3.10.0, after T13)
 
 - **Stack:** Svelte 5 (runes), Vite 8, `vite-plugin-singlefile` → a single `dist/index.html` (about 750 kB) with scripts, CSS, fonts and logo inlined. French UI, mobile-first, side rail at ≥ 960 px.
 - **Layout and deploy (T00, v2.3.8):** the app lives at the repo root (`index.html` = Vite entry, `src/`, `package.json`). `.github/workflows/deploy.yml` builds and deploys `dist/` to GitHub Pages on each push to `main`; `dist/` is git-ignored. Paths below are relative to the root (`src/...`); before T00 they were under `svelte/`.
@@ -80,6 +80,7 @@ Repo: `HeihachiMichima/Mechatron` (local: `G:\MYZ\mechatron-sheet`) · Baseline:
 - **Energy on the fiche:** StateView keeps ±1, "Recharger jusqu'à {ration}" and "Soleil (+1)" when `c.online` is false (outside).
 - **XP (T11, v3.8.0):** `src/lib/xp.js`. Rules = `campaign.rules.xp` or the book's (6 questions × 1 XP, 5 XP per upgrade), GM editor `views/gm/XpRulesEditor.svelte`. « Terminer la séance » = `views/session/SessionWizard.svelte` (backup, XP grid with « participé » pre-ticked and GM adjustment, DEV decay 1D6 with override, relations, summary with days and market deals) → one undoable `applySession`, `campaign.xp.log`, journal, then « Exporter la campagne ». Spending = `XpSpendSheet` (program +1 up to `programMax`, secondary function of any model) → `campaign.xp.spent` + journal.
 - **Grid geometry (T12, v3.9.0):** `src/lib/tactics/` (pure, tested): map = `{ w, h, cells }` (one terrain character per cell: `. # m d / b : ~ a e`, ≤ 32×24), `TERRAIN` (sight, movement cost, cover name from `coverPresets`), `distance` (Chebyshev), `line`, `los` (4 corner-to-centre rays → `visible`, `partial`), `suggestCover` (furniture / steel door next to the target on the line, wall when sight is partial), `bandOf`, `reach` (Dijkstra, `moveSquares`), `maneuversFor`, `blastVictims`; edits `setCell`, `fillRect`, `resizeMap`, `parseMap`. House values `HOUSE.grid` (`squareM` 2, `bands` Bras 1 / Proche 3 / Courte 12, `moveSquares` 4), read through `getRules().grid`.
+- **Map (T13, v3.10.0):** `campaign.maps = [{ id, name, w, h, cells }]` (`normalizeMap`; `store.saveMap` / `removeMap`, not undo steps). `combat.mapId` + combatant `pos` (undoable; `store.setCombatMap`, `store.placeToken`). `components/tactics/MapView.svelte` (SVG, one path per terrain, tokens, pan/pinch/wheel zoom, keyboard arrows), `views/combat/CombatMap.svelte` (Préparation and Combat: picker, « À placer » tray, spawn zones, overlays Portées / Déplacement / Lignes de vue with suggested cover), `views/gm/MapsPanel.svelte` + `MapEditor.svelte` (MJ → Cartes, paint tool, grid house rules in `campaign.rules.grid`). Phones: map between the turn lane and the turn panel, collapsible; ≥ 1280 px: map on the left.
 - **Combat:** preparation → initiative → guided turn (`TurnFlow.svelte`, about 1,060 lines).
   - Range is chosen by hand (`shootRanges`).
   - Cover is **a state of the robot** (`c.cover`): set by the "se mettre à couvert" maneuver (chips), and worn down by hits (`t.cover = res.newCover`).

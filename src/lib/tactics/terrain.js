@@ -37,6 +37,27 @@ export const terrainCover = (t) => (t?.cover ? coverOf(t.cover) : 0);
 export const MAX_W = 32;
 export const MAX_H = 24;
 
+/** A square position { x, y } (whole, ≥ 0), or null. */
+export function normalizePos(p) {
+  if (!p || typeof p !== 'object') return null;
+  const x = Math.floor(Number(p.x)), y = Math.floor(Number(p.y));
+  return Number.isFinite(x) && Number.isFinite(y) && x >= 0 && y >= 0 ? { x, y } : null;
+}
+
+/**
+ * A saved map: { id, name, w, h, cells }. Sizes are clamped, `cells` is cut or
+ * padded to w × h and unknown characters become floor. `makeId` gives an id
+ * when the map has none.
+ */
+export function normalizeMap(raw, makeId = () => '') {
+  const r = raw && typeof raw === 'object' ? raw : {};
+  const w = clampInt(r.w ?? 16, 1, MAX_W), h = clampInt(r.h ?? 12, 1, MAX_H);
+  const src = typeof r.cells === 'string' ? r.cells : '';
+  let cells = '';
+  for (let i = 0; i < w * h; i++) cells += TERRAIN[src[i]] ? src[i] : '.';
+  return { id: typeof r.id === 'string' && r.id ? r.id : makeId(), name: typeof r.name === 'string' ? r.name : '', w, h, cells };
+}
+
 /** A blank map of floor cells. */
 export function blankMap(w = 16, h = 12) {
   w = clampInt(w, 1, MAX_W);

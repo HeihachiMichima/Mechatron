@@ -205,3 +205,29 @@ export function blastVictims(map, centre, tokens, rules = DEFAULT) {
     .filter((v) => v.band !== 'Longue' && los(map, centre, v.token).visible)
     .sort((a, b) => a.d - b.d);
 }
+
+/**
+ * Squares for tokens to start on: allies on the ally spawn zone (`a`), enemies
+ * on the enemy one (`e`), row by row, skipping `taken` keys. `list` = [{ id, side }];
+ * returns { id: {x, y} } for those that found a square (the others stay off the map).
+ */
+export function spawnPlaces(map, list, taken = []) {
+  const used = new Set(taken);
+  const free = { ally: [], enemy: [] };
+  for (let y = 0; y < map.h; y++) for (let x = 0; x < map.w; x++) {
+    const ch = map.cells[y * map.w + x];
+    if (ch === 'a') free.ally.push({ x, y });
+    else if (ch === 'e') free.enemy.push({ x, y });
+  }
+  const out = {};
+  for (const t of list) {
+    const pool = free[t.side === 'enemy' ? 'enemy' : 'ally'];
+    while (pool.length && used.has(key(pool[0]))) pool.shift();
+    const p = pool.shift();
+    if (p) { out[t.id] = p; used.add(key(p)); }
+  }
+  return out;
+}
+
+/** Can a token stand on this square? (inside, passable, not taken) */
+export const canStand = (map, p, taken = []) => inside(map, p) && terrainAt(map, p).cost !== Infinity && !taken.includes(key(p));

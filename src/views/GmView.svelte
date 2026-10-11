@@ -6,6 +6,7 @@
   import ResetAllButton from '../components/ResetAllButton.svelte';
   import MarketEditor from './gm/MarketEditor.svelte';
   import XpRulesEditor from './gm/XpRulesEditor.svelte';
+  import MapsPanel from './gm/MapsPanel.svelte';
   import { store } from '../lib/store.svelte.js';
   import { stepErrors, draftFrom, startWizard } from '../lib/creation.js';
 
@@ -57,6 +58,8 @@
   <MarketEditor />
 
   <XpRulesEditor />
+
+  <MapsPanel />
 
   <section class="panel">
     <div class="panel-head"><h2>Outils à venir</h2></div>
