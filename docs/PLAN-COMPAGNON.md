@@ -53,7 +53,7 @@ Repo: `HeihachiMichima/Mechatron` (local: `G:\MYZ\mechatron-sheet`) · Baseline:
 
 - **Stack:** Svelte 5 (runes), Vite 8, `vite-plugin-singlefile` → a single `dist/index.html` (about 624 kB) with scripts, CSS, fonts and logo inlined. French UI, mobile-first, side rail at ≥ 960 px.
 - **Layout and deploy (T00, v2.3.8):** the app lives at the repo root (`index.html` = Vite entry, `src/`, `package.json`). `.github/workflows/deploy.yml` builds and deploys `dist/` to GitHub Pages on each push to `main`; `dist/` is git-ignored. Paths below are relative to the root (`src/...`); before T00 they were under `svelte/`.
-- **Logo (v2.3.7):** `src/assets/logo.png` (tracked) is shown in `TopBar.svelte` and `PrintSheet.svelte`. It is the logo of the *Road to Eden* video game; the owner chose to keep it.
+- **Logo (v2.3.7):** `src/assets/logo.png` (tracked) is shown in `TopBar.svelte` and `PrintSheet.svelte`. Taken from the *Road to Eden* video game logo, cropped in v3.0.1 to « MUTANT / YEAR ZERO » (the « Road to Eden » line removed); the owner chose to keep it.
 - **Docs (tracked since T00):** `CLAUDE.md` (agent guide), `README.md` (French, user-facing), `docs/PLAN-COMPAGNON.md`. The v1 files, `releases/` and the committed build are gone.
 - **State (T03, v3.0.0)** (`lib/store.svelte.js`): `data = { version: 3, campaign, chars[], activeId, combat }` in `localStorage['mechatron-v3']`; UI prefs in `mechatron-ui-v3`. Older keys are deleted at startup.
   - `campaign = { name, createdAt, updatedAt, phase, dev, rules, journal, clock, market, xp, maps, encounters }`, normalised by `normalizeCampaign()`; `normalizeAll()` keeps it (round-trip tested).
@@ -656,7 +656,7 @@ campaign.xp.log = [{ at, awards: [{ cid, total, items }] }]
 | Committed build file causes collisions | Build on GitHub, `dist/` not tracked (T00) |
 | Old-save migrations | Dropped: no user base (§2.5) |
 
-**Points noted without action:** the logo is the *Road to Eden* video game's (the owner's choice); `data.js` contains French paraphrases of the book (a hobby fan project, unchanged).
+**Points noted without action:** the logo comes from the *Road to Eden* video game's, cropped to « MUTANT / YEAR ZERO » in v3.0.1 (the owner's choice); `data.js` contains French paraphrases of the book (a hobby fan project, unchanged).
 
 ---
 
@@ -673,6 +673,7 @@ campaign.xp.log = [{ at, awards: [{ cid, total, items }] }]
   - the rulebook is available as Markdown in `Mechatron-livre-md/` (root, git-ignored); every rules reference points there. Consequence: market prices come from the book (p.234) and chassis parts are sold; range bands follow the book's distances (p.82); Scrap Robots have no base station (p.112).
 - 2026-10-11: the owner checked garbled OCR values in the PDF: scrap club 1 EP, vibro knife 3 EP (p.234), steel door cover 5 (p.91).
 - 2026-10-11: **plan agreed** → commits and pushes allowed, following §0.1.
+- 2026-10-11: crop the logo to remove the « Road to Eden » line (v3.0.1, before T04).
 - **Still open:** none blocking. If a ticket raises a question, the agent asks before choosing.
 
 ---
