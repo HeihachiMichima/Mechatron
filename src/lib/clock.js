@@ -20,7 +20,8 @@ import { d6 } from './rng.js';
 
 const BANK = 'Banque d\'énergie';
 export const bankCapacity = () => D.equipment.find((e) => e.name === BANK)?.capacity ?? 0;
-export const isBank = (name) => (name || '').trim().toLowerCase() === BANK.toLowerCase();
+const plain = (s) => (s || '').trim().toLowerCase().replace(/[’`]/g, "'");
+export const isBank = (name) => plain(name) === plain(BANK);
 export const isPack = (name) => /^(e-pack|batterie)$/i.test((name || '').trim());
 
 /** A fresh clock: day 1, morning, clear sky. */
@@ -31,7 +32,7 @@ export function normalizeClock(raw) {
   const b = blankClock();
   if (!raw || typeof raw !== 'object') return b;
   const report = raw.report && typeof raw.report === 'object'
-    ? { title: String(raw.report.title ?? ''), lines: (Array.isArray(raw.report.lines) ? raw.report.lines : []).filter((l) => l && typeof l === 'object').map((l) => ({ id: String(l.id ?? ''), text: String(l.text ?? '') })) }
+    ? { title: String(raw.report.title ?? ''), lines: (Array.isArray(raw.report.lines) ? raw.report.lines : []).filter((l) => l && typeof l === 'object').map((l) => ({ id: String(l.id ?? ''), name: String(l.name ?? ''), text: String(l.text ?? '') })) }
     : null;
   return {
     day: Math.max(1, Math.floor(Number(raw.day)) || 1),
@@ -50,7 +51,7 @@ export function normalizeClock(raw) {
 export function energyRules(campaign) {
   const R = getRules();
   const ov = campaign?.rules?.energy || {};
-  const num = (v) => (v === '' || v == null || !Number.isFinite(Number(v)) ? null : Math.max(0, Number(v)));
+  const num = (v) => (v === '' || v == null || !Number.isFinite(Number(v)) ? null : Math.max(0, Math.floor(Number(v))));
   const bookRation = devBand(campaign?.dev?.Energie ?? R.devStart).energyEp;
   return {
     dailyDrain: num(ov.dailyDrain) ?? R.dailyDrain,
@@ -71,21 +72,22 @@ const name = (c) => c.name || 'Robot sans nom';
 const epLine = (c) => `${c.ep.current}/${epMax(c)} PE`;
 
 function finish(data, title, lines) {
-  data.campaign.clock.report = { title, lines: lines.map(({ id, text }) => ({ id, text })) };
+  data.campaign.clock.report = { title, lines: lines.map(({ id, name, text }) => ({ id, name, text })) };
   const text = [title, ...lines.map((l) => `${l.name} : ${l.text}`)].join('\n');
   data.campaign.journal.push({ at: new Date().toISOString(), day: data.campaign.clock.day, text });
   return data.campaign.clock.report;
 }
 
-/** Evening: daily drain, sleep mode at 0, then night. Returns the report. */
+/** Evening: daily drain, sleep mode at 0, then night. Returns the report, or null if it isn't day. */
 export function endDay(data) {
   const clock = data.campaign.clock;
+  if (clock.phase !== 'day') return null;
   const { dailyDrain } = energyRules(data.campaign);
   const lines = clockRobots(data).map((c) => {
     const before = c.ep.current;
     c.ep.current = Math.max(0, before - dailyDrain);
     const spent = before - c.ep.current;
-    const sleep = c.ep.current === 0;
+    const sleep = c.ep.current === 0 && c.kind !== 'npc'; // NPCs have no sleep mode (rules.status)
     return { id: c.id, name: name(c), text: `${spent ? `−${spent} PE` : 'rien à dépenser'} (${epLine(c)})${sleep ? (before > 0 ? ', passe en veille' : ', toujours en veille') : ''}` };
   });
   clock.phase = 'night';
@@ -95,11 +97,14 @@ export function endDay(data) {
 }
 
 /**
- * Night: base station up to the ration for connected robots (unless excluded),
- * solar cells for the others. `exclude` defaults to the clock's list.
+ * Night: base station up to the ration for connected robots, solar cells for
+ * the others. `exclude` (default: the clock's list) = no base station for a
+ * connected robot, no Panneaux solaires for one outside (it didn't stay idle).
+ * Only once per night, after endDay; returns null otherwise. EP never go down.
  */
 export function nightCharge(data, { exclude } = {}) {
   const clock = data.campaign.clock;
+  if (clock.phase !== 'night' || clock.charged) return null;
   const skip = new Set(exclude ?? clock.exclude);
   const { ration, outsideSolarEp } = energyRules(data.campaign);
   const lines = clockRobots(data).map((c) => {
@@ -112,13 +117,17 @@ export function nightCharge(data, { exclude } = {}) {
       else if (before >= cap) text = `déjà au rationnement (${cap}), pas de recharge`;
       else { c.ep.current = cap; text = `borne : +${cap - before} PE`; }
     } else {
-      c.ep.current = Math.min(max, before + outsideSolarEp);
+      c.ep.current = Math.max(before, Math.min(max, before + outsideSolarEp));
       const parts = [`soleil +${c.ep.current - before}`];
-      if (clock.clearSky && hasSecondary(c, 'Panneaux solaires')) {
-        const roll = d6();
-        const b2 = c.ep.current;
-        c.ep.current = Math.min(max, b2 + roll);
-        parts.push(`panneaux solaires D6 = ${roll}, +${c.ep.current - b2}`);
+      if (hasSecondary(c, 'Panneaux solaires')) {
+        if (!clock.clearSky) parts.push('panneaux solaires : ciel couvert');
+        else if (skip.has(c.id)) parts.push('panneaux solaires : pas resté inactif');
+        else {
+          const roll = d6();
+          const b2 = c.ep.current;
+          c.ep.current = Math.max(b2, Math.min(max, b2 + roll));
+          parts.push(`panneaux solaires D6 = ${roll}, +${c.ep.current - b2}`);
+        }
       }
       text = `dehors : ${parts.join(', ')} PE`;
     }
@@ -129,9 +138,10 @@ export function nightCharge(data, { exclude } = {}) {
   return finish(data, `Jour ${clock.day}, nuit : recharge${clock.clearSky ? '' : ' (ciel couvert)'}`, lines);
 }
 
-/** Morning: next day, per-day flags reset. */
+/** Morning: next day, per-day flags reset. Only at night; returns false otherwise. */
 export function startDay(data) {
   const clock = data.campaign.clock;
+  if (clock.phase !== 'night') return false;
   clock.day += 1;
   clock.phase = 'day';
   clock.charged = false;
@@ -139,13 +149,15 @@ export function startDay(data) {
   for (const c of data.chars) c.daily = { barter: false };
   data.campaign.clock.report = null;
   data.campaign.journal.push({ at: new Date().toISOString(), day: clock.day, text: `Jour ${clock.day} : nouvelle journée` });
+  return true;
 }
 
 // ---------- transfers (cable, Banque d'énergie, E-pack / Batterie) ----------
 
 const ref = (data, end) => {
   const c = data.chars.find((x) => x.id === end?.id);
-  if (!c) return null;
+  // Creatures have no EP; a destroyed robot can't give or take any.
+  if (!c || c.body === 'creature' || status(c).deactivated) return null;
   if (end.item == null) return { c, get: () => c.ep.current, room: () => epMax(c) - c.ep.current, add: (n) => (c.ep.current += n), label: name(c) };
   const it = c.equipment[end.item];
   if (!it || !isBank(it.name)) return null;
@@ -159,7 +171,7 @@ const ref = (data, end) => {
  */
 export function transfer(data, from, to, n) {
   const a = ref(data, from), b = ref(data, to);
-  if (!a || !b || (from.id === to.id && from.item === to.item)) return 0;
+  if (!a || !b || (from.id === to.id && (from.item ?? null) === (to.item ?? null))) return 0;
   const got = Math.max(0, Math.min(Math.floor(n) || 0, a.get(), b.room()));
   if (!got) return 0;
   a.add(-got); b.add(got);
@@ -174,7 +186,7 @@ export function drainPack(data, id, index) {
   if (!it || !isPack(it.name)) return null;
   const roll = d6();
   const before = c.ep.current;
-  c.ep.current = Math.min(epMax(c), before + roll);
+  c.ep.current = Math.max(before, Math.min(epMax(c), before + roll));
   c.equipment.splice(index, 1);
   data.campaign.journal.push({ at: new Date().toISOString(), day: data.campaign.clock.day, text: `${name(c)} vide ${it.name} : D6 = ${roll}, +${c.ep.current - before} PE` });
   return { roll, gain: c.ep.current - before };

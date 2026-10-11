@@ -6,10 +6,10 @@
   import TurnFlow from './TurnFlow.svelte';
   import ResetAllButton from '../../components/ResetAllButton.svelte';
   import { flip } from 'svelte/animate';
-  import { getDev } from '../../lib/settings.js';
+  import { energyRules } from '../../lib/clock.js';
   import { store, blankCombat } from '../../lib/store.svelte.js';
   import { order, current, isDown, sideCounts } from '../../lib/combat.js';
-  import { status, devBand, epMax } from '../../lib/rules.js';
+  import { status, epMax } from '../../lib/rules.js';
   import { isEnergyWeapon, weaponPower } from '../../lib/energy.js';
 
   let { onprep } = $props();
@@ -31,7 +31,7 @@
   let trackEl = $state(null);
   // Keep the active robot in sight: the lane itself scrolls back to its start.
   $effect(() => { cur?.x.id; trackEl?.scrollTo({ left: 0, behavior: reduced ? 'auto' : 'smooth' }); });
-  const supply = $derived(devBand(getDev().Energie).energyEp);
+  const supply = $derived(energyRules(store.campaign).ration); // the GM pool follows the same supply level (p.73)
   let confirmEnd = $state(false);
   let logOpen = $state(true);
 

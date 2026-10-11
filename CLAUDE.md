@@ -24,6 +24,7 @@ code, comments and identifiers are in English.
     │   ├── settings.js      getRules() (book ← house ← campaign overrides), getDev() (campaign.dev)
     │   ├── demo.js          demoParty(): the demo team (« Essayer la démo »)
     │   ├── creation.js      creation wizard: STEPS, stepErrors, buildRobot/applyDraft, start/finishWizard
+    │   ├── clock.js         day/night clock + energy engine: endDay, nightCharge, startDay, transfer, drainPack
     │   ├── campaign.js      campaign files (classifyImport, readImport, file name) + automatic backups
     │   ├── rules.js         pure rules functions (chassis, pools, dice, damage…)
     │   ├── rng.js           every random draw: d6(), random(), pick(), setRng(seed)
@@ -137,6 +138,16 @@ undo step. `store.open(type, props)` / `store.close()` drive bottom sheets; **pr
   `scrap: true` parts (GM mode overrides), gear choices. `buildRobot(draft)` = `applyDraft` + the
   model's `gear` groups (data.js) + EP = today's ration. Edit mode leaves gear, EP, damage, XP alone.
   `store.setPhase('play'|'creation')` = « L'équipe est prête » / « Rouvrir la création » (journal).
+- **Clock and energy (T07, `lib/clock.js`).** Pure functions on the save, inside `commitAll`:
+  `endDay` (−`dailyDrain` to every robot of `clockRobots()`: no creatures, no destroyed robots,
+  NPCs only with the GM pool off; sleep at 0), `nightCharge` (connected → base station up to the
+  ration, capped by `epMax`; not connected → `outsideSolarEp`, + D6 Panneaux solaires under a clear
+  sky; `clock.exclude` = no station / no panels; Scrap Robots excluded by default, p.112), `startDay`
+  (day + 1, `c.daily` reset). Each step refuses to run out of order (null/false), never lowers EP and
+  writes one journal entry (one line per robot) plus `clock.report`. `energyRules(campaign)` = book
+  values ← `campaign.rules.energy` (`dailyDrain`, `outsideSolarEp`, `overrideRation`); every ration
+  (fiche, wizard, GM pool) reads it. `transfer(data, {id, item?}, {id, item?}, n)` = cable or Banque
+  d'énergie (`charge`, `capacity: 5` in data.js); `drainPack` = E-pack / Batterie D6, used up.
 - **`store.started`** is false while no campaign exists (clean profile, or a save of another
   version): App shows `WelcomeView` and nothing is saved. `store.start(raw, label)` opens the first
   campaign (new, demo, file, backup) with no undo back to the welcome screen, saves at once and
@@ -156,7 +167,8 @@ undo step. `store.open(type, props)` / `store.close()` drive bottom sheets; **pr
 - **Campaign** (`campaign`, normalised by `normalizeCampaign`): `name, createdAt, updatedAt,
   phase ('creation'|'play'), dev {Energie, Production, Défense, Information}, rules {} (GM
   overrides), journal [{at, day?, text}], clock, market, xp {log}, maps [], encounters []`.
-  `clock`/`market`/`xp`/`maps`/`encounters` are kept as plain JSON until their ticket (T07…T15).
+  `clock` = `{ day, phase, clearSky, charged, exclude[], report }` (`normalizeClock`, T07);
+  `market`/`xp`/`maps`/`encounters` are kept as plain JSON until their ticket (T09…T15).
   Journal: `pushJournal(data, text, {day})` inside a commit, or `store.addJournal(text)`.
   Rename with `store.renameCampaign(name)`.
 - **DEV levels live once, in `campaign.dev`** — read them with `getDev()` (`settings.js`), never
@@ -342,6 +354,9 @@ Follow `docs/PLAN-COMPAGNON.md` §0: one ticket at a time, in order.
   parts, model gear with choices, EP = ration, summary) for every new PC and « Reprendre
   l'assistant » (creation phase or GM mode); « L'équipe est prête » gate in the MJ space (lists
   unfinished robots) opens the market; `models[].gear` and `scrap: true` parts in data.js.
+- v3.4.0 (2026-10-11, plan ticket T07): day/night clock and energy engine (`lib/clock.js`, logic and
+  tests only): daily drain, night charge up to the ration, solar cells and Panneaux solaires, Scrap
+  Robots without a base station, transfers, E-packs; `c.daily`; GM overrides `rules.energy`.
 - v3.2.1 (2026-10-11): from Combat, « Ouvrir la fiche » opens an NPC's full fiche in place, in both
   GM modes, with « Retour au combat » (`ui.peek`): combat is now strictly the same in both modes.
 

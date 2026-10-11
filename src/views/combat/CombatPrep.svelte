@@ -2,11 +2,11 @@
   import Avatar from '../../components/Avatar.svelte';
   import Icon from '../../components/Icon.svelte';
   import Stepper from '../../components/Stepper.svelte';
-  import { getDev } from '../../lib/settings.js';
+  import { energyRules } from '../../lib/clock.js';
   import { store, newCombatant } from '../../lib/store.svelte.js';
   import ResetAllButton from '../../components/ResetAllButton.svelte';
   import { GAME_DATA as D } from '../../lib/data.js';
-  import { chassis, armorCurrent, devBand, status } from '../../lib/rules.js';
+  import { chassis, armorCurrent, status } from '../../lib/rules.js';
 
   let { onnext } = $props();
   const cb = $derived(store.combat);
@@ -15,7 +15,7 @@
   const others = $derived(cb.combatants.map((x) => ({ x, c: store.char(x.cid) })).filter((r) => r.c && r.c.kind === 'npc'));
   const spareNpcs = $derived(store.chars.filter((c) => c.kind === 'npc' && !entry(c.id)));
   let showSpare = $state(false);
-  const supply = $derived(devBand(getDev().Energie).energyEp);
+  const supply = $derived(energyRules(store.campaign).ration); // the GM pool follows the same supply level (p.73)
   const pcCount = $derived(Math.max(1, cb.combatants.filter((x) => store.char(x.cid)?.kind !== 'npc').length || pcs.length));
   const ready = $derived(cb.combatants.some((x) => x.side === 'ally') && cb.combatants.some((x) => x.side === 'enemy'));
   const tplName = (c) => D.npcTemplates.find((t) => t.id === c.template)?.name;

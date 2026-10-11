@@ -210,8 +210,8 @@ export function ensureColor(chars, c) {
 }
 
 // ---------- campaign ----------
-// clock (T07), market (T09), xp (T11), maps (T13) and encounters (T15) are
-// placeholders until their ticket: kept as plain JSON so nothing is lost.
+// clock: normalizeClock (lib/clock.js, T07). market (T09), xp (T11), maps (T13)
+// and encounters (T15) are placeholders until their ticket: kept as plain JSON.
 
 /** A new, empty campaign (DEV levels at the book's starting value). */
 export function blankCampaign(name = '') {
