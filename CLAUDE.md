@@ -22,7 +22,8 @@ code, comments and identifiers are in English.
     │   ├── data.js          GAME_DATA — every game number, from the book only
     │   ├── house.js         house rules: values the book doesn't give (« règle maison », GM-editable)
     │   ├── settings.js      getRules() (book ← house ← campaign overrides), getDev() (campaign.dev)
-    │   ├── demo.js          demoParty(): the demo team (T04)
+    │   ├── demo.js          demoParty(): the demo team (« Essayer la démo »)
+    │   ├── campaign.js      campaign files (classifyImport, readImport, file name) + automatic backups
     │   ├── rules.js         pure rules functions (chassis, pools, dice, damage…)
     │   ├── rng.js           every random draw: d6(), random(), pick(), setRng(seed)
     │   ├── __tests__/       Vitest tests (*.test.js) + helpers.js (rig dice) + roundtrip.js
@@ -32,14 +33,15 @@ code, comments and identifiers are in English.
     │   │                    lookup, energy-weapon power sources, E-packs, blasts
     │   ├── exports.js       JSON / text / share-link / PNG card exports
     │   └── pickers.js       list builders for the picker sheets
-    ├── components/          TopBar, PcTabs, VitalsPlate, Nav, Sheet, Stepper, EmptyTeam,
+    ├── components/          TopBar, PcTabs, VitalsPlate, Nav, Sheet, Stepper, EmptyTeam, BackupList,
     │                        Segments, Toast, Icon, Avatar, DiceTray, CombatGuide, PrintSheet,
     │                        OverheatDice (shows one module activation)
-    ├── views/               État, Programmes, Matériel, Robot, Collectif, Combat
+    ├── views/               Welcome (no campaign yet), État, Programmes, Matériel, Robot, Collectif, Combat
     │   └── combat/          CombatPrep → CombatInit → CombatFight (+ TurnFlow, ActorStats,
     │                        LogicConflict, BlowerStep, RecycleStep)
     └── sheets/              bottom-sheet dialogs (Roll, Damage, Module, Picker, Weapon,
-                             Template, Roster, Export, Incoming, Xp, Combatant, EnemyEdit, Duplicate)
+                             Template, Roster, Export, Incoming, Xp, Combatant, EnemyEdit, Duplicate,
+                             Campaign = the top bar menu: rename, export, import, new, backups, theme)
 ```
 
 **Rules reference: `Mechatron-livre-md/`** (repo root, git-ignored — it is the user's own copy of a
@@ -109,6 +111,19 @@ snapshot for undo (40 steps), autosave and toast. Text fields use `store.type(ch
 (`value` + `oninput`, never `bind:value={store.c.*}`): keystrokes in one field coalesce into one
 undo step. `store.open(type, props)` / `store.close()` drive bottom sheets; **props vanish after
 `close()`**, so capture them in consts first.
+- **`store.started`** is false while no campaign exists (clean profile, or a save of another
+  version): App shows `WelcomeView` and nothing is saved. `store.start(raw, label)` opens the first
+  campaign (new, demo, file, backup) with no undo back to the welcome screen, saves at once and
+  calls `navigator.storage.persist()`. Later replacements go through `replaceAll(raw, label)`
+  (undoable; copies the current campaign to the backups first, except when restoring one).
+- **Campaign files** (`campaign.js`): `classifyImport(raw)` → `campaign` (version 3 with
+  `campaign` + `chars`, replaces after a confirmation offering to export first), `robot` (`name` +
+  `programRatings`, added to the team), `old` (refused with `OLD_SAVE`), `unknown`. Export =
+  `store.exportData()` (everything, maps included) as `<slug>.mechatron.json`.
+- **Automatic backups:** `mechatron-v3-backup-1…3` (1 = newest) = `{ at, reason, name, robots, data }`.
+  One at startup if the save changed since the newest backup, one before each replacement;
+  T11 calls `store.backup('Fin de séance')`. `store.restoreBackup(n)` is undoable. Storage errors
+  are swallowed (a backup is a bonus).
 - **`store.c` can be `null`** (empty team: clean first launch, last robot deleted). `activeId` is
   then `null`; `commit()` does nothing; App shows `EmptyTeam` instead of the fiche views and closes
   the robot sheets (roll, module, damage, weapon, xp). Combat and Collectif work with no robot.
@@ -117,6 +132,7 @@ undo step. `store.open(type, props)` / `store.close()` drive bottom sheets; **pr
   overrides), journal [{at, day?, text}], clock, market, xp {log}, maps [], encounters []`.
   `clock`/`market`/`xp`/`maps`/`encounters` are kept as plain JSON until their ticket (T07…T15).
   Journal: `pushJournal(data, text, {day})` inside a commit, or `store.addJournal(text)`.
+  Rename with `store.renameCampaign(name)`.
 - **DEV levels live once, in `campaign.dev`** — read them with `getDev()` (`settings.js`), never
   from a robot. `devModFor(c, prog)` gives the bonus to any `c.online` robot (PC or NPC).
 - **Rule values:** `getRules()` (`settings.js`) = `GAME_DATA.rules` + `xpQuestions` ← `house.js` ←
@@ -126,7 +142,7 @@ undo step. `store.open(type, props)` / `store.close()` drive bottom sheets; **pr
   tab is hidden; a storage error shows « Sauvegarde impossible : exportez la campagne » (once).
 - **Undo** snapshots leave out `campaign.maps` and `campaign.encounters` (they keep their own saves).
 - `src/lib/demo.js` → `demoParty()`: 4 PCs (Battle, Scrap, Protocol, Cleaning) + 3 book NPCs,
-  built by the creation rules; used by « Essayer la démo » (T04).
+  built by the creation rules; « Essayer la démo » opens it as the campaign « Démo » (`phase: 'play'`).
 
 **Characters.** `blankCharacter(kind)` with `kind: 'pc' | 'npc'`, `body: robot | drone |
 creature`, `statMode: 'chassis' | 'direct'` (direct = stats typed in, used by NPC
@@ -283,6 +299,11 @@ Follow `docs/PLAN-COMPAGNON.md` §0: one ticket at a time, in order.
   typed fields through `store.type`, autosave debounced and flushed on `pagehide`, undo capped at 40.
 - v3.0.1 (2026-10-11): logo cropped to « MUTANT / YEAR ZERO » (the « Road to Eden » line removed),
   leftover spray under it cleared; 624×236, 26 px high on phones (22 px ≤ 340 px), 42 px from 720 px.
+- v3.1.0 (2026-10-11, plan ticket T04): welcome screen when no campaign exists (new campaign,
+  import, demo, automatic backups); top bar menu (☰, replaces the theme button): rename, export
+  `<nom>.mechatron.json`, import (campaign replaces after a confirmation, robot is added), new
+  campaign, restore one of the 3 automatic backups, theme; « Télécharger la table » became
+  « Exporter la campagne »; `navigator.storage.persist()` on the first campaign.
 
 ## Ideas not done yet
 

@@ -25,6 +25,8 @@
   import DuplicateSheet from './sheets/DuplicateSheet.svelte';
   import CombatView from './views/CombatView.svelte';
   import EmptyTeam from './components/EmptyTeam.svelte';
+  import WelcomeView from './views/WelcomeView.svelte';
+  import CampaignSheet from './sheets/CampaignSheet.svelte';
   import { store } from './lib/store.svelte.js';
   import { parseShareHash } from './lib/exports.js';
 
@@ -53,6 +55,9 @@
   $effect(() => { checkHash(); window.addEventListener('hashchange', checkHash); return () => window.removeEventListener('hashchange', checkHash); });
 </script>
 
+{#if !store.started}
+<WelcomeView />
+{:else}
 <div class="app">
   <Nav />
   <div class="main">
@@ -66,6 +71,7 @@
     </main>
   </div>
 </div>
+{/if}
 
 {#if sheet?.type === 'roll'}{#key sheet}<RollSheet programId={sheet.programId} weapon={sheet.weapon} free={sheet.free} cid={sheet.cid} />{/key}
 {:else if sheet?.type === 'module'}{#key sheet}<ModuleSheet index={sheet.index} cid={sheet.cid} />{/key}
@@ -78,6 +84,7 @@
 {:else if sheet?.type === 'weapon'}{#key sheet}<WeaponSheet index={sheet.index} />{/key}
 {:else if sheet?.type === 'picker'}<PickerSheet {...sheet} />
 {:else if sheet?.type === 'export'}<ExportSheet />
+{:else if sheet?.type === 'campaign'}{#key sheet}<CampaignSheet pending={sheet.pending} />{/key}
 {:else if sheet?.type === 'xp'}<XpSheet />
 {:else if sheet?.type === 'incoming' && store.incoming}<IncomingSheet />{/if}
 

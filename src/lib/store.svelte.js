@@ -6,6 +6,7 @@ import { GAME_DATA as D } from './data.js';
 import { ATTRS, epMax, findWeapon } from './rules.js';
 import { random } from './rng.js';
 import { bindCampaign, defaultDev, getRules } from './settings.js';
+import { makeBackup, listBackups, backupData } from './campaign.js';
 
 export const VERSION = 3;
 const KEY = 'mechatron-v3';
@@ -15,6 +16,8 @@ const OLD_KEYS = ['mechatron-roster-v3', 'mechatron-ui-v2', 'mechatron-sheet-v2'
 export const OLD_SAVE = "Sauvegarde d'une ancienne version, impossible à ouvrir";
 const SAVE_FAILED = 'Sauvegarde impossible : exportez la campagne';
 const UNDO_LIMIT = 40;
+export const THEME_LABEL = { auto: 'Thème : automatique', dark: 'Thème : sombre', light: 'Thème : clair' };
+export const THEME_ICON = { auto: 'auto', dark: 'moon', light: 'sun' };
 
 export const newId = () => Math.random().toString(36).slice(2, 10);
 
@@ -257,17 +260,26 @@ export function normalizeAll(raw) {
   return { version: VERSION, campaign: normalizeCampaign(raw?.campaign), chars, activeId, combat: normalizeCombat(raw?.combat, seen) };
 }
 
+/** localStorage, or null where it is missing or blocked (tests, some private modes). */
+function storage() {
+  try { return globalThis.localStorage ?? null; } catch { return null; }
+}
+
+/**
+ * The saved campaign, if any. `started: false` means there is no campaign yet:
+ * the welcome screen shows and nothing is saved until one is created (T04).
+ */
 function load() {
   try {
     for (const k of OLD_KEYS) localStorage.removeItem(k);
     const raw = localStorage.getItem(KEY);
     if (raw) {
       const d = JSON.parse(raw);
-      if (isCurrentSave(d)) return { data: normalizeAll(d) };
-      return { data: normalizeAll({}), stale: true };
+      if (isCurrentSave(d)) return { data: normalizeAll(d), started: true };
+      return { data: normalizeAll({}), started: false, stale: true };
     }
   } catch (e) { /* storage blocked or corrupt — start fresh */ }
-  return { data: normalizeAll({}) };
+  return { data: normalizeAll({}), started: false };
 }
 
 function loadUi() {
@@ -299,6 +311,8 @@ function snapshotOf(data, full = false) {
 
 class Store {
   data = $state(null);
+  /** False until a campaign exists (welcome screen; no autosave meanwhile). */
+  started = $state(false);
   ui = $state({ ...loadUi(), sheet: null, turn: null, turnActor: null });
   toast = $state(null);
   incoming = $state(null);
@@ -310,8 +324,11 @@ class Store {
   #saveFailed = false;
 
   constructor() {
-    const { data, stale } = load();
+    const { data, started, stale } = load();
     this.data = data;
+    this.started = started;
+    // Startup backup, only when the save changed since the newest one.
+    if (started) makeBackup(storage(), JSON.parse(JSON.stringify(data)), { reason: 'Ouverture', ifChanged: true });
     bindCampaign(() => this.data.campaign);
     if (stale) queueMicrotask(() => this.notify(OLD_SAVE));
     $effect.root(() => {
@@ -335,7 +352,7 @@ class Store {
   /** Write the pending save now (also on pagehide / tab hidden). */
   flush() {
     clearTimeout(this.#saveTimer);
-    if (this.#pending == null) return;
+    if (this.#pending == null || !this.started) return;
     const json = this.#pending;
     this.#pending = null;
     try {
@@ -426,13 +443,65 @@ class Store {
       if (d.activeId === id) d.activeId = d.chars[0]?.id ?? null;
     });
   }
-  /** Replace the whole save (campaign file). Refuses other versions; returns true when done. */
-  replaceAll(raw, label) {
+  /**
+   * Replace the whole save (campaign file, new campaign, backup). Refuses other
+   * versions; returns true when done. Undoable; unless `backup: false`, the
+   * current campaign is first copied to the automatic backups.
+   */
+  replaceAll(raw, label, { backup = true } = {}) {
     if (!isCurrentSave(raw)) { this.notify(OLD_SAVE); return false; }
+    if (backup && this.started) this.backup('Avant remplacement');
     this.#push(true);
     this.data = normalizeAll(raw);
+    this.started = true;
     if (label) this.notify(label, true);
     return true;
+  }
+
+  /**
+   * Open the first campaign from the welcome screen (new, demo or file): no
+   * undo back to the welcome screen. Saves at once and asks the browser to keep
+   * the data (navigator.storage.persist). Returns true when done.
+   */
+  start(raw, label) {
+    if (!isCurrentSave(raw)) { this.notify(OLD_SAVE); return false; }
+    this.#history = [];
+    this.#typingKey = null;
+    this.data = normalizeAll(raw);
+    this.started = true;
+    this.#pending = JSON.stringify(this.data);
+    this.flush();
+    try { navigator.storage?.persist?.().catch(() => {}); } catch {}
+    if (label) this.notify(label);
+    return true;
+  }
+
+  /** The whole campaign as a plain object, for « Exporter la campagne » (maps included). */
+  exportData() { return JSON.parse(JSON.stringify($state.snapshot(this.data))); }
+
+  renameCampaign(name) {
+    const n = str(name).trim();
+    if (n === this.data.campaign.name) return;
+    this.commitAll('Campagne renommée', (d) => (d.campaign.name = n));
+  }
+
+  /** Copy the current campaign to the automatic backups (startup, end of session in T11…). */
+  backup(reason = '') { return this.started && makeBackup(storage(), this.exportData(), { reason }); }
+  /** The automatic backups, newest first: [{ n, at, reason, name, robots }]. */
+  backups() { return listBackups(storage()); }
+  /** Replace the campaign with backup n (undoable). */
+  restoreBackup(n) {
+    const d = backupData(storage(), n);
+    if (!d) { this.notify('Cette sauvegarde est illisible.'); return false; }
+    if (!this.started) return this.start(d, 'Sauvegarde restaurée');
+    return this.replaceAll(d, 'Sauvegarde restaurée', { backup: false });
+  }
+
+  /** Theme button: auto → dark → light. */
+  cycleTheme() {
+    const themes = ['auto', 'dark', 'light'];
+    this.ui.theme = themes[(themes.indexOf(this.ui.theme) + 1) % 3];
+    this.notify(THEME_LABEL[this.ui.theme]);
   }
 
   log(text) {
