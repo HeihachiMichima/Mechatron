@@ -282,7 +282,7 @@ Follow `docs/PLAN-COMPAGNON.md` §0: one ticket at a time, in order.
   demo party moved to `demo.js`), `store.c` nullable, `getRules()`/`getDev()` wired everywhere,
   typed fields through `store.type`, autosave debounced and flushed on `pagehide`, undo capped at 40.
 - v3.0.1 (2026-10-11): logo cropped to « MUTANT / YEAR ZERO » (the « Road to Eden » line removed),
-  624×236, 26 px high on phones (22 px ≤ 340 px), 42 px from 720 px.
+  leftover spray under it cleared; 624×236, 26 px high on phones (22 px ≤ 340 px), 42 px from 720 px.
 
 ## Ideas not done yet
 
