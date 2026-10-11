@@ -1,6 +1,7 @@
 <script>
   import Stepper from '../components/Stepper.svelte';
   import Icon from '../components/Icon.svelte';
+  import { getRules } from '../lib/settings.js';
   import { store } from '../lib/store.svelte.js';
   import { GAME_DATA as D } from '../lib/data.js';
   import { ATTRS, chassis, attrCurrent, programs, programPoints, devModFor, fmtBonus, modelOf, findSecondary, attrLabels } from '../lib/rules.js';
@@ -10,7 +11,8 @@
   const ch = $derived(chassis(c));
   const list = $derived(programs(c));
   const m = $derived(modelOf(c));
-  const max = D.rules.programMax;
+  const R = $derived(getRules());
+  const max = $derived(R.programMax);
   const points = $derived(programPoints(c));
 
   function setRating(p, v) {
@@ -47,7 +49,7 @@
 
 <div class="intro">
   <p>Touchez un programme pour lancer les dés. Le nombre à côté indique la réserve : attribut + programme + bonus du collectif.</p>
-  {#if c.kind !== 'npc'}<span class="pts num" class:over={points > D.rules.creationProgramPoints}>{points} pts <small class="muted">/ {D.rules.creationProgramPoints} à la création, max {D.rules.creationProgramMax} par programme</small></span>{/if}
+  {#if c.kind !== 'npc'}<span class="pts num" class:over={points > R.creationProgramPoints}>{points} pts <small class="muted">/ {R.creationProgramPoints} à la création, max {R.creationProgramMax} par programme</small></span>{/if}
 </div>
 
 <div class="grid">
@@ -72,8 +74,8 @@
       {#if !m}<li class="empty-li">Choisissez un modèle dans l'onglet Robot pour obtenir son programme spécialiste.</li>{/if}
       {#each c.customPrograms as cp, i (i)}
         <li class="custom">
-          <input class="input" placeholder="Nom du programme" value={cp.label} oninput={(e) => (store.c.customPrograms[i].label = e.currentTarget.value)} aria-label="Nom du programme personnalisé" />
-          <select class="input" value={cp.attr ?? ''} onchange={(e) => (store.c.customPrograms[i].attr = e.currentTarget.value || null)} aria-label="Attribut">
+          <input class="input" placeholder="Nom du programme" value={cp.label} oninput={(e) => store.type(c.id, `cp${i}.label`, (s) => (s.customPrograms[i].label = e.currentTarget.value))} aria-label="Nom du programme personnalisé" />
+          <select class="input" value={cp.attr ?? ''} onchange={(e) => { const v = e.currentTarget.value || null; store.commit(null, (s) => (s.customPrograms[i].attr = v)); }} aria-label="Attribut">
             <option value="">Attribut ?</option>
             {#each ATTRS as a (a)}<option value={a}>{attrLabels(c)[a].label}</option>{/each}
           </select>
@@ -89,7 +91,7 @@
   <section class="panel wide">
     <div class="panel-head">
       <h2>Fonctions secondaires</h2>
-      <span class="meta">{D.rules.xpPerUpgrade} PX la nouvelle</span>
+      <span class="meta">{R.xpPerUpgrade} PX la nouvelle</span>
     </div>
     {#if c.secondary.length === 0}
       <p class="muted">Aucune fonction installée. À la création, choisissez-en une parmi les trois de votre modèle.</p>

@@ -10,8 +10,9 @@ describe('normalize', () => {
     expect({ ...c, id: '' }).toEqual({ ...b, id: '' });
   });
 
-  it('keeps known fields, coerces types and drops unknown fields', () => {
-    const c = normalize({ version: 2, name: 'Rouille', ep: { current: '7' }, damage: { servos: -3, reseau: 2 }, junk: 1, kind: 'npc' });
+  it('keeps known fields, coerces types and drops unknown fields (and the old per-robot DEV levels)', () => {
+    const c = normalize({ version: 2, name: 'Rouille', ep: { current: '7' }, damage: { servos: -3, reseau: 2 }, junk: 1, kind: 'npc', dev: { Energie: 80 } });
+    expect('dev' in c).toBe(false);
     expect(c.name).toBe('Rouille');
     expect(c.ep.current).toBe(7);
     expect(c.damage.servos).toBe(0);
@@ -27,12 +28,14 @@ describe('normalize', () => {
 });
 
 describe('normalizeAll', () => {
-  it('an empty save gives version 3 with one robot, which is active', () => {
+  it('an empty save gives version 3, no robot, no active robot and a fresh campaign', () => {
     const d = normalizeAll({});
     expect(d.version).toBe(3);
-    expect(d.chars).toHaveLength(1);
-    expect(d.activeId).toBe(d.chars[0].id);
+    expect(d.chars).toEqual([]);
+    expect(d.activeId).toBe(null);
     expect(d.combat).toEqual(blankCombat());
+    expect(d.campaign).toMatchObject({ name: '', phase: 'creation', rules: {}, journal: [], clock: null, market: null, xp: { log: [] }, maps: [], encounters: [] });
+    expect(Object.values(d.campaign.dev)).toEqual([50, 50, 50, 50]);
   });
 
   it('fixes duplicate ids and an unknown active id', () => {

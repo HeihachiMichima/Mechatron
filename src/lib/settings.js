@@ -1,9 +1,14 @@
-// One accessor for every rule value: book (GAME_DATA.rules) ← house rules ← the
-// campaign's GM overrides, deep-merged in that order. Wired into the store in T03.
+// One accessor for every rule value: book (GAME_DATA.rules + xpQuestions) ← house
+// rules ← the campaign's GM overrides (campaign.rules), deep-merged in that order.
+// Also the shared DEV levels (campaign.dev). The store binds the campaign source
+// at startup; without it (unit tests), book and house values apply.
 import { GAME_DATA as D } from './data.js';
 import { HOUSE } from './house.js';
 
-let overrides = {};
+const BOOK = { ...D.rules, xpQuestions: D.xpQuestions };
+const DEV_KEYS = ['Energie', 'Production', 'Défense', 'Information'];
+
+let source = () => null;
 
 const isObj = (v) => v && typeof v === 'object' && !Array.isArray(v);
 function merge(base, extra) {
@@ -12,8 +17,17 @@ function merge(base, extra) {
   return out;
 }
 
-/** Set the active campaign's GM overrides (called by the store). */
-export function setRuleOverrides(obj) { overrides = isObj(obj) ? obj : {}; }
+/** Tell the accessors where the current campaign lives (called by the store; tests may call it too). */
+export function bindCampaign(fn) { source = typeof fn === 'function' ? fn : () => null; }
+
+/** The current campaign object, or null. */
+export const getCampaign = () => source();
 
 /** Book rules, then house rules, then GM overrides. */
-export function getRules() { return merge(merge(D.rules, HOUSE), overrides); }
+export function getRules() { return merge(merge(BOOK, HOUSE), source()?.rules); }
+
+/** Default DEV levels at campaign start (book p.107). */
+export const defaultDev = () => Object.fromEntries(DEV_KEYS.map((k) => [k, getRules().devStart]));
+
+/** The collective's DEV levels, shared by every robot of the campaign. */
+export function getDev() { return source()?.dev ?? defaultDev(); }

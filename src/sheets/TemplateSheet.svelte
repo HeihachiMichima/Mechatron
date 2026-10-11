@@ -21,8 +21,7 @@
 
   function create(make, baseName) {
     const group = qty > 1 ? newId() : '';
-    const dev = { ...$state.snapshot(store.c.dev) };
-    const made = Array.from({ length: qty }, (_, i) => { const c = make(); c.dev = { ...dev }; c.name = qty > 1 ? `${baseName} ${i + 1}` : baseName; c.group = group; return c; });
+    const made = Array.from({ length: qty }, (_, i) => { const c = make(); c.name = qty > 1 ? `${baseName} ${i + 1}` : baseName; c.group = group; return c; });
     store.close();
     store.commitAll(`${qty > 1 ? `${qty} × ` : ''}${baseName} ${mode === 'combat' ? 'en combat' : qty > 1 ? 'créés' : 'créé'}`, (d) => {
       made.forEach((c) => {

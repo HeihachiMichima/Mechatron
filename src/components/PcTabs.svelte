@@ -7,7 +7,7 @@
 
   const pcs = $derived(store.chars.filter((c) => c.kind !== 'npc'));
   const npcs = $derived(store.chars.filter((c) => c.kind === 'npc'));
-  const npcActive = $derived(store.c.kind === 'npc');
+  const npcActive = $derived(store.c?.kind === 'npc');
   let scroller;
 
   const state = (c) => {
@@ -27,7 +27,7 @@
   });
   function keys(e) {
     if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
-    const i = pcs.findIndex((c) => c.id === store.c.id);
+    const i = pcs.findIndex((c) => c.id === store.c?.id);
     const n = pcs[(i + (e.key === 'ArrowRight' ? 1 : -1) + pcs.length) % pcs.length];
     if (n) { go(n.id); scroller.querySelector(`[data-id="${n.id}"]`)?.focus(); }
   }
@@ -42,8 +42,8 @@
     {/if}
     {#each pcs as c (c.id)}
       {@const s = state(c)}
-      <button class="tab" class:active={c.id === store.c.id} class:down={s === 'down'} data-id={c.id} role="tab"
-        aria-selected={c.id === store.c.id} tabindex={c.id === store.c.id ? 0 : -1}
+      <button class="tab" class:active={c.id === store.c?.id} class:down={s === 'down'} data-id={c.id} role="tab"
+        aria-selected={c.id === store.c?.id} tabindex={c.id === store.c?.id ? 0 : -1}
         style="--tc:{c.color || 'var(--muted)'}" onclick={() => go(c.id)}
         title="{c.name || 'Sans nom'}{s === 'hurt' ? ' (endommagé)' : s === 'down' ? ' (désactivé)' : ''}">
         <span class="dot" aria-hidden="true"></span>

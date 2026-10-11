@@ -60,7 +60,7 @@ MJ, chacun avec sa fiche complète. *Nouveau PNJ* propose les 25 robots et 6 cr�
 « Robots et monstres » (garde, sentinelle, Avenger, Methusalem, Digamax, Dévoreur…), ou un robot,
 drone ou créature vierge. Les PNJ ont leurs statistiques saisies directement (sans châssis) ; un drone
 n'a ni Processeur ni Réseau et a sa propre table de localisation ; une créature utilise Force,
-Agilité, Intellect et Empathie. Les niveaux du collectif sont partagés par tous les robots.
+Agilité, Intellect et Empathie. Les niveaux du collectif sont enregistrés une seule fois, dans la campagne : ils valent pour tous les robots connectés.
 
 **Onglets de couleur.** Sous la barre du haut, un onglet par robot joueur, chacun de sa couleur
 (attribuée automatiquement, modifiable dans l'onglet Robot). Le liseré de la plaque d'état prend
@@ -156,7 +156,9 @@ réparés, pas de couverture, PE au maximum, armes à énergie rechargées, bonu
 armes du livre rétabli. En combat, il efface aussi les états temporaires (immobilisé, à terre,
 action perdue) mais garde l'initiative. Deuxième appui pour confirmer, et « Annuler » juste après.
 
-**Annuler.** Chaque action (dégât, PE, import, fiche vierge…) affiche un bandeau *Annuler*.
+**Premier lancement.** L'équipe est vide : créez votre premier robot (ou ajoutez-en un depuis un fichier ou un lien de partage).
+
+**Annuler.** Chaque action (dégât, PE, import, fiche vierge…) affiche un bandeau *Annuler* (40 retours en arrière au plus ; un texte tapé dans un champ compte pour un seul).
 
 **Thèmes.** Sombre, clair ou automatique (bouton en haut).
 
@@ -165,8 +167,10 @@ action perdue) mais garde l'initiative. Deuxième appui pour confirmer, et « An
 - **Carte image PNG** : résumé visuel pour Discord ou le MJ (partage natif sur téléphone).
 - **Lien de partage** : toute la fiche tient dans le lien. Celui qui l'ouvre peut l'importer.
 - **Texte** : résumé à coller dans Discord ou un forum.
-- **Ce robot (.json)** : télécharger, ou ajouter un robot depuis un fichier (compatible ancienne fiche).
-- **Toute la table (.json)** : tous les robots et le combat en cours, pour changer d'appareil.
+- **Ce robot (.json)** : télécharger, ou ajouter un robot depuis un fichier.
+- **Toute la table (.json)** : toute la campagne (robots, niveaux de développement, journal, combat en cours), pour changer d'appareil.
+
+**Sauvegarde.** Tout est enregistré dans le navigateur, quelques instants après chaque changement et dès qu'on quitte la page. Si le navigateur refuse (navigation privée, stockage plein), un message demande d'exporter la campagne. Les sauvegardes des versions 2.x ne s'ouvrent plus.
 - **Imprimer ou PDF** : mise en page A4 dédiée, claire, avec cases à cocher.
 
 ## Modifier les données de jeu

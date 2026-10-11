@@ -49,18 +49,20 @@ Repo: `HeihachiMichima/Mechatron` (local: `G:\MYZ\mechatron-sheet`) · Baseline:
 
 ---
 
-## 1. Current state (verified against the code; layout as of v2.3.8, after T00)
+## 1. Current state (verified against the code; as of v3.0.0, after T03)
 
 - **Stack:** Svelte 5 (runes), Vite 8, `vite-plugin-singlefile` → a single `dist/index.html` (about 624 kB) with scripts, CSS, fonts and logo inlined. French UI, mobile-first, side rail at ≥ 960 px.
 - **Layout and deploy (T00, v2.3.8):** the app lives at the repo root (`index.html` = Vite entry, `src/`, `package.json`). `.github/workflows/deploy.yml` builds and deploys `dist/` to GitHub Pages on each push to `main`; `dist/` is git-ignored. Paths below are relative to the root (`src/...`); before T00 they were under `svelte/`.
 - **Logo (v2.3.7):** `src/assets/logo.png` (tracked) is shown in `TopBar.svelte` and `PrintSheet.svelte`. It is the logo of the *Road to Eden* video game; the owner chose to keep it.
 - **Docs (tracked since T00):** `CLAUDE.md` (agent guide), `README.md` (French, user-facing), `docs/PLAN-COMPAGNON.md`. The v1 files, `releases/` and the committed build are gone.
-- **State** (`lib/store.svelte.js`): `data = { version: 3, chars[], activeId, combat }` in `localStorage['mechatron-roster-v3']`; UI prefs in `mechatron-ui-v2`.
-  - `normalize()` (about lines 47–96) **rebuilds each robot from a fixed list of fields**. `normalizeCombat()` (about 126–141) does the same for combatants. `normalizeAll()` returns only `{version, chars, activeId, combat}`.
-  - `undo()` goes through `normalizeAll()`, so any unknown field disappears on undo or reload (see §2.4).
-- **First launch:** `normalizeAll({})` calls `prefill()`, which creates a ready-made Battle Robot. If the last robot is deleted, `removeChar` recreates a blank one.
-- **Collective DEV levels:** stored on **every** robot (`c.dev`). `CollectiveView` writes the same value to all of them. They are read by `devModFor(c, prog)` (rules.js about line 86, called by `poolFor`, used throughout combat), and by PrintSheet, StateView, CombatPrep and CombatFight. TemplateSheet and `addChar` copy them.
-- **"Notes et journal"** in Collectif is `bind:value={store.c.notes}`: the active robot's notes, written outside `commit` (no undo). **No campaign journal exists.** Other fields also bypass `commit` through `bind:value={store.c.*}` (RobotView, WeaponSheet).
+- **State (T03, v3.0.0)** (`lib/store.svelte.js`): `data = { version: 3, campaign, chars[], activeId, combat }` in `localStorage['mechatron-v3']`; UI prefs in `mechatron-ui-v3`. Older keys are deleted at startup.
+  - `campaign = { name, createdAt, updatedAt, phase, dev, rules, journal, clock, market, xp, maps, encounters }`, normalised by `normalizeCampaign()`; `normalizeAll()` keeps it (round-trip tested).
+  - **DEV levels are stored once** in `campaign.dev`, read through `getDev()` (`settings.js`); `devModFor` gives the bonus to every `c.online` robot. Rule values come from `getRules()` (book + `xpQuestions` ← house ← `campaign.rules`).
+  - `store.c` can be `null` (empty team); `EmptyTeam` replaces the fiche views. No pre-filled robot: the demo party is `demoParty()` in `lib/demo.js` (wired in T04).
+  - Journal: `campaign.journal`, `pushJournal()` / `store.addJournal()` (no UI before T05). Text fields go through `store.type()` (one undo step per field edit).
+  - Autosave 300 ms + flush on `pagehide`/hidden tab, error toast; undo 40 steps without maps/encounters.
+- **First launch:** an empty team ("Créez votre premier robot"). The welcome screen comes in T04.
+- **"Notes et journal"** in Collectif is still the active robot's notes (now through `store.type`); the campaign journal gets its UI in T05.
 - **Tabs:** État · Combat · Programmes · Matériel · Robot · Collectif, plus colored PC tabs and the roster sheet (PCs and NPCs).
 - **Energy:** in StateView: ±1, "Recharger jusqu'à {ration}", "Soleil (+1)" when `c.online` is false (outside), and "Nouveau jour (−1)". There is no clock.
 - **XP:** `XpSheet` has 6 questions from `data.js`, 1 XP each, applied **to the active robot only**. `xpPerUpgrade: 5` is fixed. The "Dépenser 5 PX" button only subtracts XP.

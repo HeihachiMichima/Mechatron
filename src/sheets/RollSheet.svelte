@@ -2,6 +2,7 @@
   import Sheet from '../components/Sheet.svelte';
   import Stepper from '../components/Stepper.svelte';
   import Icon from '../components/Icon.svelte';
+  import { getRules } from '../lib/settings.js';
   import { store, payEp, availableEp } from '../lib/store.svelte.js';
   import { GAME_DATA as D } from '../lib/data.js';
   import { ATTRS, chassis, attrCurrent, programs, devModFor, fmtBonus, rollPool, push, canReroll, tally, maxPushes, attrLabel, shownAttrs, status } from '../lib/rules.js';
@@ -189,7 +190,7 @@
       {/if}
       <button class="btn" onclick={() => (dice = null)}>Nouveau jet</button>
     </div>
-    {#if pushes === 0 && rerollable > 0}<p class="hint">Forcer relance tout sauf les 6{D.rules.pushKeepsOnes ? ' et les 1 des dés de base et d\'équipement' : ''}.</p>{/if}
+    {#if pushes === 0 && rerollable > 0}<p class="hint">Forcer relance tout sauf les 6{getRules().pushKeepsOnes ? ' et les 1 des dés de base et d\'équipement' : ''}.</p>{/if}
   {/if}
 </Sheet>
 

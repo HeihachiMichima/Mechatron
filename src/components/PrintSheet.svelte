@@ -4,13 +4,17 @@
   import logo from '../assets/logo.png'; // inlined into the single-file build as a data URI
   import { GAME_DATA as D } from '../lib/data.js';
   import { attrLabels, ATTRS, DEV_KEYS, DEV_LABELS, chassis, attrCurrent, armorTotal, armorCurrent, epMax, modelOf, hierarchy, programs, findModule, findSecondary, devBand, fmtBonus } from '../lib/rules.js';
+  import { getRules, getDev } from '../lib/settings.js';
   const c = $derived(store.c);
-  const ch = $derived(chassis(c));
-  const m = $derived(modelOf(c));
-  const progs = $derived(programs(c));
+  const ch = $derived(c && chassis(c));
+  const m = $derived(c && modelOf(c));
+  const progs = $derived(c ? programs(c) : []);
+  const dev = $derived(getDev());
+  const R = $derived(getRules());
   const boxes = (n) => Array.from({ length: Math.max(0, n) }, (_, i) => i);
 </script>
 
+{#if c}
 <article class="print" aria-hidden="true">
   <header>
     <div>
@@ -51,7 +55,7 @@
           <thead><tr><th>Programme</th><th>Attribut</th><th>Niv.</th><th>Collectif</th></tr></thead>
           <tbody>
             {#each progs as p (p.id)}
-              <tr><td>{p.label}{p.special ? ' (spécialiste)' : ''}</td><td>{p.attr ? attrLabels(c)[p.attr].label : '—'}</td><td class="n"><b>{p.rating}</b></td><td class="n">{p.devBonus ? fmtBonus(devBand(c.dev[p.devBonus]).bonus) : ''}</td></tr>
+              <tr><td>{p.label}{p.special ? ' (spécialiste)' : ''}</td><td>{p.attr ? attrLabels(c)[p.attr].label : '—'}</td><td class="n"><b>{p.rating}</b></td><td class="n">{p.devBonus ? fmtBonus(devBand(dev[p.devBonus]).bonus) : ''}</td></tr>
             {/each}
           </tbody>
         </table>
@@ -92,16 +96,17 @@
       </section>
       <section>
         <h2>Collectif {c.online ? '' : '(hors ligne)'}</h2>
-        <p class="small">{#each DEV_KEYS as k, i (k)}{DEV_LABELS[k]} {c.dev[k]}{i < 3 ? ', ' : '.'}{/each}</p>
+        <p class="small">{#each DEV_KEYS as k, i (k)}{DEV_LABELS[k]} {dev[k]}{i < 3 ? ', ' : '.'}{/each}</p>
       </section>
       <section class="rules">
-        <p><b>Forcer un jet :</b> relancez tous les dés sauf les 6{D.rules.pushKeepsOnes ? ' (et les 1 des dés de base et d\'équipement)' : ''}. Chaque 1 sur un dé de base : 1 PE ou 1 dégât à l'attribut. Chaque 1 sur un dé d'équipement : bonus −1.</p>
-        <p><b>{D.rules.xpPerUpgrade} PX :</b> un programme +1 (max {D.rules.programMax}) ou une nouvelle fonction secondaire.</p>
+        <p><b>Forcer un jet :</b> relancez tous les dés sauf les 6{R.pushKeepsOnes ? ' (et les 1 des dés de base et d\'équipement)' : ''}. Chaque 1 sur un dé de base : 1 PE ou 1 dégât à l'attribut. Chaque 1 sur un dé d'équipement : bonus −1.</p>
+        <p><b>{R.xpPerUpgrade} PX :</b> un programme +1 (max {R.programMax}) ou une nouvelle fonction secondaire.</p>
       </section>
     </div>
   </div>
   {#if c.notes}<section class="notes"><h2>Notes</h2><p>{c.notes}</p></section>{/if}
 </article>
+{/if}
 
 <style>
   .print { display: none; }

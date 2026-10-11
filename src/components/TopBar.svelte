@@ -5,8 +5,8 @@
   import { GAME_DATA as D } from '../lib/data.js';
   import logo from '../assets/logo.png';
   const c = $derived(store.c);
-  const m = $derived(modelOf(c));
-  const tpl = $derived(c.template ? D.npcTemplates.find((t) => t.id === c.template) : null);
+  const m = $derived(c && modelOf(c));
+  const tpl = $derived(c?.template ? D.npcTemplates.find((t) => t.id === c.template) : null);
   const themes = ['auto', 'dark', 'light'];
   const themeLabel = { auto: 'Thème : automatique', dark: 'Thème : sombre', light: 'Thème : clair' };
   const themeIcon = { auto: 'auto', dark: 'moon', light: 'sun' };
@@ -16,8 +16,8 @@
 <div class="bar">
   <img class="logo" src={logo} alt="Mutant : Année Zéro" width="640" height="323" />
   <button class="who" onclick={() => store.open({ type: 'roster' })} aria-label="Changer de robot ({store.chars.length})">
-    <span class="name"><span class="nm">{c.name || 'Robot sans nom'}</span><span class="count num"><Icon name="users" size={14} />{store.chars.length}</span></span>
-    <span class="sub">{c.kind === 'npc' ? 'PNJ, ' : ''}{tpl ? tpl.name : m ? m.name : 'Modèle à choisir'}{#if m}, hiér. {hierarchy(c)}{/if}</span>
+    <span class="name"><span class="nm">{c ? c.name || 'Robot sans nom' : 'Aucun robot'}</span><span class="count num"><Icon name="users" size={14} />{store.chars.length}</span></span>
+    <span class="sub">{#if c}{c.kind === 'npc' ? 'PNJ, ' : ''}{tpl ? tpl.name : m ? m.name : 'Modèle à choisir'}{#if m}, hiér. {hierarchy(c)}{/if}{:else}Créez votre premier robot{/if}</span>
   </button>
   <button class="icon-btn" aria-label={themeLabel[store.ui.theme]} title={themeLabel[store.ui.theme]} onclick={cycle}><Icon name={themeIcon[store.ui.theme]} /></button>
   <button class="btn small export" onclick={() => store.open({ type: 'export' })}><Icon name="share" size={18} /><span>Exporter</span></button>
