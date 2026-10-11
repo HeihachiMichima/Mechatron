@@ -13,7 +13,7 @@
 
 <Sheet title="Gérer l'équipe" subtitle={pcs.length ? 'Touchez un robot pour ouvrir sa fiche' : ''}>
   <RobotList list={pcs} onpick={pick} empty="Aucun robot joueur pour l'instant." />
-  <div class="reset-row"><ResetAllButton small /></div>
+  <div class="reset-row"><ResetAllButton small kind="pc" /></div>
   {#snippet footer()}
     <button class="btn primary" onclick={newPc}><Icon name="plus" size={18} />Nouveau robot</button>
   {/snippet}

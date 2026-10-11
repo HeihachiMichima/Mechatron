@@ -44,7 +44,7 @@
   <p class="hint">Activer lance autant de dés de surchauffe que de PE dépensés{saver ? ' (+1 : Économiseur d\'énergie, un 6 retire 1 PE du coût)' : ''}. Un seul 1 suffit à provoquer un incident.</p>
   {#if broken}<p class="callout warn">Ce module est cassé : il faut le Réparer avant de l'utiliser (onglet Matériel).</p>{/if}
   <button class="btn primary block go" disabled={spend < 1 || broken || spend > avail} onclick={activate}><Icon name="bolt" />Activer pour {spend} PE</button>
-  {#if avail === 0 && !act}<p class="callout">{pool ? 'La réserve du MJ est vide (onglet Combat).' : "Plus d'énergie : rechargez dans l'onglet État."}</p>{/if}
+  {#if avail === 0 && !act}<p class="callout">{pool ? 'La réserve du MJ est vide (espace Combat).' : "Plus d'énergie : rechargez dans l'onglet État."}</p>{/if}
   {#if act}{#key n}<div class="res"><OverheatDice {act} /></div>{/key}{/if}
 </Sheet>
 

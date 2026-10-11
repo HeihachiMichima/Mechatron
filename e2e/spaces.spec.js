@@ -88,7 +88,7 @@ test('GM mode: shows the MJ space and NPC tools, hides them again, combat unchan
   await setGm(page, false);
   await expect(nav(page, 'MJ')).toHaveCount(0);
   await expect(page.locator('.plate')).toBeVisible(); // back in Équipe, on a PC
-  await expect(page.getByRole('button', { name: /Gérer l'équipe \(4\)/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /gérer l'équipe \(4\)/i })).toBeVisible();
   await page.waitForTimeout(400);
   // The switch changes nothing in the campaign.
   const after = JSON.parse(await page.evaluate(() => localStorage['mechatron-v3']));
@@ -111,7 +111,8 @@ test('every v2.3.6 feature is within 2 taps of Équipe (GM mode on)', async ({ b
   const btn = (name, exact = false) => () => page.getByRole('button', { name, exact }).first().click();
   const tab = (name) => () => page.getByRole('tab', { name }).click();
   const go = (label) => () => nav(page, label).click();
-  // [feature, taps from home, what must then be visible]
+  // [feature, taps from home, what must then be visible]. Inside Combat nothing moved: the GM pool,
+  // NPC duplication and the combatant sheets appear with the enemies, as before.
   const checklist = [
     ['Attributs, PE, armure, couverture (État)', [], () => page.getByRole('heading', { name: 'Protection' })],
     ['Subir des dégâts', [btn('Subir des dégâts')], () => dialog()],
@@ -121,9 +122,12 @@ test('every v2.3.6 feature is within 2 taps of Équipe (GM mode on)', async ({ b
     ['Jet de programme', [tab('Programmes'), () => page.getByRole('button', { name: /^Lancer / }).first().click()], () => dialog()],
     ['Matériel : armes, équipement, modules', [tab('Matériel')], () => page.getByRole('heading', { name: /Armes/ }).first()],
     ['Identité : modèle, châssis, relations, notes', [tab('Identité')], () => page.getByText('Notes', { exact: true })],
+    ['Activer un module', [tab('Matériel'), btn('Activer', true)], () => dialog()],
+    ['Modifier une arme', [tab('Matériel'), () => page.getByRole('button', { name: /^Modifier / }).first().click()], () => dialog()],
+    ['PJ ou PNJ (mode MJ)', [tab('Identité')], () => page.getByRole('button', { name: 'MJ (PNJ)' })],
     ['Choisir une pièce de châssis', [tab('Identité'), () => page.locator('.part').first().click()], () => dialog()],
     ['Exports du robot (JSON, lien, texte, image, impression)', [btn('Exporter')], () => dialog()],
-    ["Gérer l'équipe : dupliquer, supprimer, nouveau, remise à neuf", [btn("Gérer l'équipe", true)], () => dialog().getByRole('button', { name: /Tout remettre à neuf/ })],
+    ["Gérer l'équipe : dupliquer, supprimer, nouveau, remise à neuf", [btn("Gérer l'équipe", true)], () => dialog().getByRole('button', { name: /Remettre l'équipe à neuf/ })],
     ['Combat : préparation, initiative, tours', [go('Combat')], () => page.getByRole('button', { name: 'Initiative', exact: true })],
     ['Niveaux de développement et connexion', [go('Énergie')], () => page.getByRole('heading', { name: 'Connexion au collectif' })],
     ['Usure des niveaux (fin de séance)', [go('Séance')], () => page.getByRole('button', { name: /−1D6 à chaque niveau/ })],
@@ -132,6 +136,7 @@ test('every v2.3.6 feature is within 2 taps of Équipe (GM mode on)', async ({ b
     ['Campagne : exporter, importer, nouvelle, sauvegardes, thème, mode MJ', [btn('Menu de la campagne')], () => page.getByRole('switch', { name: /Mode MJ/ })],
     ['PNJ du MJ', [go('MJ')], () => page.getByRole('heading', { name: /PNJ du MJ/ })],
     ['Nouveau PNJ (modèles du livre)', [go('MJ'), btn('Nouveau PNJ')], () => dialog()],
+    ['Dupliquer ou supprimer un PNJ', [go('MJ'), () => page.getByRole('button', { name: /^Dupliquer / }).first().click()], () => page.getByText(/\(copie\)/).first()],
     ['Fiche d’un PNJ', [go('MJ'), () => page.locator('button.main', { hasText: 'Unité Sentinelle' }).click()], () => page.getByRole('button', { name: 'Tous les PNJ' })]
   ];
   for (const [name, taps, visible] of checklist) {
@@ -144,6 +149,26 @@ test('every v2.3.6 feature is within 2 taps of Équipe (GM mode on)', async ({ b
     for (const t of taps) await t();
     await expect(visible(), name).toBeVisible();
   }
+  expect(errors).toEqual([]);
+  await ctx.close();
+});
+
+test('outside GM mode, an NPC is never shown or exported from Équipe', async ({ browser }) => {
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await ctx.newPage();
+  const errors = watch(page);
+  await page.goto(url);
+  await page.getByLabel('Nom de la campagne').fill('Sans PJ');
+  await page.getByRole('button', { name: 'Créer la campagne' }).click();
+  // The only robot is an enemy added in combat: it becomes the active robot.
+  await nav(page, 'Combat').click();
+  await page.getByRole('button', { name: 'Depuis les modèles du livre' }).click();
+  await page.getByRole('dialog').locator('button.item').first().click();
+  await nav(page, 'Équipe').click();
+  await expect(page.getByRole('heading', { name: 'Créez votre premier robot' })).toBeVisible();
+  await page.getByRole('button', { name: 'Ajouter depuis un fichier' }).click();
+  await expect(page.getByRole('dialog').getByText("Aucun robot pour l’instant")).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Télécharger ce robot' })).toHaveCount(0);
   expect(errors).toEqual([]);
   await ctx.close();
 });

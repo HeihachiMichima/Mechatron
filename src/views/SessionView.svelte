@@ -44,7 +44,7 @@
           <li class="xp">
             <span class="who"><span class="cdot" style="background:{c.color}"></span><span class="nm">{c.name || 'Sans nom'}</span></span>
             <b class="num pts">{c.xp.current} PX</b>
-            <button class="btn small" onclick={() => store.open({ type: 'xp', cid: c.id })}>Questions</button>
+            <button class="btn" onclick={() => store.open({ type: 'xp', cid: c.id })}>Questions</button>
           </li>
         {/each}
       </ul>

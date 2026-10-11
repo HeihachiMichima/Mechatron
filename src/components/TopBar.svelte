@@ -22,7 +22,7 @@
 <div class="bar">
   <img class="logo" src={logo} alt="Mutant : Année Zéro" width="624" height="236" />
   {#if c}
-    <button class="who" onclick={tap} aria-label={c.kind === 'npc' ? 'Retour à la liste des PNJ' : `Gérer l'équipe (${pcs})`}>
+    <button class="who" onclick={tap} aria-label={`${c.name || 'Robot sans nom'} : ${c.kind === 'npc' ? 'retour à la liste des PNJ' : `gérer l'équipe (${pcs})`}`}>
       <span class="name"><span class="nm">{c.name || 'Robot sans nom'}</span>{#if c.kind !== 'npc'}<span class="count num"><Icon name="users" size={14} />{pcs}</span>{/if}</span>
       <span class="sub">{c.kind === 'npc' ? 'PNJ, ' : ''}{tpl ? tpl.name : m ? m.name : 'Modèle à choisir'}{#if m}, hiér. {hierarchy(c)}{/if}</span>
     </button>

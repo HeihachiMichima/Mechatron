@@ -1,11 +1,11 @@
 // T05: spaces, the fiche on screen and the « Mode MJ » switch (UI prefs, per device).
 import { describe, it, expect, beforeEach } from 'vitest';
-import { store, normalizeAll, blankCharacter, cleanUi } from '../store.svelte.js';
+import { store, normalizeAll, blankCharacter, cleanUi, restoreAll } from '../store.svelte.js';
 
 let pc, pc2, npc;
 beforeEach(() => {
   store.data = normalizeAll({});
-  Object.assign(store.ui, { space: 'equipe', tab: 'etat', gm: false, npc: null, sheet: null });
+  Object.assign(store.ui, { space: 'equipe', tab: 'etat', gm: false, npc: null, pc: null, sheet: null });
   pc = store.addChar({ ...blankCharacter('pc'), name: 'Brise-Fer' });
   pc2 = store.addChar({ ...blankCharacter('pc'), name: 'Clou' }, { activate: false });
   npc = store.addChar({ ...blankCharacter('npc'), name: 'Garde' }, { activate: false });
@@ -79,5 +79,51 @@ describe('Spaces', () => {
     store.setGm(true);
     store.setGm(false);
     expect(JSON.stringify(store.data)).toBe(before);
+  });
+
+  it('coming back to Équipe shows the PC seen there last, not the first one', () => {
+    store.openFiche(pc2);
+    store.setGm(true);
+    store.openFiche(npc);
+    expect(store.c.id).toBe(npc);
+    store.go('equipe');
+    expect(store.c.id).toBe(pc2);
+  });
+
+  it('an undo that activates an NPC while in Équipe is put right', () => {
+    store.commitAll(null, (d) => (d.activeId = npc));
+    store.syncFiche();
+    expect(store.c.id).toBe(pc);
+  });
+
+  it('undoing « Fiche passée en PNJ » in MJ follows the robot back to Équipe', () => {
+    store.setGm(true);
+    store.openFiche(pc2, 'robot');
+    store.commit('Fiche passée en PNJ', (s) => (s.kind = 'npc'));
+    store.openFiche(pc2, 'robot');
+    expect(store.space).toBe('mj');
+    store.undo();
+    store.syncFiche();
+    expect([store.space, store.ui.npc, store.fiche?.id]).toEqual(['equipe', null, pc2]);
+  });
+
+  it('a deleted NPC closes its fiche in MJ', () => {
+    store.setGm(true);
+    store.openFiche(npc);
+    store.removeChar(npc);
+    store.syncFiche();
+    expect(store.ui.npc).toBe(null);
+    expect(store.fiche).toBe(null);
+  });
+});
+
+describe('restoreAll scope', () => {
+  it("« Remettre l'équipe à neuf » leaves the NPCs alone, and the reverse", () => {
+    store.commitAll(null, (d) => d.chars.forEach((c) => (c.armorDamage = 2)));
+    const d = JSON.parse(JSON.stringify(store.data));
+    expect(restoreAll(d, 'pc')).toBe(2);
+    expect(d.chars.map((c) => c.armorDamage)).toEqual([0, 0, 2]);
+    expect(restoreAll(d, 'npc')).toBe(1);
+    expect(d.chars.map((c) => c.armorDamage)).toEqual([0, 0, 0]);
   });
 });

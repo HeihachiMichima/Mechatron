@@ -170,8 +170,9 @@ action, un robot peut transférer des PE à un allié par câble.
 **Grand écran.** Sur ordinateur, les pages occupent toute la largeur de la fenêtre ; au-delà de
 1500 px, les onglets passent à trois colonnes.
 
-**Tout remettre à neuf.** Un bouton (préparation du combat, bas de l'écran de combat, liste
-des robots) remet tous les robots, PJ et PNJ, en parfait état : aucun dégât, armure et modules
+**Tout remettre à neuf.** Un bouton (préparation du combat, bas de l'écran de combat) remet tous
+les robots, PJ et PNJ, en parfait état ; *Remettre l'équipe à neuf* (liste de l'équipe) et
+*Remettre les PNJ à neuf* (espace MJ) ne touchent que leur groupe. Parfait état : aucun dégât, armure et modules
 réparés, pas de couverture, PE au maximum, armes à énergie rechargées, bonus d'équipement des
 armes du livre rétabli. En combat, il efface aussi les états temporaires (immobilisé, à terre,
 action perdue) mais garde l'initiative. Deuxième appui pour confirmer, et « Annuler » juste après.

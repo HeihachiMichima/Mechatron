@@ -43,16 +43,7 @@
   const View = $derived(fiche ? fiches[store.ui.tab] || StateView : space === 'equipe' ? EmptyTeam : space === 'mj' ? GmView : spaces[space]);
   // Keep the active robot in line with the space: Équipe shows PCs only (an undo or
   // a combat sheet can make an NPC active), the MJ fiche is the open NPC's.
-  $effect(() => {
-    if (space === 'equipe' && store.c?.kind === 'npc') {
-      const pc = store.chars.find((x) => x.kind !== 'npc');
-      if (pc) store.activate(pc.id);
-    } else if (space === 'mj' && store.ui.npc) {
-      const n = store.char(store.ui.npc);
-      if (!n || n.kind !== 'npc') store.ui.npc = null;
-      else if (store.data.activeId !== n.id) store.activate(n.id);
-    }
-  });
+  $effect(() => store.syncFiche());
   // Sheets about one robot can't stay open once there is none.
   const robotSheets = new Set(['roll', 'module', 'damage', 'weapon', 'xp']);
   const orphan = $derived(!store.c && !!store.ui.sheet && robotSheets.has(store.ui.sheet.type));
@@ -80,7 +71,7 @@
 <div class="app">
   <Nav />
   <div class="main">
-    <header class="head" style="--pc:{fiche?.kind !== 'npc' && fiche?.color ? fiche.color : 'var(--line)'}">
+    <header class="head" style="--pc:{fiche?.kind !== 'npc' && fiche?.color ? fiche.color : 'var(--line)'}; --accent:{fiche?.kind !== 'npc' && fiche?.color ? fiche.color : 'var(--amber)'}">
       <TopBar />
       {#if space === 'equipe'}<PcTabs />{/if}
       {#if space === 'mj' && fiche}
@@ -115,7 +106,7 @@
 
 <style>
   .npcbar { display: flex; align-items: center; padding: 0 6px; min-height: 44px; background: var(--hull); border-top: 1px solid var(--line); }
-  .npcbar .btn { color: var(--muted); gap: 4px; }
+  .npcbar .btn { color: var(--muted); gap: 4px; min-height: 44px; }
   .head { position: sticky; top: 0; z-index: 20; box-shadow: 0 6px 18px rgb(3 14 16 / .25); }
   /* No max width: on a big screen the views spread over the whole window (extra columns below). */
   main { padding: 14px 12px calc(var(--nav-h) + 28px + env(safe-area-inset-bottom)); }

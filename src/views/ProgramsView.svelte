@@ -71,7 +71,7 @@
     </div>
     <ul class="list">
       {#each list.filter((p) => p.special) as p (p.id)}{@render row(p)}{/each}
-      {#if !m}<li class="empty-li">Choisissez un modèle dans l'onglet Robot pour obtenir son programme spécialiste.</li>{/if}
+      {#if !m}<li class="empty-li">Choisissez un modèle dans l'onglet Identité pour obtenir son programme spécialiste.</li>{/if}
       {#each c.customPrograms as cp, i (i)}
         <li class="custom">
           <input class="input" placeholder="Nom du programme" value={cp.label} oninput={(e) => store.type(c.id, `cp${i}.label`, (s) => (s.customPrograms[i].label = e.currentTarget.value))} aria-label="Nom du programme personnalisé" />

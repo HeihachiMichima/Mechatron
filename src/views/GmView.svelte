@@ -18,10 +18,10 @@
   <section class="panel">
     <div class="panel-head">
       <h2>PNJ du MJ <span class="muted num">{npcs.length}</span></h2>
-      <button class="btn small primary" onclick={() => store.open({ type: 'templates', mode: 'roster' })}><Icon name="plus" size={16} />Nouveau PNJ</button>
+      <button class="btn primary" onclick={() => store.open({ type: 'templates', mode: 'roster' })}><Icon name="plus" size={16} />Nouveau PNJ</button>
     </div>
     <RobotList list={npcs} onpick={(id) => store.openFiche(id)} empty="Aucun PNJ. Créez-en un depuis les modèles du livre, ou ajoutez des adversaires en préparant un combat." />
-    {#if npcs.length}<div class="reset-row"><ResetAllButton small /></div>{/if}
+    {#if npcs.length}<div class="reset-row"><ResetAllButton small kind="npc" /></div>{/if}
   </section>
 
   <section class="panel">
