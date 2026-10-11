@@ -684,7 +684,7 @@ campaign.xp.log = [{ at, awards: [{ cid, total, items }] }]
 - 2026-10-11: **plan agreed** → commits and pushes allowed, following §0.1.
 - 2026-10-11: crop the logo to remove the « Road to Eden » line (v3.0.1, before T04).
 - 2026-10-11: T05 merged; NPC fiches open in place from Combat in both GM modes (option chosen over hiding the buttons or switching GM mode on).
-- 2026-10-11 (T06, agent's reading of the book, to confirm): starting gear = the model's whole GEAR box with its « or » choices (p.31-46 and the example robot p.29), although p.25 says « one piece of gear »; modules are unique among PCs like chassis parts (p.22); the serial format (3 letters, 3 digits) is generated but not enforced, since junk robots name themselves (p.16) and the demo's serials are shorter.
+- 2026-10-11 (T06, confirmed by the owner): starting gear = the model's whole GEAR box with its « or » choices (p.31-46 and the example robot p.29), although p.25 says « one piece of gear »; modules are unique among PCs like chassis parts (p.22); the serial format (3 letters, 3 digits) is generated but not enforced, since junk robots name themselves (p.16) and the demo's serials are shorter.
 - **Still open:** none blocking. If a ticket raises a question, the agent asks before choosing.
 
 ---
