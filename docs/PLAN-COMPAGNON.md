@@ -49,7 +49,7 @@ Repo: `HeihachiMichima/Mechatron` (local: `G:\MYZ\mechatron-sheet`) · Baseline:
 
 ---
 
-## 1. Current state (verified against the code; as of v3.7.0, after T10)
+## 1. Current state (verified against the code; as of v3.8.0, after T11)
 
 - **Stack:** Svelte 5 (runes), Vite 8, `vite-plugin-singlefile` → a single `dist/index.html` (about 624 kB) with scripts, CSS, fonts and logo inlined. French UI, mobile-first, side rail at ≥ 960 px.
 - **Layout and deploy (T00, v2.3.8):** the app lives at the repo root (`index.html` = Vite entry, `src/`, `package.json`). `.github/workflows/deploy.yml` builds and deploys `dist/` to GitHub Pages on each push to `main`; `dist/` is git-ignored. Paths below are relative to the root (`src/...`); before T00 they were under `svelte/`.
@@ -68,7 +68,7 @@ Repo: `HeihachiMichima/Mechatron` (local: `G:\MYZ\mechatron-sheet`) · Baseline:
   - Équipe: PC tabs (+ new, *Gérer* = `RosterSheet`, PCs only), vitals plate, `FicheTabs` (État · Programmes · Matériel · Identité = `RobotView`). NPCs never show there.
   - Énergie: `EnergyView` (DEV levels + each robot's connection; NPCs listed in GM mode). T08 adds the clock.
   - Marché: `MarketView` placeholder (« Le marché noir ouvre une fois l'équipe créée » during creation).
-  - Séance: `SessionView`: XP questions per PC (`XpSheet cid`), DEV wear −1D6 (also written to the journal), campaign journal (list newest first + add).
+  - Séance: `SessionView`: « Terminer la séance » (T11 wizard), each PC's XP with « Dépenser », history of sessions, campaign journal (list newest first + add).
   - MJ (GM mode): `GmView` = NPC roster (`RobotList`, *Nouveau PNJ*, *Tout remettre à neuf*) + placeholders (market, house rules, encounters); an NPC's fiche opens there with « Tous les PNJ » to go back.
   - GM mode hides tools, not information: combat is identical in both modes. From Combat, « Ouvrir la fiche » opens an NPC's fiche in place (`ui.peek`, v3.2.1) with « Retour au combat ». Outside GM mode the PJ/PNJ switch (Identité) is hidden.
   - The robot's own notes (`c.notes`) moved from Collectif to Identité; the « Fin de séance » button left État (Séance has it).
@@ -78,7 +78,7 @@ Repo: `HeihachiMichima/Mechatron` (local: `G:\MYZ\mechatron-sheet`) · Baseline:
 - **Black market (T09, v3.6.0):** `src/lib/market.js`, `campaign.market = { open, sellRate, rarities, listings, ledger }` (normalised, round-trip tested). Catalog = every module, weapon (not bare hands), chassis part and equipment item; book prices `GAME_DATA.goodsPrices` (p.234); house defaults `HOUSE.market` (sell-back ½ min 1, rarities commun 1 / peu commun ½ / rare ⅙ / unique GM-only, rarity by kind). GM editor `views/gm/MarketEditor.svelte` (MJ space). The gate opens the market; the demo starts open.
 - **Shop (T10, v3.7.0):** `MarketView` = today's offer (`market.draw`, drawn once per in-game day by `store.ensureDraw`; GM: *Nouveau tirage*, whole catalog, `listing.force` in/out), buyer picker, `buy` / `sell` in `market.js` (EP, slots, duplicates, half price, EP max, stock), `market.ledger` + journal; one commit per purchase or sale.
 - **Energy on the fiche:** StateView keeps ±1, "Recharger jusqu'à {ration}" and "Soleil (+1)" when `c.online` is false (outside).
-- **XP:** `XpSheet` has 6 questions from `data.js`, 1 XP each, applied **to one robot** (opened per robot from Séance). `xpPerUpgrade: 5` is fixed. The "Dépenser 5 PX" button only subtracts XP.
+- **XP (T11, v3.8.0):** `src/lib/xp.js`. Rules = `campaign.rules.xp` or the book's (6 questions × 1 XP, 5 XP per upgrade), GM editor `views/gm/XpRulesEditor.svelte`. « Terminer la séance » = `views/session/SessionWizard.svelte` (backup, XP grid with « participé » pre-ticked and GM adjustment, DEV decay 1D6 with override, relations, summary with days and market deals) → one undoable `applySession`, `campaign.xp.log`, journal, then « Exporter la campagne ». Spending = `XpSpendSheet` (program +1 up to `programMax`, secondary function of any model) → `campaign.xp.spent` + journal.
 - **Combat:** preparation → initiative → guided turn (`TurnFlow.svelte`, about 1,060 lines).
   - Range is chosen by hand (`shootRanges`).
   - Cover is **a state of the robot** (`c.cover`): set by the "se mettre à couvert" maneuver (chips), and worn down by hits (`t.cover = res.newCover`).

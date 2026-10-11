@@ -5,6 +5,7 @@
   import RobotList from '../components/RobotList.svelte';
   import ResetAllButton from '../components/ResetAllButton.svelte';
   import MarketEditor from './gm/MarketEditor.svelte';
+  import XpRulesEditor from './gm/XpRulesEditor.svelte';
   import { store } from '../lib/store.svelte.js';
   import { stepErrors, draftFrom, startWizard } from '../lib/creation.js';
 
@@ -16,7 +17,6 @@
   const unready = $derived(pcs.filter((c) => issues(c).length));
   let reopen = $state(false);
   const soon = [
-    { icon: 'edit', title: 'Règles maison', text: 'Les valeurs que le livre ne donne pas, et les PX de fin de séance.' },
     { icon: 'combat', title: 'Rencontres', text: 'Des combats préparés à lancer en un geste.' }
   ];
 </script>
@@ -55,6 +55,8 @@
   </section>
 
   <MarketEditor />
+
+  <XpRulesEditor />
 
   <section class="panel">
     <div class="panel-head"><h2>Outils à venir</h2></div>

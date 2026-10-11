@@ -26,6 +26,7 @@ code, comments and identifiers are in English.
     │   ├── creation.js      creation wizard: STEPS, stepErrors, buildRobot/applyDraft, start/finishWizard
     │   ├── clock.js         day/night clock + energy engine: endDay, nightCharge, startDay, transfer, drainPack
     │   ├── market.js        black market: catalog (defaultListings), normalizeMarket, prices, sell price, file
+    │   ├── xp.js            XP rules (xpRules ← campaign.rules.xp), session draft/apply, spendProgram/Secondary
     │   ├── campaign.js      campaign files (classifyImport, readImport, file name) + automatic backups
     │   ├── rules.js         pure rules functions (chassis, pools, dice, damage…)
     │   ├── rng.js           every random draw: d6(), random(), pick(), setRng(seed)
@@ -42,12 +43,13 @@ code, comments and identifiers are in English.
     ├── views/               Welcome (no campaign yet); fiche tabs État, Programmes, Matériel, Robot
     │                        (« Identité »); spaces Energy, Market, Combat, Session, Gm
     │   ├── energy/          EnergyTransfer (« Donner des PE »), EnergyRules (GM overrides)
-    │   ├── gm/              MarketEditor (MJ → Marché noir)
+    │   ├── gm/              MarketEditor (MJ → Marché noir), XpRulesEditor (MJ → Règles de l'expérience)
+    │   ├── session/         SessionWizard (« Terminer la séance »)
     │   ├── combat/          CombatPrep → CombatInit → CombatFight (+ TurnFlow, ActorStats,
     │   │                    LogicConflict, BlowerStep, RecycleStep)
     │   └── creation/        CreationWizard (+ ChassisStep, ProgramStep, ModuleStep)
     └── sheets/              bottom-sheet dialogs (Roll, Damage, Module, Picker, Weapon,
-                             Template, Roster (« Gérer l'équipe », PCs), Export, Incoming, Xp, Combatant, EnemyEdit, Duplicate,
+                             Template, Roster (« Gérer l'équipe », PCs), Export, Incoming, XpSpend, Combatant, EnemyEdit, Duplicate,
                              Campaign = the top bar menu: rename, export, import, new, backups, theme)
 ```
 
@@ -164,6 +166,14 @@ undo step. `store.open(type, props)` / `store.close()` drive bottom sheets; **pr
   `availableEp`, module slots, duplicate module) → `buy(data, id, cid, { pay: payEp, ep: availableEp })`
   (item added: module, weapon, else equipment; a part goes to the equipment); `sellables` / `sell`
   (`sellPrice`, never above `epMax`, back in stock). Both write `market.ledger` (300 last) and the journal.
+- **Experience (T11, `lib/xp.js`).** `xpRules(campaign)` = `campaign.rules.xp` (`questions [{id, text,
+  xp, enabled}]`, `costs {program, secondary}`, `bonusAwards`) or the book's (`bookXp()`: the 6
+  questions at 1 XP, 5 XP per upgrade, p.26). « Terminer la séance » (SessionView → `store.ui.session =
+  { step, draft, done }`, not saved; opening it calls `store.backup('Fin de séance')`): `sessionDraft`
+  (« participé » ticked), `sessionXp`, `rollDecay`, then one `commitAll` → `applySession` (XP, DEV,
+  relations, `xp.log` entry with `day` and market `ledger` length, journal; `sinceLast` gives the
+  days and deals since the previous session). Spending: `XpSpendSheet` → `spendProgram` (max
+  `programMax`) / `spendSecondary` (any model), logged in `xp.spent` and the journal.
 - **`store.started`** is false while no campaign exists (clean profile, or a save of another
   version): App shows `WelcomeView` and nothing is saved. `store.start(raw, label)` opens the first
   campaign (new, demo, file, backup) with no undo back to the welcome screen, saves at once and
@@ -185,7 +195,8 @@ undo step. `store.open(type, props)` / `store.close()` drive bottom sheets; **pr
   overrides), journal [{at, day?, text}], clock, market, xp {log}, maps [], encounters []`.
   `clock` = `{ day, phase, clearSky, charged, exclude[], report }` (`normalizeClock`, T07);
   `market` = `{ open, sellRate, rarities[], listings[], ledger[] }` (`normalizeMarket`, T09);
-  `xp`/`maps`/`encounters` are kept as plain JSON until their ticket (T11…T15).
+  `xp` = `{ log: [session], spent: [spend] }` (`normalizeXp`, T11); `maps`/`encounters` are kept as
+  plain JSON until their ticket (T13…T15).
   Journal: `pushJournal(data, text, {day})` inside a commit, or `store.addJournal(text)`.
   Rename with `store.renameCampaign(name)`.
 - **DEV levels live once, in `campaign.dev`** — read them with `getDev()` (`settings.js`), never
@@ -387,6 +398,11 @@ Follow `docs/PLAN-COMPAGNON.md` §0: one ticket at a time, in order.
   `setRng`), GM redraw / whole catalog / force in or out, buyer picker with EP, buy with clear blocking
   reasons (EP, slots, duplicate module), weapon comparison, sell back at the house rate, ledger and
   journal, every purchase and sale undoable.
+- v3.8.0 (2026-10-11, plan ticket T11): GM-editable XP rules (questions, XP per question, bonus
+  awards, costs, book values), end-of-session wizard for the whole team (backup, XP grid, DEV decay
+  with override, relations, summary with days and market deals, export), XP spending (program +1 up
+  to 5, secondary function of any model), session history; the per-robot XpSheet and the separate
+  DEV wear button are gone.
 - v3.2.1 (2026-10-11): from Combat, « Ouvrir la fiche » opens an NPC's full fiche in place, in both
   GM modes, with « Retour au combat » (`ui.peek`): combat is now strictly the same in both modes.
 

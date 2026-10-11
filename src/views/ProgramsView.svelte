@@ -2,6 +2,7 @@
   import Stepper from '../components/Stepper.svelte';
   import Icon from '../components/Icon.svelte';
   import { getRules } from '../lib/settings.js';
+  import { xpRules } from '../lib/xp.js';
   import { store } from '../lib/store.svelte.js';
   import { GAME_DATA as D } from '../lib/data.js';
   import { ATTRS, chassis, attrCurrent, programs, programPoints, devModFor, fmtBonus, modelOf, findSecondary, attrLabels } from '../lib/rules.js';
@@ -91,7 +92,7 @@
   <section class="panel wide">
     <div class="panel-head">
       <h2>Fonctions secondaires</h2>
-      <span class="meta">{R.xpPerUpgrade} PX la nouvelle</span>
+      <span class="meta">{xpRules(store.campaign).costs.secondary} PX la nouvelle</span>
     </div>
     {#if c.secondary.length === 0}
       <p class="muted">Aucune fonction installée. À la création, choisissez-en une parmi les trois de votre modèle.</p>

@@ -21,7 +21,7 @@
   import PickerSheet from './sheets/PickerSheet.svelte';
   import ExportSheet from './sheets/ExportSheet.svelte';
   import IncomingSheet from './sheets/IncomingSheet.svelte';
-  import XpSheet from './sheets/XpSheet.svelte';
+  import XpSpendSheet from './sheets/XpSpendSheet.svelte';
   import RosterSheet from './sheets/RosterSheet.svelte';
   import TemplateSheet from './sheets/TemplateSheet.svelte';
   import DamageSheet from './sheets/DamageSheet.svelte';
@@ -47,7 +47,7 @@
   // a combat sheet can make an NPC active), the MJ fiche is the open NPC's.
   $effect(() => store.syncFiche());
   // Sheets about one robot can't stay open once there is none.
-  const robotSheets = new Set(['roll', 'module', 'damage', 'weapon', 'xp']);
+  const robotSheets = new Set(['roll', 'module', 'damage', 'weapon', 'xpSpend']);
   const orphan = $derived(!store.c && !!store.ui.sheet && robotSheets.has(store.ui.sheet.type));
   $effect(() => { if (orphan) store.close(); });
   const sheet = $derived(orphan ? null : store.ui.sheet);
@@ -102,7 +102,7 @@
 {:else if sheet?.type === 'picker'}<PickerSheet {...sheet} />
 {:else if sheet?.type === 'export'}<ExportSheet />
 {:else if sheet?.type === 'campaign'}{#key sheet}<CampaignSheet pending={sheet.pending} />{/key}
-{:else if sheet?.type === 'xp'}{#key sheet}<XpSheet cid={sheet.cid} />{/key}
+{:else if sheet?.type === 'xpSpend'}{#key sheet}<XpSpendSheet cid={sheet.cid} />{/key}
 {:else if sheet?.type === 'incoming' && store.incoming}<IncomingSheet />{/if}
 
 <Toast />

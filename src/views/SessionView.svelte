@@ -1,26 +1,23 @@
 <script>
-  // Séance space: end of session (XP questions per robot, wear of the collective's
-  // levels) and the campaign journal. T11 turns the end of session into a wizard.
+  // Séance space: « Terminer la séance » (T11 wizard: XP for the whole team, DEV
+  // wear, relations, summary), each robot's XP and spending, the history of
+  // sessions, and the campaign journal.
   import Icon from '../components/Icon.svelte';
-  import { store, pushJournal } from '../lib/store.svelte.js';
-  import { getRules } from '../lib/settings.js';
-  import { DEV_KEYS, DEV_LABELS } from '../lib/rules.js';
-  import { d6 } from '../lib/rng.js';
+  import SessionWizard from './session/SessionWizard.svelte';
+  import { store } from '../lib/store.svelte.js';
+  import { xpRules, sessionDraft } from '../lib/xp.js';
 
   const pcs = $derived(store.chars.filter((c) => c.kind !== 'npc'));
-  const per = $derived(getRules().xpPerUpgrade);
-  const dev = $derived(store.campaign.dev);
+  const rules = $derived(xpRules(store.campaign));
+  const sessions = $derived([...store.campaign.xp.log].map((s, i) => ({ ...s, n: i + 1 })).reverse());
   // Newest first.
   const journal = $derived([...store.campaign.journal].reverse());
   let text = $state('');
 
-  function decay() {
-    const rolls = DEV_KEYS.map(() => d6());
-    const line = `Usure : ${DEV_KEYS.map((k, i) => `${DEV_LABELS[k]} −${rolls[i]}`).join(', ')}`;
-    store.commitAll(line, (d) => {
-      DEV_KEYS.forEach((k, i) => (d.campaign.dev[k] = Math.max(0, d.campaign.dev[k] - rolls[i])));
-      pushJournal(d, line);
-    });
+  function startSession() {
+    store.backup('Fin de séance');
+    store.ui.session = { step: 0, draft: sessionDraft(store.data), done: null };
+    window.scrollTo({ top: 0 });
   }
   function add(e) {
     e.preventDefault();
@@ -34,29 +31,41 @@
   };
 </script>
 
+{#if store.ui.session}
+<SessionWizard />
+{:else}
 <div class="grid">
   <div class="col">
+    <section class="panel end">
+      <div class="panel-head"><h2>Fin de séance</h2></div>
+      <p class="hint top">Pour toute l'équipe d'un coup : les PX (questions du MJ), l'usure des niveaux (1D6 chacun), les relations et le résumé au journal. Une sauvegarde automatique est faite avant.</p>
+      <button class="btn primary block go" disabled={!pcs.length} onclick={startSession}><Icon name="seance" size={20} />Terminer la séance</button>
+    </section>
+
     <section class="panel">
-      <div class="panel-head"><h2>Expérience</h2><span class="meta">{per} PX = un programme +1 ou une fonction</span></div>
+      <div class="panel-head"><h2>Expérience</h2><span class="meta">{rules.costs.program} PX = un programme +1, {rules.costs.secondary} PX = une fonction</span></div>
       {#if pcs.length === 0}<p class="muted">Aucun robot joueur pour l'instant.</p>{/if}
       <ul class="list">
         {#each pcs as c (c.id)}
           <li class="xp">
             <span class="who"><span class="cdot" style="background:{c.color}"></span><span class="nm">{c.name || 'Sans nom'}</span></span>
             <b class="num pts">{c.xp.current} PX</b>
-            <button class="btn" onclick={() => store.open({ type: 'xp', cid: c.id })}>Questions</button>
+            <button class="btn small" onclick={() => store.open({ type: 'xpSpend', cid: c.id })}>Dépenser</button>
           </li>
         {/each}
       </ul>
-      <p class="hint">Les questions de fin de séance donnent 1 PX par réponse « oui ». Les PX se dépensent sur la fiche (État).</p>
     </section>
 
-    <section class="panel">
-      <div class="panel-head"><h2>Usure des niveaux</h2></div>
-      <p class="levels num">{#each DEV_KEYS as k, i (k)}<span>{DEV_LABELS[k]} <b>{dev[k]}</b></span>{/each}</p>
-      <button class="btn small" onclick={decay}>Fin de séance : −1D6 à chaque niveau</button>
-      <p class="hint">Le résultat est noté dans le journal. Les niveaux se règlent à la main dans l'espace Énergie.</p>
-    </section>
+    {#if sessions.length}
+      <section class="panel">
+        <div class="panel-head"><h2>Séances</h2><span class="meta">{sessions.length}</span></div>
+        <ol class="list hist">
+          {#each sessions as s (s.n)}
+            <li><span class="when">Séance {s.n}{s.day ? `, jour ${s.day}` : ''}, {fmt(s.at)}</span><p>{s.awards.map((a) => `${a.name} +${a.total} PX`).join(', ') || 'aucun PX'}</p></li>
+          {/each}
+        </ol>
+      </section>
+    {/if}
   </div>
 
   <section class="panel">
@@ -73,6 +82,7 @@
     </ol>
   </section>
 </div>
+{/if}
 
 <style>
   .grid { display: grid; gap: 12px; }
@@ -84,8 +94,11 @@
   .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .cdot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
   .pts { color: var(--amber); }
-  .levels { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0 0 12px; color: var(--muted); font-size: .9rem; }
-  .levels b { color: var(--text); font-size: 1.05rem; }
+  .top { margin: -4px 0 12px; }
+  .go { min-height: 52px; }
+  .end { border-left: 3px solid var(--amber); }
+  .hist li { padding: 8px 0; }
+  .hist p { margin: 2px 0 0; }
   .add { display: grid; gap: 8px; margin-bottom: 8px; }
   .add textarea { min-height: 84px; }
   .add .btn { justify-self: end; }
