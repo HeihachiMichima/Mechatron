@@ -231,6 +231,9 @@ Follow `docs/PLAN-COMPAGNON.md` §0: one ticket at a time, in order.
 - v2.3.8 (2026-10-11, plan ticket T00): repo flattened (the app is at the repo root, v1 files and
   `releases/` deleted), GitHub Actions builds and deploys `dist/` (no committed build), docs
   tracked (`CLAUDE.md`, `README.md`, `docs/`), `house.js` + `getRules()` skeleton.
+- v2.3.9 (2026-10-11, plan ticket T01): the app is named « Compagnon Mechatron » (page title,
+  meta description, nav label, PNG card footer, package name `mechatron-companion`); a robot's
+  page stays a « fiche ». The bottom nav has `id="app-nav"` (TurnFlow finds it by id).
 
 ## Ideas not done yet
 

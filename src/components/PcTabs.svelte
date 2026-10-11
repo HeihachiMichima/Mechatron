@@ -1,6 +1,6 @@
 <script>
   // Colored tabs to jump between player robots. The active robot's color
-  // also edges the status plate below, so you always know whose sheet it is.
+  // also edges the status plate below, so you always know whose fiche it is.
   import Icon from './Icon.svelte';
   import { store, blankCharacter } from '../lib/store.svelte.js';
   import { chassis, status, attrCurrent, ATTRS } from '../lib/rules.js';

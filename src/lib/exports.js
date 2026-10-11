@@ -149,7 +149,7 @@ export async function cardBlob(c) {
 
   // footer
   g.fillStyle = col.muted; g.font = body(400, 22);
-  g.fillText('Mutant : Année Zéro, Mechatron. Fiche de fan, non officielle.', P + 16, H - 64);
+  g.fillText('Mutant : Année Zéro, Mechatron. Compagnon de fan, non officiel.', P + 16, H - 64);
   g.textAlign = 'right'; g.fillStyle = col.amber; g.font = disp(600, 24); g.fillText('MECHATRON-7', W - P - 16, H - 64); g.textAlign = 'left';
 
   return new Promise((res) => cv.toBlob(res, 'image/png'));

@@ -1,7 +1,7 @@
 /**
  * MECHATRON — game data
  * =====================
- * Everything the character sheet's dropdowns offer (chassis parts, modules,
+ * Everything the companion's pickers offer (chassis parts, modules,
  * weapons, equipment, secondary functions, dev-level bonuses) comes from the
  * arrays below. Most numbers here are now copied straight from the English
  * rulebook (chapters "Your Robot", "Programs", "Secondary Functions",

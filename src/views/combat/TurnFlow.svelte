@@ -65,7 +65,7 @@
     tick().then(() => {
       if (!panel) return;
       const top = document.querySelector('.head')?.getBoundingClientRect().bottom ?? 0;
-      const navEl = document.querySelector('nav[aria-label="Sections de la fiche"]');
+      const navEl = document.getElementById('app-nav');
       const bottom = navEl ? navEl.getBoundingClientRect().top : window.innerHeight;
       const seen = [...panel.querySelectorAll('button:not(:disabled)')].some((b) => { const r = b.getBoundingClientRect(); return r.height > 0 && r.top >= top && r.bottom <= bottom; });
       if (!seen) window.scrollTo({ top: Math.max(0, window.scrollY + panel.getBoundingClientRect().top - top - 8), behavior: 'smooth' });
