@@ -10,8 +10,9 @@
   import ModuleStep from './ModuleStep.svelte';
   import { store } from '../../lib/store.svelte.js';
   import { GAME_DATA as D } from '../../lib/data.js';
-  import { ATTRS, findWeapon, findEquipment, devBand } from '../../lib/rules.js';
+  import { ATTRS, findWeapon, findEquipment } from '../../lib/rules.js';
   import { getDev } from '../../lib/settings.js';
+  import { energyRules } from '../../lib/clock.js';
   import { STEPS, SLOTS, stepErrors, modelById, draftName, draftAttrs, newSerial, gearItems, closeWizard, finishWizard } from '../../lib/creation.js';
 
   const w = $derived(store.ui.wizard);
@@ -23,7 +24,7 @@
   const m = $derived(modelById(d.model));
   const tot = $derived(draftAttrs(d));
   const L = D.attributeLabels;
-  const ration = $derived(devBand(getDev().Energie).energyEp);
+  const ration = $derived(energyRules(store.campaign).ration);
   const others = $derived(store.chars.filter((c) => c.kind !== 'npc' && c.id !== w.id));
   // A step can be opened when every step before it is valid (always in GM mode).
   const reachable = (i) => store.ui.gm || STEPS.slice(0, i).every((s) => !stepErrors(s.id, d, ctx).length);

@@ -7,6 +7,7 @@ import { ATTRS, epMax, findWeapon } from './rules.js';
 import { random } from './rng.js';
 import { bindCampaign, defaultDev, getRules } from './settings.js';
 import { makeBackup, listBackups, backupData } from './campaign.js';
+import { blankClock, normalizeClock, isBank, bankCapacity } from './clock.js';
 
 export const VERSION = 3;
 const KEY = 'mechatron-v3';
@@ -39,7 +40,8 @@ export function blankCharacter(kind = 'pc') {
     ep: { current: getRules().startEp }, xp: { current: 0 },
     programRatings: {}, specialRating: 0, customPrograms: [],
     secondary: [], modules: [], brokenModules: [], equipment: [], weapons: [],
-    notes: '', online: true
+    notes: '', online: true,
+    daily: { barter: false } // per-day flags, reset each morning by the clock (T07)
   };
 }
 
@@ -69,10 +71,16 @@ export function normalize(raw) {
   c.secondary = arr(raw.secondary).map(str);
   c.modules = arr(raw.modules).map(str);
   c.brokenModules = arr(raw.brokenModules).map((i) => num(i, -1)).filter((i) => i >= 0 && i < c.modules.length);
-  c.equipment = arr(raw.equipment).map((e) => (typeof e === 'string' ? { name: e, integre: false } : { name: str(e?.name), integre: !!e?.integre }));
+  c.equipment = arr(raw.equipment).map((e) => {
+    const it = typeof e === 'string' ? { name: e, integre: false } : { name: str(e?.name), integre: !!e?.integre };
+    // A Banque d'énergie stores EP (T07).
+    if (isBank(it.name)) it.charge = Math.max(0, Math.min(bankCapacity(), num(e?.charge)));
+    return it;
+  });
   // power/empty/crankDue: energy weapon power source state (book p.86).
   c.weapons = arr(raw.weapons).map((w) => ({ name: str(w?.name), bonus: w?.bonus ?? '', degats: w?.degats ?? '', portee: str(w?.portee), note: str(w?.note), power: ['epack', 'internal', 'crank'].includes(w?.power) ? w.power : 'epack', empty: !!w?.empty, crankDue: !!w?.crankDue, oneUse: !!w?.oneUse, spent: !!w?.spent }));
   c.online = raw.online !== false;
+  c.daily = { barter: !!raw.daily?.barter };
   c.ep = { current: num(raw.ep?.current, b.ep.current) };
   c.xp = { current: num(raw.xp?.current) };
   c.hierarchy = str(raw.hierarchy);
@@ -214,7 +222,7 @@ export function blankCampaign(name = '') {
     dev: defaultDev(),
     rules: {},
     journal: [],
-    clock: null, market: null, xp: { log: [] },
+    clock: blankClock(), market: null, xp: { log: [] },
     maps: [], encounters: []
   };
 }
@@ -240,7 +248,7 @@ export function normalizeCampaign(raw) {
     dev,
     rules: isObj(raw.rules) ? copy(raw.rules) : {},
     journal: normalizeJournal(raw.journal),
-    clock: isObj(raw.clock) ? copy(raw.clock) : null,
+    clock: normalizeClock(raw.clock),
     market: isObj(raw.market) ? copy(raw.market) : null,
     xp: { log: arr(raw.xp?.log).filter(isObj).map(copy) },
     maps: arr(raw.maps).filter(isObj).map(copy),

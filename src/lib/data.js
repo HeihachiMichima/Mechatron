@@ -260,7 +260,7 @@ export const GAME_DATA = {
   equipment: [
     { name: "Chewing-gum", nameEn: "Chewing Gum", bonus: 1, note: "+1 en Réparation, Fabriquer et Bricolage. Minuscule. D6 utilisations." },
     { name: "Outils électroniques", nameEn: "Electronic Tools", bonus: 2, note: "+2 pour réparer des objets et machines électroniques. Sans eux, les non-robots ont −3 pour réparer l'électronique." },
-    { name: "Banque d'énergie", nameEn: "Energy Bank", bonus: null, note: "Stocke jusqu'à 5 PE ; transfert dans les deux sens (une action). Peut alimenter une arme à énergie : 1 PE par tir." },
+    { name: "Banque d'énergie", nameEn: "Energy Bank", bonus: null, capacity: 5, note: "Stocke jusqu'à 5 PE ; transfert dans les deux sens (une action). Peut alimenter une arme à énergie : 1 PE par tir." },
     { name: "E-pack", nameEn: "E-Pack", bonus: null, note: "Alimente les armes à énergie. Ou recharge un robot de D6 PE, ce qui le vide complètement. Minuscule." },
     { name: "Verrou de blocage", nameEn: "Lock Bolt", bonus: null, note: "Se fixe sur un robot par un jet d'Assaut ou Combat ; le robot doit réussir un jet de Surcharge à −1 pour chaque action. Retrait : Réparation à −2. Léger." },
     { name: "Ruban nanocarbone", nameEn: "Nanocarbon Tape", bonus: 3, note: "+3 en Réparation, Fabriquer et Bricolage. Minuscule. D6 utilisations." },
