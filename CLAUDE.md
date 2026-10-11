@@ -29,6 +29,7 @@ code, comments and identifiers are in English.
     │   ├── tactics/         square-grid map: terrain.js (TERRAIN, map format, normalizeMap, edits),
     │   │                    geometry.js (distance, line, los, suggestCover, bandOf, reach, blastVictims,
     │   │                    spawnPlaces, canStand), paths.js (SVG paths)
+    │   ├── encounters.js    encounter library: normalizeEncounter, enemyLine, matches, files, PRESETS (4 maps)
     │   ├── xp.js            XP rules (xpRules ← campaign.rules.xp), session draft/apply, spendProgram/Secondary
     │   ├── campaign.js      campaign files (classifyImport, readImport, file name) + automatic backups
     │   ├── rules.js         pure rules functions (chassis, pools, dice, damage…)
@@ -47,7 +48,8 @@ code, comments and identifiers are in English.
     │                        (« Identité »); spaces Energy, Market, Combat, Session, Gm
     │   ├── energy/          EnergyTransfer (« Donner des PE »), EnergyRules (GM overrides)
     │   ├── gm/              MarketEditor (MJ → Marché noir), XpRulesEditor (MJ → Règles de l'expérience),
-    │   │                    MapsPanel + MapEditor (MJ → Cartes, paint tool)
+    │   │                    MapsPanel + MapEditor (MJ → Cartes, paint tool), EncountersPanel +
+    │   │                    EncounterEditor (MJ → Rencontres)
     │   ├── session/         SessionWizard (« Terminer la séance »)
     │   ├── combat/          CombatPrep → CombatInit → CombatFight (+ CombatMap, TurnFlow, ActorStats,
     │   │                    LogicConflict, BlowerStep, RecycleStep)
@@ -221,6 +223,16 @@ undo step. `store.open(type, props)` / `store.close()` drive bottom sheets; **pr
   Meuble 3 » first (only then). A map band beyond the weapon's range is capped to the weapon and,
   like no sight, needs « Le MJ autorise le tir quand même ». `flee()` logs before the commit and
   calls `endTurn` (the last robot of a round fleeing no longer stalls the fight).
+- **Encounters (T15, `lib/encounters.js`).** `campaign.encounters = [{ id, name, tags[], mapId,
+  enemies: [{ template, count (1-12), side: enemy|ally }], surprise: none|allies|enemies, gmPool (null =
+  ration × PCs), notes }]` (`normalizeEncounter`). `store.saveEncounter` / `removeEncounter` are not
+  undo steps (like maps); `store.launchEncounter(enc)` is one: new combat (keeps `usePool`), every PC
+  not destroyed, NPCs by `fromTemplate` + `addCopies` (one group → one initiative; pass the stored
+  object `d.chars.at(-1)`, not the plain one you pushed, or the rename/group is lost in the browser),
+  surprise flags, pool, map, `spawnPlaces`, then `go('combat')` (Préparation). A quick setup (`PRESETS`,
+  carries `map`) saves its map once (reused when relaunched). Files: `encounterFile(encs, maps)` /
+  `readEncounterFile` (fresh ids, map links kept). UI: `views/gm/EncountersPanel.svelte` (launch asks a
+  second tap over a running fight) and `EncounterEditor.svelte`.
 - **`store.started`** is false while no campaign exists (clean profile, or a save of another
   version): App shows `WelcomeView` and nothing is saved. `store.start(raw, label)` opens the first
   campaign (new, demo, file, backup) with no undo back to the welcome screen, saves at once and
@@ -241,10 +253,9 @@ undo step. `store.open(type, props)` / `store.close()` drive bottom sheets; **pr
   phase ('creation'|'play'), dev {Energie, Production, Défense, Information}, rules {} (GM
   overrides), journal [{at, day?, text}], clock, market, xp {log}, maps [], encounters []`.
   `clock` = `{ day, phase, clearSky, charged, exclude[], report }` (`normalizeClock`, T07);
-  `maps` = `[{ id, name, w, h, cells }]` (`normalizeMap`, T13);
+  `maps` = `[{ id, name, w, h, cells }]` (`normalizeMap`, T13); `encounters` (`normalizeEncounter`, T15);
   `market` = `{ open, sellRate, rarities[], listings[], ledger[] }` (`normalizeMarket`, T09);
-  `xp` = `{ log: [session], spent: [spend] }` (`normalizeXp`, T11); `maps`/`encounters` are kept as
-  plain JSON until their ticket (T15).
+  `xp` = `{ log: [session], spent: [spend] }` (`normalizeXp`, T11).
   Journal: `pushJournal(data, text, {day})` inside a commit, or `store.addJournal(text)`.
   Rename with `store.renameCampaign(name)`.
 - **DEV levels live once, in `campaign.dev`** — read them with `getDev()` (`settings.js`), never
@@ -324,6 +335,9 @@ round), `defenses`, `protectRound` (Protect once per round). Weapons: `power`
 - `@page` is not allowed in component CSS — put print page rules in `app.css`.
 - Keep `overflow-anchor: none` (app.css): with scroll anchoring the page jumps whenever a
   panel above or around the viewport changes height.
+- Vitest runs the store without `$state` proxies: pushing a plain object into `d.chars` and then
+  mutating that object works in tests but not in the browser (the array holds a proxied copy).
+  Mutate what you read back from the array, and cover such flows with a Playwright check.
 - Don't remove a `GAME_DATA` key without grepping for it (deleting `pcColors` once
   blanked the whole app at startup).
 
@@ -465,6 +479,11 @@ Follow `docs/PLAN-COMPAGNON.md` §0: one ticket at a time, in order.
   reach × 2 with movement modules, overwatch prompt after a move, grenade aimed at a square with
   victims by band, module ranges and Protect checked on the map, shot line in the log; without a map
   the seeded fight logs are unchanged.
+- v3.12.0 (2026-10-11, plan ticket T15): encounter library in MJ → Rencontres (name, tags, map,
+  NPCs from templates with count and side, surprise, GM pool, notes; search, tags, duplicate, delete,
+  JSON export/import with their maps) and 4 original quick setups (Couloir de service, Quai, Salle du
+  réacteur, Entrepôt); « Lancer » builds the fight with tokens on the spawn zones and opens
+  Préparation (initiative in 2 taps).
 - v3.2.1 (2026-10-11): from Combat, « Ouvrir la fiche » opens an NPC's full fiche in place, in both
   GM modes, with « Retour au combat » (`ui.peek`): combat is now strictly the same in both modes.
 

@@ -1,12 +1,14 @@
 <script>
-  // MJ space (GM mode only): the NPC roster, then the GM's editors as they arrive
-  // (market T09, rules T11, encounters T15). An NPC's fiche opens in this space.
+  // MJ space (GM mode only): the creation gate, the NPC roster, then the GM's
+  // editors: black market (T09), XP rules (T11), maps (T13), encounters (T15).
+  // An NPC's fiche opens in this space.
   import Icon from '../components/Icon.svelte';
   import RobotList from '../components/RobotList.svelte';
   import ResetAllButton from '../components/ResetAllButton.svelte';
   import MarketEditor from './gm/MarketEditor.svelte';
   import XpRulesEditor from './gm/XpRulesEditor.svelte';
   import MapsPanel from './gm/MapsPanel.svelte';
+  import EncountersPanel from './gm/EncountersPanel.svelte';
   import { store } from '../lib/store.svelte.js';
   import { stepErrors, draftFrom, startWizard } from '../lib/creation.js';
 
@@ -17,9 +19,6 @@
   const issues = (c) => stepErrors('recap', draftFrom(c), { chars: store.chars, id: c.id, gm: false });
   const unready = $derived(pcs.filter((c) => issues(c).length));
   let reopen = $state(false);
-  const soon = [
-    { icon: 'combat', title: 'Rencontres', text: 'Des combats préparés à lancer en un geste.' }
-  ];
 </script>
 
 <div class="grid">
@@ -61,15 +60,9 @@
 
   <MapsPanel />
 
-  <section class="panel">
-    <div class="panel-head"><h2>Outils à venir</h2></div>
-    <ul class="list soon">
-      {#each soon as s (s.title)}
-        <li><Icon name={s.icon} /><span><b>{s.title}</b><small>{s.text}</small></span></li>
-      {/each}
-    </ul>
-    <p class="hint">Le mode MJ cache ces outils aux joueurs ; il ne change rien au combat. Il se règle dans le menu ☰, pour cet appareil seulement.</p>
-  </section>
+  <EncountersPanel />
+
+  <p class="hint gmnote">Le mode MJ cache ces outils aux joueurs ; il ne change rien au combat. Il se règle dans le menu ☰, pour cet appareil seulement.</p>
 </div>
 
 <style>
@@ -88,9 +81,6 @@
   .go { margin-top: 12px; min-height: 52px; }
   .armed { color: var(--amber); border-color: var(--amber); }
   @media (min-width: 1100px) { .gate { grid-column: 1 / -1; } }
-  .soon li { display: flex; gap: 14px; align-items: center; padding: 10px 0; color: var(--muted); }
-  .soon li > :global(svg) { flex: none; }
-  .soon span { display: grid; }
-  .soon b { font-family: var(--display); font-weight: 600; color: var(--text); }
-  .soon small { font-size: .85rem; }
+  .gmnote { margin: 0; }
+  @media (min-width: 1100px) { .gmnote { grid-column: 1 / -1; } }
 </style>

@@ -3,14 +3,16 @@
 // Autosaves to localStorage (debounced, flushed when the page is hidden);
 // commit*() make discrete changes undoable. No support for older saves (§2.5).
 import { GAME_DATA as D } from './data.js';
-import { ATTRS, epMax, findWeapon } from './rules.js';
+import { ATTRS, epMax, findWeapon, status } from './rules.js';
 import { random } from './rng.js';
 import { bindCampaign, defaultDev, getRules } from './settings.js';
 import { makeBackup, listBackups, backupData } from './campaign.js';
-import { blankClock, normalizeClock, isBank, bankCapacity } from './clock.js';
+import { blankClock, normalizeClock, isBank, bankCapacity, energyRules } from './clock.js';
 import { blankMarket, normalizeMarket, drawMarket } from './market.js';
 import { normalizeXp } from './xp.js';
 import { normalizeMap, normalizePos } from './tactics/terrain.js';
+import { spawnPlaces } from './tactics/geometry.js';
+import { normalizeEncounter } from './encounters.js';
 
 export const VERSION = 3;
 const KEY = 'mechatron-v3';
@@ -216,8 +218,8 @@ export function ensureColor(chars, c) {
 
 // ---------- campaign ----------
 // clock: normalizeClock (lib/clock.js, T07); market: normalizeMarket (lib/market.js,
-// T09), xp: normalizeXp (T11), maps: normalizeMap (lib/tactics, T13). encounters
-// (T15) are kept as plain JSON until then.
+// T09), xp: normalizeXp (T11), maps: normalizeMap (lib/tactics, T13), encounters:
+// normalizeEncounter (lib/encounters.js, T15).
 
 /** A new, empty campaign (DEV levels at the book's starting value). */
 export function blankCampaign(name = '') {
@@ -258,7 +260,7 @@ export function normalizeCampaign(raw) {
     market: normalizeMarket(raw.market, raw.phase),
     xp: normalizeXp(raw.xp),
     maps: dedupeIds(arr(raw.maps).filter(isObj).map((m) => normalizeMap(m, newId))),
-    encounters: arr(raw.encounters).filter(isObj).map(copy)
+    encounters: dedupeIds(arr(raw.encounters).filter(isObj).map((e) => normalizeEncounter(e, newId)))
   };
 }
 
@@ -682,6 +684,61 @@ class Store {
       const x = d.combat.combatants.find((y) => y.id === xid);
       if (x) x.pos = normalizePos(pos);
     });
+  }
+
+  // ---------- encounters (T15) ----------
+  // Like maps, the library keeps its own save (not undo steps); launching one is undoable.
+  /** Create or replace an encounter (by id); returns its id. */
+  saveEncounter(raw) {
+    const e = normalizeEncounter(raw, newId);
+    const list = this.data.campaign.encounters;
+    const i = list.findIndex((x) => x.id === e.id);
+    if (i >= 0) list[i] = e; else list.push(e);
+    this.#touch();
+    return e.id;
+  }
+  removeEncounter(id) {
+    this.data.campaign.encounters = this.data.campaign.encounters.filter((e) => e.id !== id);
+    this.#touch();
+  }
+  /**
+   * Launch an encounter (or a quick setup, which carries its own `map`): a new
+   * fight with the whole team, the encounter's NPCs made from the book's
+   * templates (copies share their group, hence one initiative), surprise, GM
+   * pool (ration × PCs when not set), the map and every token on its side's
+   * spawn zone; then Combat → Préparation. One undo step.
+   */
+  launchEncounter(raw) {
+    const enc = normalizeEncounter(raw, newId);
+    const maps = this.data.campaign.maps;
+    let mapId = enc.mapId && maps.some((m) => m.id === enc.mapId) ? enc.mapId : null;
+    if (raw?.map) {
+      const same = maps.find((m) => m.name === raw.name && m.w === raw.map.w && m.cells === raw.map.cells);
+      mapId = same ? same.id : this.saveMap({ ...raw.map, name: raw.name });
+    }
+    const map = this.data.campaign.maps.find((m) => m.id === mapId) ?? null;
+    const pcCount = this.data.chars.filter((c) => c.kind !== 'npc' && !status(c).deactivated).length;
+    const pool = enc.gmPool ?? energyRules(this.data.campaign).ration * Math.max(1, pcCount);
+    this.ui.turn = null; this.ui.turnActor = null; this.ui.owTarget = null; this.ui.owResume = null; this.ui.mapPick = null; this.ui.blastCell = null;
+    this.commitAll(`Rencontre : ${enc.name || 'sans nom'}`, (d) => {
+      d.combat = { ...blankCombat(), usePool: d.combat.usePool, gmPool: pool, mapId };
+      d.chars.filter((c) => c.kind !== 'npc' && !status(c).deactivated).forEach((c) => d.combat.combatants.push(newCombatant(c.id, 'ally')));
+      for (const e of enc.enemies) {
+        const t = D.npcTemplates.find((x) => x.id === e.template);
+        const c = fromTemplate(t);
+        while (d.chars.some((y) => y.id === c.id)) c.id = newId();
+        d.chars.push(c);
+        d.combat.combatants.push(newCombatant(c.id, e.side));
+        // addCopies renames and groups the original: give it the stored (proxied) object.
+        if (e.count > 1) addCopies(d, d.chars.at(-1), e.count - 1);
+      }
+      d.combat.combatants.forEach((x) => { x.surprise = (enc.surprise === 'allies' && x.side === 'ally') || (enc.surprise === 'enemies' && x.side === 'enemy'); });
+      if (map) {
+        const spots = spawnPlaces(map, d.combat.combatants.map((x) => ({ id: x.id, side: x.side })));
+        d.combat.combatants.forEach((x) => { x.pos = spots[x.id] ? { ...spots[x.id] } : null; });
+      }
+    });
+    this.go('combat');
   }
 
   /** Theme button: auto → dark → light. */
