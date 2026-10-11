@@ -12,7 +12,7 @@
   const pick = (id) => { store.ui.tab = id; window.scrollTo({ top: 0 }); };
 </script>
 
-<nav aria-label="Sections de la fiche">
+<nav id="app-nav" aria-label="Sections du compagnon">
   {#each tabs as t (t.id)}
     <button class:fight={t.id === 'combat' && store.combat.active} class:active={store.ui.tab === t.id} aria-current={store.ui.tab === t.id ? 'page' : undefined} onclick={() => pick(t.id)}>
       <Icon name={t.id} size={22} />

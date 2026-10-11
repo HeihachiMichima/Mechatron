@@ -1,8 +1,7 @@
-# Mechatron, fiche de personnage (version 2, Svelte)
+# Compagnon Mechatron
 
-Refonte *mobile d'abord* de la fiche interactive pour **Mutant : Année Zéro, Mechatron**.
-Mêmes données de jeu, même format de sauvegarde (les anciennes sauvegardes `.json` et la
-fiche déjà enregistrée dans le navigateur sont reprises automatiquement).
+Compagnon de jeu *mobile d'abord* pour **Mutant : Année Zéro, Mechatron** : la fiche de chaque
+robot, l'énergie, le combat guidé, et bientôt le marché noir et la carte tactique.
 
 Outil de fan, non officiel, sans lien avec Free League Publishing.
 
