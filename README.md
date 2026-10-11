@@ -23,7 +23,7 @@ ordinateur, une colonne à gauche) :
 |---|---|
 | Équipe | Les fiches des robots joueurs : onglets de couleur, plaque d'état, puis *État · Programmes · Matériel · Identité*, et *Gérer* (la liste de l'équipe) |
 | Énergie | L'horloge jour/nuit de Mechatron-7, l'énergie de l'équipe, le rationnement, les transferts de PE, les niveaux de développement |
-| Marché | Le marché noir : fermé tant que l'équipe est en création (ou si le MJ le ferme), sinon le catalogue du MJ |
+| Marché | Le marché noir : ce qui est en vente aujourd'hui, acheter et vendre (fermé pendant la création ou si le MJ le ferme) |
 | Combat | Préparation, initiative et tours guidés (inchangé) |
 | Séance | Fin de séance : questions de PX par robot, usure des niveaux (−1D6), journal de campagne |
 | MJ | En mode MJ seulement : les PNJ et leurs fiches, et la place des futurs outils du meneur |
@@ -212,6 +212,18 @@ stock (vide = illimité), en vente ou non, caché ou non ; recherche et filtres 
 perso* ; export et import du catalogue (JSON) ; *Tout réinitialiser*. *Règles du marché* (règles
 maison) : revente à la moitié du prix, au moins 1 PE, et la chance de chaque rareté. L'interrupteur
 *Ouvert/Fermé* ferme le marché aux joueurs ; *L'équipe est prête* l'ouvre.
+
+**Acheter et vendre (espace Marché).** Chaque jour de jeu, l'offre est tirée selon la rareté
+(commun : toujours ; peu commun : 1 chance sur 2 ; rare : 1 sur 6 ; unique : seulement si le MJ le
+met en vente). Choisissez l'acheteur (le robot de la fiche par défaut, avec ses PE), puis
+*Acheter* : le bouton reste grisé avec la raison s'il manque des PE, s'il n'y a plus d'emplacement
+libre pour un module ou si le robot a déjà ce module. Pour une arme, la carte rappelle les armes du
+même type que le robot possède. Une pièce de châssis arrive dans l'équipement, à monter ensuite. Un
+achat retire les PE, ajoute l'objet, baisse le stock et s'inscrit au journal ; « Annuler » défait
+tout. *Vendre* reprend un module, une arme ou un équipement à la moitié du prix (au moins 1 PE,
+règle maison), sans dépasser le maximum de PE, et remet l'objet en stock. En mode MJ : *Nouveau
+tirage*, *Tout le catalogue*, et pour chaque objet « Forcer en vente » ou « Retirer de la vente »
+pour la journée ; les objets cachés n'apparaissent qu'au MJ.
 
 **Premier lancement.** Un écran d'accueil propose *Nouvelle campagne* (donnez-lui un nom, l'équipe est vide : créez ensuite vos robots), *Importer une campagne* (un fichier `.mechatron.json`, ou un robot `.json` qui ouvre une nouvelle campagne) ou *Essayer la démo* (quatre robots joueurs et trois PNJ). Une seule campagne à la fois : pour en changer, exportez-la, puis créez-en une autre ou importez-en une.
 

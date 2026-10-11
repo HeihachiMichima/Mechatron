@@ -16,8 +16,8 @@ for (const { w, h, theme } of [{ w: 390, h: 844, theme: 'dark' }, { w: 1280, h: 
     await page.goto(url);
     await page.getByRole('button', { name: 'Ouvrir la démo' }).click();
     await nav(page, 'Marché').click();
-    await expect(page.getByRole('heading', { name: 'Modules' })).toBeVisible();
-    await expect(page.locator('li', { hasText: 'Pistolet laser' }).first()).toContainText('2 PE'); // p.234
+    await expect(page.getByRole('heading', { name: /Aujourd'hui, jour/ })).toBeVisible();
+    await expect(page.locator('li.card', { has: page.locator('.cn', { hasText: /^Pistolet laser$/ }) })).toContainText('2 PE'); // p.234
     await page.screenshot({ path: `e2e/screenshots/market-catalog-${w}-${theme}.png` });
 
     await page.getByRole('button', { name: 'Menu de la campagne' }).click();
@@ -58,3 +58,57 @@ for (const { w, h, theme } of [{ w: 390, h: 844, theme: 'dark' }, { w: 1280, h: 
     await ctx.close();
   });
 }
+
+test('T10: buy, blocked purchases, undo, sell, and the GM forcing an item in', async ({ browser }) => {
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await ctx.newPage();
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(String(e)));
+  await page.goto(url);
+  await page.getByRole('button', { name: 'Ouvrir la démo' }).click();
+  await nav(page, 'Marché').click();
+  await expect(page.getByRole('radio', { name: /Brise-Fer/ })).toHaveAttribute('aria-checked', 'true');
+  const card = (name) => page.locator('li.card', { has: page.locator('.cn', { hasText: new RegExp(`^${name}$`) }) });
+
+  // A common weapon is always on sale: Brise-Fer (5 EP) buys a laser pistol for 2 EP.
+  await expect(card('Pistolet laser')).toContainText('Brise-Fer BTL-07 a : Pistolet laser');
+  await card('Pistolet laser').getByRole('button', { name: 'Acheter' }).click();
+  let d = await save(page);
+  expect(d.chars[0].ep.current).toBe(3);
+  expect(d.chars[0].weapons.map((w) => w.name)).toEqual(['Pistolet laser', 'Pistolet laser']);
+  expect(d.campaign.market.ledger.at(-1)).toMatchObject({ type: 'buy', name: 'Pistolet laser', price: 2 });
+  // Undo restores EP and inventory.
+  await page.getByRole('button', { name: 'Annuler' }).click();
+  d = await save(page);
+  expect([d.chars[0].ep.current, d.chars[0].weapons.length, d.campaign.market.ledger.length]).toEqual([5, 1, 0]);
+
+  // Not enough EP: the plasma rifle costs 7.
+  await expect(card('Fusil à plasma').getByRole('button', { name: 'Acheter' })).toBeDisabled();
+  await expect(card('Fusil à plasma')).toContainText('Pas assez de PE : il en faut 7, Brise-Fer BTL-07 en a 5.');
+
+  // GM mode: force a rare module in. Brise-Fer has no free slot; Clou (6 slots) buys it.
+  await page.getByRole('button', { name: 'Menu de la campagne' }).click();
+  await page.getByRole('switch', { name: /Mode MJ/ }).click();
+  await page.keyboard.press('Escape');
+  await nav(page, 'Marché').click();
+  await page.getByLabel('Tout le catalogue (MJ)').check();
+  await card('Jetpack').getByLabel('Disponibilité de Jetpack').selectOption('in');
+  await expect(card('Jetpack')).toContainText('Aucun emplacement libre (3 sur 3 pris).');
+  await page.getByRole('radio', { name: /Clou/ }).click();
+  await card('Jetpack').getByRole('button', { name: 'Acheter' }).click();
+  d = await save(page);
+  const clou = d.chars.find((c) => c.name === 'Clou SCR-311');
+  expect([clou.ep.current, clou.modules.includes('Jetpack')]).toEqual([0, true]);
+  await page.screenshot({ path: 'e2e/screenshots/market-shop-gm-390.png', fullPage: true });
+
+  // Sell it back: half of 5 = 3 EP (house rule).
+  await page.locator('.sells li', { hasText: 'Jetpack' }).getByRole('button', { name: /Vendre/ }).click();
+  d = await save(page);
+  expect(d.chars.find((c) => c.name === 'Clou SCR-311').ep.current).toBe(3);
+  expect(d.campaign.market.ledger.at(-1)).toMatchObject({ type: 'sell', name: 'Jetpack', price: 3 });
+
+  // Players don't see hidden items.
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+  expect(errors).toEqual([]);
+  await ctx.close();
+});

@@ -8,7 +8,7 @@ import { random } from './rng.js';
 import { bindCampaign, defaultDev, getRules } from './settings.js';
 import { makeBackup, listBackups, backupData } from './campaign.js';
 import { blankClock, normalizeClock, isBank, bankCapacity } from './clock.js';
-import { blankMarket, normalizeMarket } from './market.js';
+import { blankMarket, normalizeMarket, drawMarket } from './market.js';
 
 export const VERSION = 3;
 const KEY = 'mechatron-v3';
@@ -489,6 +489,19 @@ class Store {
       d.campaign.market.open = play; // the gate opens the black market (T06/T09); the GM can close it
       pushJournal(d, play ? "L'équipe est prête, la partie commence." : "Retour à la création de l'équipe.");
     });
+  }
+  /**
+   * The black market's offer for today (T10): drawn once per in-game day, the
+   * first time the market is looked at. Not an undo step (it is today's state).
+   */
+  ensureDraw() {
+    const m = this.data.campaign.market;
+    const day = this.data.campaign.clock.day;
+    if (this.started && m.open && m.draw.day !== day) drawMarket(m, day);
+  }
+  /** « Nouveau tirage » (GM mode): draw today's offer again, undoable. */
+  redraw() {
+    this.commitAll('Nouveau tirage du marché', (d) => drawMarket(d.campaign.market, d.campaign.clock.day));
   }
   /** « Mode MJ » switch (per device). Turning it off leaves the MJ space. */
   setGm(on) {

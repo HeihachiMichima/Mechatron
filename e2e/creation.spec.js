@@ -147,7 +147,7 @@ test('a second robot cannot take the first one\'s parts or modules; the GM opens
   await page.getByRole('button', { name: "L'équipe est prête" }).click();
   await expect(page.getByRole('heading', { name: 'Partie en cours' })).toBeVisible();
   await nav(page, 'Marché').click();
-  await expect(page.getByRole('heading', { name: 'Modules' })).toBeVisible(); // the market is open
+  await expect(page.getByRole('heading', { name: /Aujourd'hui, jour/ })).toBeVisible(); // the market is open
   await page.waitForTimeout(400);
   const saved = await page.evaluate(() => JSON.parse(localStorage['mechatron-v3']));
   expect(saved.campaign.phase).toBe('play');

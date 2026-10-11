@@ -2,11 +2,13 @@
 // campaign.market = { open, sellRate, rarities, listings, ledger }.
 // listing = { id, kind: 'module'|'weapon'|'equipment'|'part'|'custom', ref, custom,
 //             price (null = to be set by the GM), rarity, stock (null = unlimited),
-//             enabled, hidden, note }.
+//             enabled, hidden, note, force: null|'in'|'out' (GM override of the day's draw) }.
+// market.draw = { day, ids }: what is on sale on that in-game day (T10).
 // Book prices: data.js goodsPrices (p.234). Everything else is a house rule (house.js).
 import { GAME_DATA as D } from './data.js';
 import { HOUSE } from './house.js';
-import { findModule, findWeapon, findEquipment, findPart } from './rules.js';
+import { findModule, findWeapon, findEquipment, findPart, chassis, epMax } from './rules.js';
+import { random } from './rng.js';
 
 const H = HOUSE.market;
 export const KINDS = [
@@ -33,7 +35,7 @@ export function bookPrice(l) {
 export const priceSource = (l) => (l.price == null ? 'none' : bookPrice(l) === l.price ? 'book' : 'house');
 
 const listing = (kind, ref, extra = {}) => {
-  const l = { id: `${kind}:${ref}`, kind, ref, custom: '', price: null, rarity: H.rarityByKind[kind], stock: null, enabled: true, hidden: false, note: '', ...extra };
+  const l = { id: `${kind}:${ref}`, kind, ref, custom: '', price: null, rarity: H.rarityByKind[kind], stock: null, enabled: true, hidden: false, note: '', force: null, ...extra };
   if (!('price' in extra)) l.price = bookPrice(l);
   return l;
 };
@@ -51,7 +53,7 @@ export function defaultListings() {
 export const defaultRarities = () => H.rarities.map((r) => ({ ...r }));
 
 /** A fresh market: the whole catalog, house rarities and sell rate. Open once the game starts. */
-export const blankMarket = (open = false) => ({ open, sellRate: H.sellRate, rarities: defaultRarities(), listings: defaultListings(), ledger: [] });
+export const blankMarket = (open = false) => ({ open, sellRate: H.sellRate, rarities: defaultRarities(), listings: defaultListings(), ledger: [], draw: { day: 0, ids: [] } });
 
 function normalizeListing(raw) {
   if (!isObj(raw)) return null;
@@ -67,7 +69,8 @@ function normalizeListing(raw) {
     stock: intOrNull(raw.stock),
     enabled: raw.enabled !== false,
     hidden: !!raw.hidden,
-    note: str(raw.note)
+    note: str(raw.note),
+    force: raw.force === 'in' || raw.force === 'out' ? raw.force : null
   };
 }
 
@@ -84,7 +87,8 @@ export function normalizeMarket(raw, phase = 'creation') {
     sellRate: Number.isFinite(Number(raw.sellRate)) ? Math.max(0, Math.min(1, Number(raw.sellRate))) : H.sellRate,
     rarities: rarities.length ? rarities : defaultRarities(),
     listings,
-    ledger: (Array.isArray(raw.ledger) ? raw.ledger : []).filter(isObj).map((e) => JSON.parse(JSON.stringify(e)))
+    ledger: (Array.isArray(raw.ledger) ? raw.ledger : []).filter(isObj).map((e) => JSON.parse(JSON.stringify(e))),
+    draw: { day: Math.max(0, Math.floor(Number(raw.draw?.day)) || 0), ids: (Array.isArray(raw.draw?.ids) ? raw.draw.ids : []).filter((x) => typeof x === 'string') }
   };
 }
 
@@ -125,4 +129,108 @@ export function readMarketFile(raw) {
   if (!isObj(raw) || !Array.isArray(raw.listings)) return null;
   const m = normalizeMarket({ ...raw, open: false, ledger: [] });
   return m.listings.length ? m : null;
+}
+
+// ---------- T10: availability, buy, sell ----------
+
+/** Draw the day's offer: each item for sale shows up with its rarity's chance (rng). */
+export function drawMarket(market, day) {
+  const ids = market.listings.filter((l) => l.enabled && random() < rarityOf(market, l.rarity).chance).map((l) => l.id);
+  market.draw = { day, ids };
+  return ids;
+}
+
+/** On sale today: enabled, priced, in stock, and drawn (or forced in by the GM; forced out never). */
+export function isAvailable(market, l) {
+  if (!l.enabled || l.price == null || l.stock === 0 || l.force === 'out') return false;
+  return l.force === 'in' || market.draw.ids.includes(l.id);
+}
+
+/** What a robot already has of that kind (to block a second copy of a module). */
+const hasModule = (c, name) => c.modules.includes(name);
+
+/**
+ * Why `c` can't buy `l` today (a French sentence), or null. ep = what it can spend
+ * (availableEp: the GM pool for an NPC when the pool is on).
+ */
+export function buyBlock(market, l, c, ep) {
+  if (!c) return 'Choisissez un acheteur.';
+  if (c.body === 'creature') return 'Une créature n\'achète rien.';
+  if (!market.open) return 'Le marché noir est fermé.';
+  if (l.price == null) return 'Le MJ n\'a pas encore fixé de prix.';
+  if (!isAvailable(market, l)) return l.stock === 0 ? 'Épuisé.' : 'Pas en vente aujourd\'hui.';
+  if (ep < l.price) return `Pas assez de PE : il en faut ${l.price}, ${c.name || 'ce robot'} en a ${ep}.`;
+  if (l.kind === 'module') {
+    if (hasModule(c, l.ref)) return `${c.name || 'Ce robot'} a déjà ce module.`;
+    const ch = chassis(c);
+    if (c.modules.filter(Boolean).length >= ch.slots) return `Aucun emplacement libre (${ch.slots} sur ${ch.slots} pris).`;
+  }
+  return null;
+}
+
+const weaponFrom = (name) => { const w = findWeapon(name); return { name, bonus: w?.bonus ?? '', degats: w?.degats ?? '', portee: w?.portee ?? '', note: '' }; };
+const record = (data, entry) => {
+  const day = data.campaign.clock?.day ?? null;
+  data.campaign.market.ledger.push({ at: new Date().toISOString(), day, ...entry });
+  if (data.campaign.market.ledger.length > 300) data.campaign.market.ledger.splice(0, data.campaign.market.ledger.length - 300);
+  data.campaign.journal.push({ at: new Date().toISOString(), ...(day ? { day } : {}), text: entry.text });
+};
+
+/**
+ * Buy listing `id` for robot `cid` (inside commitAll). pay(data, c, n) takes the
+ * EP (store.payEp: the GM pool for NPCs when on). Returns null or the reason.
+ */
+export function buy(data, id, cid, { pay, ep }) {
+  const m = data.campaign.market;
+  const l = m.listings.find((x) => x.id === id);
+  const c = data.chars.find((x) => x.id === cid);
+  if (!l) return 'Objet introuvable.';
+  const why = buyBlock(m, l, c, ep(data, c));
+  if (why) return why;
+  pay(data, c, l.price);
+  const name = listingName(l);
+  if (l.kind === 'module') c.modules.push(name);
+  else if (l.kind === 'weapon') c.weapons.push(weaponFrom(name));
+  else c.equipment.push({ name, integre: false, ...(/^banque d.énergie$/i.test(name) ? { charge: 0 } : {}) });
+  if (l.stock != null) l.stock -= 1;
+  record(data, { type: 'buy', cid, listing: l.id, name, price: l.price, text: `${c.name || 'Robot'} achète ${name} au marché noir : ${l.price} PE` });
+  return null;
+}
+
+/** The listing the market would take an item back as (same kind and name), or null. */
+export function listingFor(market, kind, name) {
+  const kinds = kind === 'equipment' ? ['equipment', 'part', 'custom'] : [kind];
+  return market.listings.find((l) => kinds.includes(l.kind) && listingName(l) === name) ?? null;
+}
+
+/** What robot `c` could sell: [{ kind, index, name, listing, price }] (price null = not taken back). */
+export function sellables(market, c) {
+  if (!c) return [];
+  const out = [];
+  c.modules.forEach((name, index) => name && out.push({ kind: 'module', index, name }));
+  c.weapons.forEach((w, index) => out.push({ kind: 'weapon', index, name: w.name }));
+  c.equipment.forEach((e, index) => out.push({ kind: 'equipment', index, name: e.name }));
+  return out.map((it) => { const l = listingFor(market, it.kind, it.name); return { ...it, listing: l, price: l ? sellPrice(l, market) : null }; });
+}
+
+/** Sell item {kind, index} of robot `cid`: half price (house rule), back in stock. Returns null or the reason. */
+export function sell(data, cid, { kind, index }) {
+  const m = data.campaign.market;
+  const c = data.chars.find((x) => x.id === cid);
+  if (!c) return 'Robot introuvable.';
+  if (!m.open) return 'Le marché noir est fermé.';
+  const it = sellables(m, c).find((x) => x.kind === kind && x.index === index);
+  if (!it) return 'Objet introuvable.';
+  if (it.price == null) return 'Le marché noir ne reprend pas cet objet (pas de prix).';
+  const room = epMax(c) - c.ep.current;
+  if (room < it.price) return `Trop de PE : ${c.name || 'ce robot'} ne peut en recevoir que ${room} (max ${epMax(c)}).`;
+  if (kind === 'module') {
+    c.modules.splice(index, 1);
+    c.brokenModules = c.brokenModules.filter((i) => i !== index).map((i) => (i > index ? i - 1 : i));
+  } else if (kind === 'weapon') c.weapons.splice(index, 1);
+  else c.equipment.splice(index, 1);
+  c.ep.current += it.price;
+  if (it.listing.stock != null) it.listing.stock += 1;
+  record(data, { type: 'sell', cid, listing: it.listing.id, name: it.name, price: it.price, text: `${c.name || 'Robot'} vend ${it.name} au marché noir : +${it.price} PE` });
+  return null;
 }
