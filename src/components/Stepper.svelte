@@ -17,6 +17,11 @@
   button:not(:disabled):active { background: var(--hull-2); }
   output { min-width: 2ch; display: grid; place-items: center; font-size: 1.15rem; font-weight: 600; padding: 0 2px; }
   .sm button { width: 38px; min-height: 38px; }
+  /* 44 px hit area around the visible 38-40 px buttons, growing outward only
+     (never over the other button of the pair). */
+  button { position: relative; }
+  button::before { content: ''; position: absolute; inset: -3px 0 -3px -6px; }
+  button:last-child::before { inset: -3px -6px -3px 0; }
   .div { width: 1px; background: var(--line); margin: 6px 0; }
   .sm output { font-size: 1rem; }
 </style>

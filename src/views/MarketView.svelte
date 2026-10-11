@@ -138,7 +138,7 @@
           {#each goods as it (`${it.kind}:${it.index}`)}
             <li>
               <span class="sn"><b>{it.name}</b><small>{it.kind === 'module' ? 'module' : it.kind === 'weapon' ? 'arme' : 'équipement'}</small></span>
-              {#if it.price == null}<span class="muted small">non repris</span>
+              {#if it.price == null}<span class="muted note">non repris</span>
               {:else}<button class="btn small" onclick={() => resell(it)}>Vendre <b class="num">+{it.price} PE</b></button>{/if}
             </li>
           {/each}
@@ -181,10 +181,10 @@
   .buy .btn { min-height: 44px; min-width: 7em; }
   .why { color: var(--muted); font-size: .8rem; }
   .force { display: grid; gap: 2px; margin-top: 6px; font-size: .75rem; color: var(--muted); }
-  .force .input { min-height: 40px; padding: 6px 8px; font-size: .85rem; }
+  .force .input { min-height: 44px; padding: 6px 8px; font-size: .85rem; }
   .sells li { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 52px; }
   .sn { display: grid; min-width: 0; }
   .sn b { font-family: var(--display); font-weight: 600; }
-  .sn small, .small { font-size: .8rem; color: var(--muted); }
+  .sn small, .note { font-size: .8rem; color: var(--muted); }
   @media (min-width: 1100px) { .grid { grid-template-columns: minmax(0, 1fr); } }
 </style>

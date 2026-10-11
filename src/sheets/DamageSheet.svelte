@@ -94,7 +94,7 @@
   .row .muted { font-size: .85rem; }
   .block { margin-bottom: 12px; }
   .lbl { display: block; font-size: .85rem; color: var(--muted); margin: 0 0 6px; }
-  .toggle { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+  .toggle { display: flex; gap: 10px; align-items: center; cursor: pointer; min-height: 44px; }
   .toggle input { width: 20px; height: 20px; accent-color: var(--amber); flex: none; }
   .toggle em { font-style: normal; font-size: .85rem; }
   .go { min-height: 52px; margin-top: 4px; }

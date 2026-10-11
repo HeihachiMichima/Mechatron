@@ -128,7 +128,7 @@
   .pair { display: grid; gap: 8px; }
   @media (min-width: 560px) { .pair { grid-template-columns: 1fr 1fr; } }
   .h { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: .9rem; }
-  .tog { display: flex; gap: 10px; align-items: center; cursor: pointer; font-size: .92rem; }
+  .tog { display: flex; gap: 10px; align-items: center; cursor: pointer; font-size: .92rem; min-height: 44px; }
   .tog input { width: 20px; height: 20px; accent-color: var(--amber); flex: none; }
   .sum { margin: 0; font-weight: 600; }
   .trays { display: grid; gap: 10px; }

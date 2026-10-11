@@ -203,7 +203,7 @@
   .acts, .foot { display: flex; flex-wrap: wrap; gap: 8px; }
   .pool-row { display: flex; align-items: center; justify-content: space-between; }
   .pv { font-size: 2.2rem; font-weight: 700; color: var(--coolant); }
-  .lh { width: 100%; background: none; border: 0; padding: 0; text-align: left; color: inherit; }
+  .lh { width: 100%; background: none; border: 0; padding: 0; text-align: left; color: inherit; min-height: 44px; align-items: center; }
   .entries { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: .86rem; max-height: 360px; overflow: auto; }
   .entries li { display: flex; gap: 8px; }
   .lr { color: var(--muted); flex: none; min-width: 2.2em; }

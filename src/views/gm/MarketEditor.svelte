@@ -149,7 +149,7 @@
   .ctl { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: flex-end; }
   .ctl label:not(.chk) { display: grid; gap: 2px; }
   .ctl label span { font-size: .72rem; color: var(--muted); }
-  .ctl .input { min-height: 40px; padding: 6px 8px; }
+  .ctl .input { min-height: 44px; padding: 6px 8px; }
   .ctl input.num { width: 4.5em; text-align: center; }
   .ctl select { width: auto; }
   .add { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }

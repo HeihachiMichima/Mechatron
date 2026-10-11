@@ -178,7 +178,7 @@
         <line class="sight" class:hidden={!l.visible} x1={l.x1 + 0.5} y1={l.y1 + 0.5} x2={l.x2 + 0.5} y2={l.y2 + 0.5} />
       {/each}
       {#each shown as t (t.id)}
-        <g class="tok" class:enemy={t.side === 'enemy'} class:sel={t.selected} class:cur={t.current} class:down={t.down} class:dragging={t.dragging} data-tok={t.id} transform="translate({t.fx + 0.5} {t.fy + 0.5})" style="--ring:{t.color}">
+        <g class="tok" class:enemy={t.side === 'enemy'} class:sel={t.selected} class:cur={t.current} class:down={t.down} class:dragging={t.dragging} data-tok={t.id} transform="translate({t.fx + 0.5} {t.fy + 0.5})" style="--ring:{t.color}; --ink:{t.ink || 'var(--on-ring)'}">
           {#if t.current || t.selected}<circle class="halo" r="0.5" />{/if}
           <circle class="disc" r="0.42" />
           <text class="ini" y="0.12">{t.initials}</text>
@@ -220,7 +220,7 @@
   .tok .disc { fill: color-mix(in srgb, var(--ring) 22%, var(--abyss)); stroke: var(--ring); stroke-width: 0.08; }
   .tok .ini { font: 700 0.32px var(--display); fill: var(--text); text-anchor: middle; pointer-events: none; }
   .tok.sel .disc { fill: var(--ring); }
-  .tok.sel .ini { fill: #10181a; }
+  .tok.sel .ini { fill: var(--ink); }
   .tok .halo { fill: none; stroke: var(--amber); stroke-width: 0.07; }
   .tok.sel:not(.cur) .halo { stroke: var(--text); stroke-dasharray: 0.12 0.1; }
   .tok.down { opacity: .45; }

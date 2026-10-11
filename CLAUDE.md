@@ -14,7 +14,10 @@ code, comments and identifiers are in English.
 ├── .github/workflows/deploy.yml   builds and deploys to GitHub Pages on push to main
 ├── Mechatron-livre-md/  the rulebook in Markdown (git-ignored, never commit): READ THIS for rules
 ├── dist/index.html      the build (git-ignored): ONE self-contained file (JS, CSS, fonts, logo inlined)
-├── e2e/smoke.spec.js    Playwright smoke test of dist/index.html (screenshots → e2e/screenshots/, ignored)
+├── pwa/                 manifest.webmanifest + icons, copied next to index.html (Vite publicDir) for the
+│                        home-screen install; main.js links the manifest only over http(s)
+├── e2e/                 Playwright: smoke, spaces, creation, energy, market, session, map, fights
+│                        (+ fixtures/no-map-logs.json), encounters, install (budget + manifest), a11y
 └── src/
     ├── main.js, App.svelte, app.css     entry, sheet router, design tokens
     ├── assets/logo.png  app logo (top bar + print sheet), inlined into the build (the only tracked logo.png)
@@ -78,10 +81,10 @@ from a GitHub clone doesn't have it and must ask the user for the pages it needs
 ```bash
 npm install
 npm run dev       # Vite dev server
-npm run build     # → dist/index.html (single file, ~750 kB)
+npm run build     # → dist/index.html (single file, ~815 kB; budget < 900 kB, checked by e2e/install)
 npm run preview
 npm test          # Vitest unit tests (src/**/__tests__/*.test.js)
-npm run e2e       # Playwright smoke test of the build (run npm run build first)
+npm run e2e       # Playwright tests of the build (run npm run build first)
 ```
 
 Stack: Svelte 5 (runes), Vite 8, `vite-plugin-singlefile`, fonts from
@@ -96,6 +99,17 @@ no backend. Output must stay a **static page** that opens by double-click, offli
   back gracefully. When unsure, read the page in `Mechatron-livre-md/` first.
 - **Mobile first.** Design for ~380 px wide, thumb reach (bottom nav, bottom sheets),
   44 px touch targets, no horizontal scroll. Desktop is a bonus layout.
+- **Accessibility (T16, checked by `e2e/a11y.spec.js` on every space, 390/1280 px, both themes):**
+  every control has a name; every control offers a 44 px target — `.btn.small` and `.chip` stay 36 px
+  tall but get a `::before` hit area (inset −4px 0; chip rows have an 8 px gap so areas barely touch),
+  Stepper buttons grow outward only (never over their twin); checkbox labels are ≥ 44 × 44; only the
+  LED segment cells are narrower (their ± stepper is the full-size control); text contrast ≥ 4.5:1
+  (3:1 for ≥ 24 px or bold ≥ 18.66 px), faded text included (only `:disabled` is exempt). Text on a
+  filled ring (selected avatar or token) uses `--on-ring` unless the ring is a light player color.
+  The spec visits the spaces, fiche tabs, damage/roster/templates sheets, the wizard's first step,
+  the MJ details, combat prep → initiative → fight → target setup (seeded with `setRng(5)`). The light
+  theme's amber (#985600), coolant (#0b746c) and fault (#b52f24), and the dark fault (#ff7b6d), were
+  darkened/lightened for that. Never name a scoped class `.small`: it also styles `btn small` buttons.
 - **French UI text**, proper typography (« », non-breaking spaces before `:` when
   natural, accents). Correct plural agreement in messages/toasts.
 - **No backward compatibility.** There is no user base: no migration of old saves, no legacy
@@ -354,9 +368,9 @@ round), `defenses`, `protectRound` (Protect once per round). Weapons: `power`
   `roundtrip(data)` (`__tests__/roundtrip.js`): JSON → `normalizeAll` → JSON, compared without
   `id` and `color` (`expect(after).toEqual(before)`). Reload and undo both go through
   `normalizeAll`, so this covers them.
-- **Browser:** `npm run build && npm run e2e` (Playwright, `e2e/smoke.spec.js`): loads
-  `dist/index.html` at 390 and 1280 px in both themes, no console error, screenshots in
-  `e2e/screenshots/`. `@playwright/test` is pinned to the version whose Chromium is preinstalled
+- **Browser:** `npm run build && npm run e2e` (Playwright, every `e2e/*.spec.js`; the smoke test
+  loads `dist/index.html` at 390 and 1280 px in both themes, no console error, screenshots in
+  `e2e/screenshots/`; a11y and install are described above). `@playwright/test` is pinned to the version whose Chromium is preinstalled
   in Claude's cloud workspace (`/opt/pw-browsers`; never run `playwright install` there); on the
   user's PC run `npx playwright install chromium` once.
 - For combat changes, also click through Préparation → Initiative → Combat for a few rounds
@@ -484,6 +498,9 @@ Follow `docs/PLAN-COMPAGNON.md` §0: one ticket at a time, in order.
   JSON export/import with their maps) and 4 original quick setups (Couloir de service, Quai, Salle du
   réacteur, Entrepôt); « Lancer » builds the fight with tokens on the spawn zones and opens
   Préparation (initiative in 2 taps).
+- v3.13.0 (2026-10-11, plan ticket T16): finish — home-screen install (`pwa/` manifest + icons,
+  linked over http(s) only), 44 px targets and AA contrast everywhere (a11y e2e), size budget test,
+  « Exportez la campagne » reminder at the end of a session, README reorganised for players and GM.
 - v3.2.1 (2026-10-11): from Combat, « Ouvrir la fiche » opens an NPC's full fiche in place, in both
   GM modes, with « Retour au combat » (`ui.peek`): combat is now strictly the same in both modes.
 
