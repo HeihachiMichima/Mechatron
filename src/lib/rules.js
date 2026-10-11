@@ -1,6 +1,7 @@
 // Pure game-rule helpers. Everything reads the character object `c`
 // and GAME_DATA; nothing here touches the DOM or storage.
 import { GAME_DATA as D } from './data.js';
+import { d6, pick } from './rng.js';
 
 export const ATTRS = ['servos', 'stabilite', 'processeur', 'reseau'];
 export const DEV_KEYS = ['Energie', 'Production', 'Défense', 'Information'];
@@ -88,8 +89,7 @@ export function devModFor(c, prog) {
   return devBand(c.dev[prog.devBonus]).bonus;
 }
 
-// ---------- dice ----------
-const d6 = () => 1 + Math.floor(Math.random() * 6);
+// ---------- dice (all through rng.js) ----------
 
 // Negative modifications beyond the program level become negative Program
 // Dice (p.51): each 6 on them cancels a 6 on Base or Gear Dice.
@@ -143,8 +143,7 @@ export function status(c, ch = chassis(c)) {
 }
 
 // ---------- damage pipeline (p.88-91) ----------
-const d6r = () => 1 + Math.floor(Math.random() * 6);
-const rollN = (n) => Array.from({ length: Math.max(0, n) }, d6r);
+const rollN = (n) => Array.from({ length: Math.max(0, n) }, d6);
 
 /**
  * Resolve one hit against character `c` (mutated in place).
@@ -214,11 +213,11 @@ export function resolveDamage(c, opts) {
     let target = forced;
     forced = null;
     let roll = null;
-    if (!target) { roll = d6r(); target = table.find((r) => roll >= r.min && roll <= r.max)?.target ?? 'module'; }
+    if (!target) { roll = d6(); target = table.find((r) => roll >= r.min && roll <= r.max)?.target ?? 'module'; }
     if (target === 'module') {
       const w = working();
       if (!w.length) { if (roll == null) continue; continue; } // no module left: re-roll
-      const idx = w[Math.floor(Math.random() * w.length)];
+      const idx = pick(w);
       c.brokenModules = [...(c.brokenModules || []), idx];
       steps.push(`${roll != null ? `D6 ${roll} : ` : ''}module ${c.modules[idx]} cassé`);
       dmg -= 1;
@@ -281,8 +280,8 @@ export const canTarget = (c) => c.model === 'battle' && (c.specialRating || 0) >
 
 // ---------- initiative (p.79) ----------
 export function rollInitiative(c) {
-  const a = d6r();
-  if (hasSecondary(c, 'Tactiques SWAT')) { const b = d6r(); return { value: Math.max(a, b), text: `${a} et ${b}, garde ${Math.max(a, b)}` }; }
+  const a = d6();
+  if (hasSecondary(c, 'Tactiques SWAT')) { const b = d6(); return { value: Math.max(a, b), text: `${a} et ${b}, garde ${Math.max(a, b)}` }; }
   return { value: a, text: String(a) };
 }
 

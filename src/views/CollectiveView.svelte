@@ -3,11 +3,12 @@
   import { store } from '../lib/store.svelte.js';
   import { GAME_DATA as D } from '../lib/data.js';
   import { DEV_KEYS, DEV_LABELS, devBand, fmtBonus } from '../lib/rules.js';
+  import { d6 } from '../lib/rng.js';
 
   const c = $derived(store.c);
   const linked = (k) => D.programs.filter((p) => p.devBonus === k).map((p) => p.label);
   function decay() {
-    const rolls = DEV_KEYS.map(() => 1 + Math.floor(Math.random() * 6));
+    const rolls = DEV_KEYS.map(() => d6());
     store.commitAll(`Usure : ${DEV_KEYS.map((k, i) => `${DEV_LABELS[k]} −${rolls[i]}`).join(', ')}`, (d) => { const base = { ...store.c.dev }; d.chars.forEach((s) => DEV_KEYS.forEach((k, i) => (s.dev[k] = Math.max(0, base[k] - rolls[i])))); });
   }
   // The collective is shared: every robot on the table sees the same levels.

@@ -70,7 +70,7 @@ Repo: `HeihachiMichima/Mechatron` (local: `G:\MYZ\mechatron-sheet`) · Baseline:
   - Overwatch exists as a manual state. The quick guide (data.js about line 511) describes it as covering "votre arc de 90°".
   - Moving is described as "Bras ↔ Proche ↔ Courte: 1 maneuver per range band; beyond Courte, 2 maneuvers in a row per band" (data.js about line 520). **No maneuver counter exists.**
 - **Exports:** robot JSON, share link `#robot=…` (it imports a **copy**), text, PNG card, print, and "Télécharger la table" (`mechatron-table.json`, the whole roster).
-- **Tests:** none.
+- **Tests (T02, v2.3.10):** Vitest `npm test` (`src/lib/__tests__/`, helpers `rig()` and `roundtrip()`), dice through `src/lib/rng.js` (`setRng`, `window.__mechatron.setRng`), Playwright `npm run e2e` (`e2e/smoke.spec.js`, needs a build).
 - **Rulebook:** `Mechatron-livre-md/` at the repo root: the owner's Markdown conversion of the Mechatron rulebook (237 pages, OCR via pymupdf4llm + ocrmypdf, `meta.json`). `INDEX.md` maps chapters to pages; one file per 5 pages (`p0001-0005.md` … `p0236-0237.md`); `<!-- page N -->` markers give PDF page numbers. **Git-ignored** (copyrighted content, not to publish): it exists only on the owner's PC. An agent working from a GitHub clone (cloud) doesn't have it and must ask the owner for the relevant slice.
 - **Key book pages for the tickets** (PDF pages): XP p.26 · chassis parts and "two players may not choose the same part" p.18 · energy points and charging p.72 · range, movement and fleeing p.82 · cover p.91 · DEV levels p.107-108 · base stations and energy as currency p.112 · black market p.116-117 · **goods and services price list p.234**.
 

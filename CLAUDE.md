@@ -14,6 +14,7 @@ code, comments and identifiers are in English.
 ├── .github/workflows/deploy.yml   builds and deploys to GitHub Pages on push to main
 ├── Mechatron-livre-md/  the rulebook in Markdown (git-ignored, never commit): READ THIS for rules
 ├── dist/index.html      the build (git-ignored): ONE self-contained file (JS, CSS, fonts, logo inlined)
+├── e2e/smoke.spec.js    Playwright smoke test of dist/index.html (screenshots → e2e/screenshots/, ignored)
 └── src/
     ├── main.js, App.svelte, app.css     entry, sheet router, design tokens
     ├── assets/logo.png  app logo (top bar + print sheet), inlined into the build (the only tracked logo.png)
@@ -22,6 +23,8 @@ code, comments and identifiers are in English.
     │   ├── house.js         house rules: values the book doesn't give (« règle maison », GM-editable)
     │   ├── settings.js      getRules(): book ← house ← campaign overrides
     │   ├── rules.js         pure rules functions (chassis, pools, dice, damage…)
+    │   ├── rng.js           every random draw: d6(), random(), pick(), setRng(seed)
+    │   ├── __tests__/       Vitest tests (*.test.js) + helpers.js (rig dice) + roundtrip.js
     │   ├── store.svelte.js  roster + combat state, undo, localStorage
     │   ├── combat.js        initiative order, turn advance, group rolls
     │   ├── energy.js        module activation (overheating, Power Saver), module fx
@@ -59,6 +62,8 @@ npm install
 npm run dev       # Vite dev server
 npm run build     # → dist/index.html (single file, ~624 kB)
 npm run preview
+npm test          # Vitest unit tests (src/**/__tests__/*.test.js)
+npm run e2e       # Playwright smoke test of the build (run npm run build first)
 ```
 
 Stack: Svelte 5 (runes), Vite 8, `vite-plugin-singlefile`, fonts from
@@ -171,13 +176,24 @@ round), `defenses`, `protectRound` (Protect once per round). Weapons: `power`
 
 ## Testing
 
-No test suite in the repo. Verify with a production build plus a headless
-Playwright run on `dist/index.html` (Chromium is preinstalled in Claude's cloud
-workspace at `/opt/pw-browsers`, do not run `playwright install` there; on the user's PC run
-`npx playwright install chromium` once): click through
-Préparation → Initiative → Combat for a few rounds, read the combat log from
-`localStorage['mechatron-roster-v3']`, check there are no console errors, and look
-at screenshots at 390 px width (light and dark).
+- **Unit tests (Vitest):** `npm test`. Tests live in `src/lib/__tests__/*.test.js` (node
+  environment; `.svelte.js` runes compile through the Svelte plugin in `vite.config.js`).
+- **Dice:** every random draw goes through `src/lib/rng.js` (`d6`, `random`, `pick`). Never call
+  `Math.random()` for game randomness (ids and toast keys are the only exceptions). In tests,
+  `rig(6, 1, 3)` (helpers.js) forces the next faces; `setRng(seed)` gives a reproducible
+  sequence; `setRng(null)` restores `Math.random`. In the browser (dev and build),
+  `window.__mechatron.setRng(5)` makes a whole fight reproducible.
+- **Persistence:** every new persisted field gets a round-trip test with
+  `roundtrip(data)` (`__tests__/roundtrip.js`): JSON → `normalizeAll` → JSON, compared without
+  `id` and `color` (`expect(after).toEqual(before)`). Reload and undo both go through
+  `normalizeAll`, so this covers them.
+- **Browser:** `npm run build && npm run e2e` (Playwright, `e2e/smoke.spec.js`): loads
+  `dist/index.html` at 390 and 1280 px in both themes, no console error, screenshots in
+  `e2e/screenshots/`. `@playwright/test` is pinned to the version whose Chromium is preinstalled
+  in Claude's cloud workspace (`/opt/pw-browsers`; never run `playwright install` there); on the
+  user's PC run `npx playwright install chromium` once.
+- For combat changes, also click through Préparation → Initiative → Combat for a few rounds
+  (seeded) and read the log from `localStorage['mechatron-roster-v3']`.
 
 ## Delivering changes
 
@@ -234,6 +250,9 @@ Follow `docs/PLAN-COMPAGNON.md` §0: one ticket at a time, in order.
 - v2.3.9 (2026-10-11, plan ticket T01): the app is named « Compagnon Mechatron » (page title,
   meta description, nav label, PNG card footer, package name `mechatron-companion`); a robot's
   page stays a « fiche ». The bottom nav has `id="app-nav"` (TurnFlow finds it by id).
+- v2.3.10 (2026-10-11, plan ticket T02): tests — Vitest (`npm test`, 34 tests: chassis, dice,
+  push, damage, overheating, initiative order, end of turn, normalize, round-trip), seedable dice
+  (`rng.js`, `window.__mechatron.setRng`), round-trip helper, Playwright smoke test (`npm run e2e`).
 
 ## Ideas not done yet
 

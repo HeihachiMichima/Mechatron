@@ -9,5 +9,7 @@ export default defineConfig({
   // Nothing is copied next to the build: the logo is imported from src/assets and inlined.
   publicDir: false,
   plugins: [svelte(), viteSingleFile()],
-  build: { assetsInlineLimit: 100000000, cssCodeSplit: false }
+  build: { assetsInlineLimit: 100000000, cssCodeSplit: false },
+  // Vitest: unit tests live next to the code in src/**/__tests__; e2e/ is Playwright's.
+  test: { include: ['src/**/*.test.js'], environment: 'node' }
 });
