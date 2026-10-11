@@ -129,7 +129,7 @@ test('every v2.3.6 feature is within 2 taps of Équipe (GM mode on)', async ({ b
     ['Exports du robot (JSON, lien, texte, image, impression)', [btn('Exporter')], () => dialog()],
     ["Gérer l'équipe : dupliquer, supprimer, nouveau, remise à neuf", [btn("Gérer l'équipe", true)], () => dialog().getByRole('button', { name: /Remettre l'équipe à neuf/ })],
     ['Combat : préparation, initiative, tours', [go('Combat')], () => page.getByRole('button', { name: 'Initiative', exact: true })],
-    ['Niveaux de développement et connexion', [go('Énergie')], () => page.getByRole('heading', { name: 'Connexion au collectif' })],
+    ['Niveaux de développement, connexion et horloge', [go('Énergie')], () => page.getByRole('heading', { name: 'Rationnement' })],
     ['Usure des niveaux (fin de séance)', [go('Séance')], () => page.getByRole('button', { name: /−1D6 à chaque niveau/ })],
     ['Questions de fin de séance (PX)', [go('Séance'), btn('Questions')], () => dialog()],
     ['Journal de campagne', [go('Séance')], () => page.getByRole('heading', { name: 'Journal de campagne' })],

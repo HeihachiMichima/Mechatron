@@ -109,9 +109,8 @@
         {:else}
           <button class="btn small" disabled={c.ep.current >= maxEp} onclick={() => setEp(c.ep.current + solar, `Soleil : +${solar} PE`)}>Soleil (+{solar})</button>
         {/if}
-        <button class="btn small" disabled={c.ep.current <= 0} onclick={() => setEp(c.ep.current - 1, 'Nouveau jour : −1 PE')}>Nouveau jour (−1)</button>
       </div>
-      <p class="hint">{#if c.online}Une borne recharge jusqu'au niveau de rationnement (Énergie {getDev().Energie}), jamais au-delà.{:else}Hors du collectif, chaque robot regagne 1 PE par jour en plein air.{/if} Un PE par jour pour fonctionner ; à 0 PE, le robot passe en veille.</p>
+      <p class="hint">{#if c.online}Une borne recharge jusqu'au niveau de rationnement (Énergie {getDev().Energie}), jamais au-delà.{:else}Hors du collectif, chaque robot regagne 1 PE par jour en plein air.{/if} {energyRules(store.campaign).dailyDrain} PE chaque soir pour fonctionner (l'horloge de l'espace Énergie les retire) ; à 0 PE, le robot passe en veille.</p>
     </section>
     {/if}
 

@@ -22,7 +22,7 @@ ordinateur, une colonne à gauche) :
 | Espace | Rôle |
 |---|---|
 | Équipe | Les fiches des robots joueurs : onglets de couleur, plaque d'état, puis *État · Programmes · Matériel · Identité*, et *Gérer* (la liste de l'équipe) |
-| Énergie | Niveaux de développement du collectif, et quels robots y sont connectés |
+| Énergie | L'horloge jour/nuit de Mechatron-7, l'énergie de l'équipe, le rationnement, les transferts de PE, les niveaux de développement |
 | Marché | Le marché noir : fermé tant que l'équipe est en création, il arrive dans une prochaine version |
 | Combat | Préparation, initiative et tours guidés (inchangé) |
 | Séance | Fin de séance : questions de PX par robot, usure des niveaux (−1D6), journal de campagne |
@@ -74,6 +74,18 @@ au-delà) ; hors ligne, le bouton devient *Soleil (+1)*. L'espace Séance pose l
 à chaque robot et retire 1D6 à chaque niveau de développement en un geste (le résultat va au
 journal). Le **journal de campagne** (espace Séance) garde les notes de la table, les plus récentes
 en haut.
+
+**Jour et nuit (espace Énergie).** Un seul bouton fait avancer la journée : *Terminer la journée*
+(chaque robot consomme 1 PE ; à 0, il passe en veille), *Recharger pour la nuit* (un robot connecté
+remonte à sa borne jusqu'au rationnement, jamais au-delà ; dehors, le soleil donne 1 PE, et les
+*Panneaux solaires* D6 par ciel dégagé), puis *Nouveau jour*. Chaque étape s'annule d'un coup et va
+au journal, avec une ligne par robot ; le dernier rapport reste affiché. Les robots de rebut n'ont
+pas de borne : ils sont exclus de la recharge sauf si le MJ décoche « Pas de borne ». Le tableau de
+l'équipe montre les PE, l'état (OK, bas, en veille) et la connexion de chacun. *Donner des PE*
+transfère par câble ou vers une banque d'énergie (5 PE au plus), et vide un E-pack ou une batterie
+(+D6). En mode MJ, *Règles de l'énergie* change la consommation, le soleil et le rationnement, avec
+la valeur du livre et *Réinitialiser*. Sur la fiche, ±1 et *Recharger* restent ; l'horloge remplace
+l'ancien bouton « Nouveau jour ».
 
 **Plusieurs robots.** Dans l'Équipe, *Gérer* (ou le nom en haut) ouvre la liste des robots
 joueurs : ouvrir, dupliquer, supprimer, créer. Les PNJ du MJ ont leur liste dans l'espace MJ,
