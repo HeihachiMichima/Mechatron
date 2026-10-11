@@ -8,10 +8,14 @@ node_modules/
 *.md
 *.txt
 
-# Assets: optional logo exported from the purchased PDFs
-# (the pages fall back to a text title when it is missing)
-assets/
+# The rulebook in Markdown: the owner's copy of a copyrighted book, never versioned
+/Mechatron-livre-md/
+
+# Logo: the app's logo is versioned at svelte/src/assets/logo.png (inlined into the build).
+# Other copies stay local: the v1 root assets/ folder and unused exports elsewhere.
+/assets/
 **/logo.png
+!svelte/src/assets/logo.png
 
 # Versioned snapshots of dist/index.html
 svelte/releases/

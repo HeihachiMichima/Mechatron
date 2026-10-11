@@ -1,15 +1,13 @@
 <script>
   // Print-only A4 layout. Hidden on screen; App hides the interactive UI when printing.
   import { store } from '../lib/store.svelte.js';
+  import logo from '../assets/logo.png'; // inlined into the single-file build as a data URI
   import { GAME_DATA as D } from '../lib/data.js';
   import { attrLabels, ATTRS, DEV_KEYS, DEV_LABELS, chassis, attrCurrent, armorTotal, armorCurrent, epMax, modelOf, hierarchy, programs, findModule, findSecondary, devBand, fmtBonus } from '../lib/rules.js';
   const c = $derived(store.c);
   const ch = $derived(chassis(c));
   const m = $derived(modelOf(c));
   const progs = $derived(programs(c));
-  // Logo inlined into the single-file build (as a data URI). src/assets/logo.png is
-  // git-ignored, so the glob keeps the build working without it (text title shown).
-  const logo = Object.values(import.meta.glob('../assets/logo.png', { eager: true, query: '?url', import: 'default' }))[0];
   const boxes = (n) => Array.from({ length: Math.max(0, n) }, (_, i) => i);
 </script>
 
