@@ -6,8 +6,9 @@
 //           programRatings, specialRating, secondary, modules, gear, buddy, hate, protect, dream }
 // gear[i] = index chosen in the model's i-th gear group (groups of one need none).
 import { GAME_DATA as D } from './data.js';
-import { ATTRS, chassis, findPart, findWeapon, devBand, epMax } from './rules.js';
-import { getRules, getDev } from './settings.js';
+import { ATTRS, chassis, findPart, findWeapon, epMax } from './rules.js';
+import { getRules, getCampaign } from './settings.js';
+import { energyRules } from './clock.js';
 import { pick } from './rng.js';
 import { store, blankCharacter } from './store.svelte.js';
 
@@ -155,7 +156,7 @@ export function buildRobot(d) {
     if (findWeapon(name)) c.weapons.push(weaponFrom(name));
     else c.equipment.push({ name, integre: false });
   }
-  c.ep.current = Math.min(devBand(getDev().Energie).energyEp, epMax(c));
+  c.ep.current = Math.min(energyRules(getCampaign()).ration, epMax(c));
   return c;
 }
 

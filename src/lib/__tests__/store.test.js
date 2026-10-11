@@ -34,7 +34,7 @@ describe('normalizeAll', () => {
     expect(d.chars).toEqual([]);
     expect(d.activeId).toBe(null);
     expect(d.combat).toEqual(blankCombat());
-    expect(d.campaign).toMatchObject({ name: '', phase: 'creation', rules: {}, journal: [], clock: null, market: null, xp: { log: [] }, maps: [], encounters: [] });
+    expect(d.campaign).toMatchObject({ name: '', phase: 'creation', rules: {}, journal: [], clock: { day: 1, phase: 'day', clearSky: true, charged: false, exclude: [], report: null }, market: null, xp: { log: [] }, maps: [], encounters: [] });
     expect(Object.values(d.campaign.dev)).toEqual([50, 50, 50, 50]);
   });
 

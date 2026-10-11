@@ -5,13 +5,14 @@
   import { store } from '../lib/store.svelte.js';
   import { GAME_DATA as D } from '../lib/data.js';
   import { getRules, getDev } from '../lib/settings.js';
-  import { ATTRS, chassis, attrCurrent, armorTotal, armorCurrent, epMax, devBand, hasSecondary, shownAttrs, attrLabels } from '../lib/rules.js';
+  import { energyRules } from '../lib/clock.js';
+  import { ATTRS, chassis, attrCurrent, armorTotal, armorCurrent, epMax, hasSecondary, shownAttrs, attrLabels } from '../lib/rules.js';
 
   const c = $derived(store.c);
   const ch = $derived(chassis(c));
   const maxEp = $derived(epMax(c));
-  const ration = $derived(Math.min(devBand(getDev().Energie).energyEp, maxEp));
-  const solar = $derived(getRules().outsideSolarEp);
+  const ration = $derived(Math.min(energyRules(store.campaign).ration, maxEp));
+  const solar = $derived(energyRules(store.campaign).outsideSolarEp);
 
   const L = $derived(attrLabels(c));
   const attrs = $derived(shownAttrs(c, ch));
