@@ -359,7 +359,9 @@ class Store {
   // is open inside Combat (any GM mode), until « Retour au combat ». None is saved.
   // wizard: the creation wizard in progress { id, step, draft } (T06, lib/creation.js);
   // session: the end-of-session wizard { step, draft, done } (T11, lib/xp.js).
-  ui = $state({ ...loadUi(), npc: null, pc: null, peek: null, wizard: null, session: null, sheet: null, turn: null, turnActor: null });
+  // mapPick: 'blast' while the turn waits for a square on the map (T14), blastCell: that
+  // square; owTarget: the robot an overwatch shot aims at, owResume: the turn it interrupted (T14).
+  ui = $state({ ...loadUi(), npc: null, pc: null, peek: null, wizard: null, session: null, sheet: null, turn: null, turnActor: null, mapPick: null, blastCell: null, owTarget: null, owResume: null });
   toast = $state(null);
   incoming = $state(null);
   #history = [];

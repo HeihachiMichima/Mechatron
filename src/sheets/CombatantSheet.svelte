@@ -17,7 +17,7 @@
   const setX = (patch, label) => store.commitAll(label, (d) => Object.assign(d.combat.combatants.find((y) => y.id === xid), patch));
   function remove() { const n = c.name; store.close(); store.commitAll(`${n || 'Robot'} retiré du combat`, (d) => (d.combat.combatants = d.combat.combatants.filter((y) => y.id !== xid))); }
   function openSheet() { const id = c.id; store.close(); store.openFiche(id, 'etat'); }
-  function shootNow() { store.close(); store.ui.turn = null; store.ui.turnActor = xid; window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  function shootNow() { store.close(); store.ui.owResume = store.ui.turnActor ? store.ui.owResume : store.ui.turn; store.ui.turn = null; store.ui.turnActor = xid; window.scrollTo({ top: 0, behavior: 'smooth' }); }
 </script>
 
 {#if x && c}

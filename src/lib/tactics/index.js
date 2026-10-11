@@ -2,3 +2,4 @@
 export * from './terrain.js';
 export * from './geometry.js';
 export * from './paths.js';
+export * from './combat.js';

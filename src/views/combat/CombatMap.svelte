@@ -7,16 +7,18 @@
 <script>
   // The fight's optional map (T13): pick a map, place the combatants (tap a
   // token, then a square; or drag), and look at range bands, reach and lines of
-  // sight from the selected token. Everything here is a visual aid: no combat
-  // rule reads the map (T14 will only pre-select choices).
+  // sight from the selected token. During the turn (T14) it also takes the square
+  // an explosion is aimed at, and asks about overwatch shots after a move. It is
+  // a visual aid: the turn only pre-selects choices from it, the table decides.
   import MapView from '../../components/tactics/MapView.svelte';
   import Avatar from '../../components/Avatar.svelte';
   import Icon from '../../components/Icon.svelte';
   import MapEditor from '../gm/MapEditor.svelte';
-  import { store } from '../../lib/store.svelte.js';
+  import { store, availableEp } from '../../lib/store.svelte.js';
   import { getRules } from '../../lib/settings.js';
   import { order, current, isDown, initials } from '../../lib/combat.js';
-  import { blankMap, inside, key, reach, los, suggestCover, ring, cellsPath, spawnPlaces, canStand, distance, bandOf } from '../../lib/tactics/index.js';
+  import { blankMap, inside, key, reach, los, suggestCover, ring, cellsPath, spawnPlaces, canStand, distance, bandOf, mapCtx, overwatchers, moveSquaresFor, bandText } from '../../lib/tactics/index.js';
+  import { blastDice } from '../../lib/energy.js';
 
   let { fight = false } = $props();
   let open = $state(keepOpen);
@@ -47,12 +49,22 @@
   const takenBy = (except) => placed.filter((r) => r.x.id !== except).map((r) => key(r.x.pos));
 
   const BANDS = ['Bras', 'Proche', 'Courte'];
-  const rings = $derived(focus && ov.bands ? BANDS.map((b) => ({ label: b, ...ring(map, focus.x.pos, rules.bands[b]) })) : []);
+  // While the turn aims an explosion (T14): the blast's reach around the chosen square.
+  const picking = $derived(fight && store.ui.mapPick === 'blast');
+  const blastPower = $derived(picking ? store.ui.turn?.fxObj?.power ?? 0 : 0);
+  const rings = $derived.by(() => {
+    if (picking && store.ui.blastCell) {
+      const c = store.ui.blastCell;
+      return ['Bras', 'Proche', ...(blastDice(blastPower, 'Courte') ? ['Courte'] : [])].map((b) => ({ label: `Souffle ${b}`, ...ring(map, c, rules.bands[b]) }));
+    }
+    return focus && ov.bands ? BANDS.map((b) => ({ label: b, ...ring(map, focus.x.pos, rules.bands[b]) })) : [];
+  });
   const layers = $derived.by(() => {
     if (!focus || !ov.move) return [];
-    const costs = reach(map, focus.x.pos, 2, rules, { blocked: takenBy(focus.x.id) });
+    const m = moveSquaresFor(focus.c, rules, availableEp(store.data, focus.c)); // × 2 with a movement module it can pay (T14)
+    const costs = reach(map, focus.x.pos, 2, { ...rules, moveSquares: m }, { blocked: takenBy(focus.x.id) });
     const one = [], two = [];
-    for (const [k, c] of costs) if (c > 0) (c <= rules.moveSquares ? one : two).push(k);
+    for (const [k, c] of costs) if (c > 0) (c <= m ? one : two).push(k);
     return [{ kind: 'reach2', d: cellsPath(two) }, { kind: 'reach1', d: cellsPath(one) }];
   });
   const lines = $derived.by(() => {
@@ -78,17 +90,45 @@
       store.notify(taken.includes(key(cell)) ? 'Case occupée' : 'On ne peut pas se tenir là');
       return false;
     }
+    const before = rows.find((r) => r.x.id === xid)?.x.pos;
     store.placeToken(xid, cell);
+    // A move during the fight may walk into someone's overwatch (T14): ask, never fire on its own.
+    if (fight && before) {
+      const ctx = mapCtx(store.data, rules);
+      const mover = store.combat.combatants.find((y) => y.id === xid);
+      // Not the robot whose turn it is (or who is already firing).
+      const busy = [store.ui.turnActor, current(store.data)?.x.id];
+      const ws = overwatchers(ctx, store.data, mover).filter((w) => !busy.includes(w.x.id));
+      owPrompt = ws.length ? { mover: mover.cid, actor: current(store.data)?.x.id ?? null, list: ws.map((w) => ({ xid: w.x.id, name: w.c.name || 'Sans nom', range: bandText(w.range) })) } : null;
+    }
     return true;
   }
+  let owPrompt = $state(null);
+  const deOf = (name) => (/^[aeiouyéèêàâîôûh]/i.test(name) ? "d'" : 'de ');
+  // A new actor (end of turn, undo…) makes an old prompt meaningless.
+  $effect(() => { const now = current(store.data)?.x.id ?? null; if (owPrompt && owPrompt.actor !== now) owPrompt = null; });
+  function owShoot(w) {
+    store.ui.owTarget = owPrompt.mover;
+    store.ui.owResume = store.ui.turnActor ? store.ui.owResume : store.ui.turn; // back to this turn afterwards
+    store.ui.turn = null;
+    store.ui.turnActor = w.xid;
+    const rest = owPrompt.list.filter((o) => o.xid !== w.xid);
+    owPrompt = rest.length ? { ...owPrompt, list: rest } : null;
+    document.querySelector('section.turn')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
   function tapCell(cell) {
+    if (picking) { store.ui.blastCell = { ...cell }; return; }
     if (!sel) return;
     const wasOff = unplaced.some((r) => r.x.id === sel);
     if (!placeAt(sel, cell)) return;
     // Setting up: go straight to the next token still off the map.
     sel = wasOff ? (unplaced.find((r) => r.x.id !== sel)?.x.id ?? null) : null;
   }
-  const tapToken = (id) => (sel = sel === id ? null : id);
+  function tapToken(id) {
+    const r = picking ? placed.find((p) => p.x.id === id) : null;
+    if (r) { store.ui.blastCell = { ...r.x.pos }; return; } // aiming an explosion at someone's square
+    sel = sel === id ? null : id;
+  }
   function keyMove(dx, dy) {
     const r = placed.find((p) => p.x.id === sel);
     if (r) placeAt(r.x.id, { x: r.x.pos.x + dx, y: r.x.pos.y + dy });
@@ -137,6 +177,17 @@
         label="Carte {map.name || 'sans nom'} : touchez un combattant puis une case pour le placer"
         ontap={tapCell} ontoken={tapToken} ondrop={(id, cell) => { if (placeAt(id, cell)) sel = null; }}
         onkeymove={sel && placed.some((r) => r.x.id === sel) ? keyMove : null} />
+
+      {#if picking}<p class="pick-note">Touchez la case visée par l'explosion.</p>{/if}
+      {#if owPrompt}
+        <div class="owp" role="alert">
+          {#each owPrompt.list as w (w.xid)}
+            <p>Tir de surveillance {deOf(w.name)}<b>{w.name}</b>, à {w.range}&nbsp;? Arc de 90°&nbsp;: à vous de juger.</p>
+            <button class="btn small primary" onclick={() => owShoot(w)}>Tirer en surveillance</button>
+          {/each}
+          <button class="btn small ghost" onclick={() => (owPrompt = null)}>Pas de tir</button>
+        </div>
+      {/if}
 
       {#if selRow}
         <div class="selrow">
@@ -190,6 +241,9 @@
   .avbtn { background: none; border: 0; padding: 2px; border-radius: 8px; }
   .avbtn:hover { background: var(--hull-2); }
   .tray .btn { justify-self: start; }
+  .pick-note { margin: 0; padding: 8px 10px; border-left: 3px solid var(--amber); background: var(--abyss); font-weight: 600; }
+  .owp { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 10px 12px; border-left: 3px solid var(--amber); background: var(--abyss); }
+  .owp p { margin: 0; flex: 1 1 220px; }
   .sightlist { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; font-size: .86rem; color: var(--muted); }
   .sightlist b { color: var(--text); font-weight: 600; }
 </style>
