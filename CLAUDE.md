@@ -49,7 +49,7 @@ converted to Markdown (237 PDF pages, OCR, see `meta.json`):
 - useful pages: XP 26 · chassis parts 18 · energy points 72 · modules 72-78 · range & movement 82 ·
   cover 91 · DEV levels 107-108 · base stations, energy as currency 112 · black market 116-117 ·
   goods & services prices 234.
-The original PDFs stay outside the repo. The folder only exists on the user's PC: an agent working
+The folder only exists on the user's PC: an agent working
 from a GitHub clone doesn't have it and must ask the user for the pages it needs.
 
 ## Commands (run at the repo root)
@@ -235,7 +235,6 @@ Follow `docs/PLAN-COMPAGNON.md` §0: one ticket at a time, in order.
 ## Ideas not done yet
 
 - Hover drone moves/Scan/Infiltrate, Holoflage/Sensor Pulse (no combat flow yet), Energy Bank
-  as a weapon power source, EMP weapons (none in the data), Trash Blower, Self-Destruct.
-- The rulebook is in `Mechatron-livre-md/` (see "Rules reference" above); no need to OCR the PDF
-  again. PDF page numbers match the page refs in `data.js` comments; the book's own
-  cross-references ("see page 86") point one page earlier than the PDF page.
+  as a weapon power source, EMP weapons (none in the data), Self-Destruct.
+- Rules: see "Rules reference" above. Page refs in `data.js` comments are PDF page numbers; the
+  book's own cross-references ("see page 86") point one page earlier.

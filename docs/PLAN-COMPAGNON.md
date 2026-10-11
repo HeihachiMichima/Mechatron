@@ -49,12 +49,12 @@ Repo: `HeihachiMichima/Mechatron` (local: `G:\MYZ\mechatron-sheet`) · Baseline:
 
 ---
 
-## 1. Current state (verified against the code at v2.3.6/v2.3.7)
+## 1. Current state (verified against the code; layout as of v2.3.8, after T00)
 
-- **Stack:** Svelte 5 (runes), Vite 8, `vite-plugin-singlefile` → a single `svelte/dist/index.html` (about 624 kB) with scripts, CSS, fonts and logo inlined. French UI, mobile-first, side rail at ≥ 960 px.
-- **Deploy:** the root `index.html` is a redirect to `svelte/dist/index.html`. `.github/workflows/static.yml` uploads the **whole repo** to Pages (Pages is already set to "GitHub Actions" mode). The built file is committed.
-- **Logo (v2.3.7, uncommitted):** `svelte/src/assets/logo.png` is shown in `TopBar.svelte` and `PrintSheet.svelte`. `.gitignore` allows it (`!svelte/src/assets/logo.png`). It is the logo of the *Road to Eden* video game; the owner chose to keep it.
-- **Ignored but present locally:** v1 files at the root (`app.js`, `data.js`, `style.css`, `v1/`, `assets/`, root `README.md`), `svelte/releases/`, `svelte/public/logo.png`, and every `*.md` (including the detailed local `CLAUDE.md` and `svelte/README.md`).
+- **Stack:** Svelte 5 (runes), Vite 8, `vite-plugin-singlefile` → a single `dist/index.html` (about 624 kB) with scripts, CSS, fonts and logo inlined. French UI, mobile-first, side rail at ≥ 960 px.
+- **Layout and deploy (T00, v2.3.8):** the app lives at the repo root (`index.html` = Vite entry, `src/`, `package.json`). `.github/workflows/deploy.yml` builds and deploys `dist/` to GitHub Pages on each push to `main`; `dist/` is git-ignored. Paths below are relative to the root (`src/...`); before T00 they were under `svelte/`.
+- **Logo (v2.3.7):** `src/assets/logo.png` (tracked) is shown in `TopBar.svelte` and `PrintSheet.svelte`. It is the logo of the *Road to Eden* video game; the owner chose to keep it.
+- **Docs (tracked since T00):** `CLAUDE.md` (agent guide), `README.md` (French, user-facing), `docs/PLAN-COMPAGNON.md`. The v1 files, `releases/` and the committed build are gone.
 - **State** (`lib/store.svelte.js`): `data = { version: 3, chars[], activeId, combat }` in `localStorage['mechatron-roster-v3']`; UI prefs in `mechatron-ui-v2`.
   - `normalize()` (about lines 47–96) **rebuilds each robot from a fixed list of fields**. `normalizeCombat()` (about 126–141) does the same for combatants. `normalizeAll()` returns only `{version, chars, activeId, combat}`.
   - `undo()` goes through `normalizeAll()`, so any unknown field disappears on undo or reload (see §2.4).

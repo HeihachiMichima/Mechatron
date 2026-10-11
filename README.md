@@ -189,7 +189,7 @@ src/lib/data.js          données du livre (à compléter)
 src/lib/rules.js         calculs de règles et dés
 src/lib/store.svelte.js  état, sauvegarde auto, annulation
 src/lib/exports.js       PNG, lien, texte, JSON
-src/views/               les 5 onglets
+src/views/               les onglets
 src/sheets/              panneaux (dés, module, arme, sélecteur, exports)
 src/components/          plaque d'état, navigation, jauges, fiche imprimable
 ```
