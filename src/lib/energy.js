@@ -2,8 +2,7 @@
 // powering energy weapons (reloading, book p.86). Pure helpers — callers
 // pay the EP inside a store commit with payEp().
 import { hasSecondary, overheatResult, findModule, findWeapon } from './rules.js';
-
-const d6 = () => 1 + Math.floor(Math.random() * 6);
+import { d6 } from './rng.js';
 
 /**
  * Roll the overheating dice for spending `ep` EP on a module.

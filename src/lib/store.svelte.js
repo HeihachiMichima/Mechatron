@@ -3,6 +3,7 @@
 // discrete changes undoable. normalize() accepts v1/v2 character saves.
 import { GAME_DATA as D } from './data.js';
 import { chassis, ATTRS, epMax, findWeapon } from './rules.js';
+import { random } from './rng.js';
 
 const KEY = 'mechatron-roster-v3';
 const OLD_KEYS = ['mechatron-sheet-v2', 'mechatron-sheet-v1'];
@@ -116,7 +117,7 @@ export function fromTemplate(t, name) {
 // held: { by, how, mod, with } while immobilized; extra: { round, used: [module] }
 // for bonus attacks; defenses: defenses this round; protectRound: last round
 // the Protect program was used (once per round).
-export const newCombatant = (cid, side) => ({ id: newId(), cid, side, init: null, tie: Math.random(), acted: false, defending: false, overwatch: false, surprise: false, lostAction: false, prone: false, fled: false, lock: null, initBonus: 0, held: null, extra: null, defenses: 0, protectRound: 0 });
+export const newCombatant = (cid, side) => ({ id: newId(), cid, side, init: null, tie: random(), acted: false, defending: false, overwatch: false, surprise: false, lostAction: false, prone: false, fled: false, lock: null, initBonus: 0, held: null, extra: null, defenses: 0, protectRound: 0 });
 
 export function blankCombat() {
   return { phase: 'prep', active: false, round: 1, turn: 0, combatants: [], log: [], gmPool: 0, usePool: true };
@@ -129,7 +130,7 @@ function normalizeCombat(raw, ids) {
     phase, active: phase === 'fight', round: Math.max(1, num(raw.round, 1)), turn: Math.max(0, num(raw.turn)),
     combatants: arr(raw.combatants).filter((x) => ids.has(x?.cid)).map((x) => ({
       id: str(x.id) || newId(), cid: x.cid, side: x.side === 'enemy' ? 'enemy' : 'ally',
-      init: x.init == null ? null : num(x.init), tie: num(x.tie, Math.random()),
+      init: x.init == null ? null : num(x.init), tie: num(x.tie, random()),
       acted: !!x.acted, defending: !!x.defending, overwatch: !!x.overwatch,
       surprise: !!x.surprise, lostAction: !!x.lostAction, prone: !!x.prone, fled: !!x.fled,
       lock: x.lock && x.lock.target ? { target: str(x.lock.target), atk: num(x.lock.atk, 1), dmg: num(x.lock.dmg) } : null,

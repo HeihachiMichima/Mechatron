@@ -179,13 +179,20 @@ du fichier (`pushKeepsOnes`, max de PE, etc.). Après modification, reconstruise
 npm install     # une seule fois
 npm run dev     # aperçu en direct sur http://localhost:5173
 npm run build   # régénère dist/index.html (non versionné : GitHub le construit et le publie)
+npm test        # tests des règles et de la sauvegarde (Vitest)
+npm run e2e     # après le build : ouvre l'appli dans Chromium, captures dans e2e/screenshots/
 ```
+
+Pour `npm run e2e` sur un PC, installez le navigateur une fois : `npx playwright install chromium`.
 
 ## Structure
 
 ```
 src/lib/data.js          données du livre (à compléter)
 src/lib/rules.js         calculs de règles et dés
+src/lib/rng.js           tirage des dés (initialisable pour les tests)
+src/lib/__tests__/       tests Vitest
+e2e/                     test Playwright de l'appli construite
 src/lib/store.svelte.js  état, sauvegarde auto, annulation
 src/lib/exports.js       PNG, lien, texte, JSON
 src/views/               les onglets
