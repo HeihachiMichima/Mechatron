@@ -25,7 +25,7 @@ ordinateur, une colonne à gauche) :
 | Énergie | L'horloge jour/nuit de Mechatron-7, l'énergie de l'équipe, le rationnement, les transferts de PE, les niveaux de développement |
 | Marché | Le marché noir : ce qui est en vente aujourd'hui, acheter et vendre (fermé pendant la création ou si le MJ le ferme) |
 | Combat | Préparation, initiative et tours guidés (inchangé) |
-| Séance | Fin de séance : questions de PX par robot, usure des niveaux (−1D6), journal de campagne |
+| Séance | *Terminer la séance* (PX de toute l'équipe, usure des niveaux, relations, résumé), PX à dépenser, historique, journal |
 | MJ | En mode MJ seulement : les PNJ et leurs fiches, et la place des futurs outils du meneur |
 
 Les quatre parties d'une fiche :
@@ -70,10 +70,20 @@ fiche d'artefact ; la fiche garde la table et signale l'écart.
 
 **Outils de séance.** *Dégât localisé* lance le D6 de localisation et retire le point.
 *Recharger jusqu'à N* suit la règle de la borne (on remonte au niveau de rationnement, jamais
-au-delà) ; hors ligne, le bouton devient *Soleil (+1)*. L'espace Séance pose les questions de PX
-à chaque robot et retire 1D6 à chaque niveau de développement en un geste (le résultat va au
-journal). Le **journal de campagne** (espace Séance) garde les notes de la table, les plus récentes
-en haut.
+au-delà) ; hors ligne, le bouton devient *Soleil (+1)*. Le **journal de campagne** (espace Séance)
+garde les notes de la table, les plus récentes en haut.
+
+**Fin de séance (espace Séance).** *Terminer la séance* fait une sauvegarde automatique, puis guide
+toute l'équipe : 1) les PX, une case par réponse « oui » et par récompense, « participé » déjà
+cochée, avec un ajustement du MJ ; 2) l'usure, 1D6 par niveau de développement (corrigeable) ;
+3) les relations (PNJ protégé, détesté, grand rêve) ; 4) le résumé, avec les jours de jeu et les
+affaires du marché noir depuis la séance précédente. Rien ne change avant le dernier bouton, qui
+s'annule d'un coup ; le résumé va au journal et à l'historique des séances, puis *Exporter la
+campagne*. **Dépenser des PX** (fiche, État, ou espace Séance) : un programme +1 (5 PX, niveau 5 au
+plus) ou une nouvelle fonction secondaire, de n'importe quel modèle (5 PX, il faut aussi la
+ferraille) ; chaque dépense va au journal. En mode MJ, *Règles de l'expérience* (espace MJ) :
+questions (texte, PX, active, ordre, ajout, suppression), récompenses en plus (« Ordre de travail
+accompli »…), coûts, et *Valeurs du livre*.
 
 **Jour et nuit (espace Énergie).** Un seul bouton fait avancer la journée : *Terminer la journée*
 (chaque robot consomme 1 PE ; à 0, il passe en veille), *Recharger pour la nuit* (un robot connecté

@@ -5,6 +5,7 @@
   import { GAME_DATA as D } from '../lib/data.js';
   import { attrLabels, ATTRS, DEV_KEYS, DEV_LABELS, chassis, attrCurrent, armorTotal, armorCurrent, epMax, modelOf, hierarchy, programs, findModule, findSecondary, devBand, fmtBonus } from '../lib/rules.js';
   import { getRules, getDev } from '../lib/settings.js';
+  import { xpRules } from '../lib/xp.js';
   const c = $derived(store.c);
   const ch = $derived(c && chassis(c));
   const m = $derived(c && modelOf(c));
@@ -100,7 +101,7 @@
       </section>
       <section class="rules">
         <p><b>Forcer un jet :</b> relancez tous les dés sauf les 6{R.pushKeepsOnes ? ' (et les 1 des dés de base et d\'équipement)' : ''}. Chaque 1 sur un dé de base : 1 PE ou 1 dégât à l'attribut. Chaque 1 sur un dé d'équipement : bonus −1.</p>
-        <p><b>{R.xpPerUpgrade} PX :</b> un programme +1 (max {R.programMax}) ou une nouvelle fonction secondaire.</p>
+        <p><b>{xpRules(store.campaign).costs.program} PX :</b> un programme +1 (max {R.programMax}) ; <b>{xpRules(store.campaign).costs.secondary} PX :</b> une nouvelle fonction secondaire.</p>
       </section>
     </div>
   </div>

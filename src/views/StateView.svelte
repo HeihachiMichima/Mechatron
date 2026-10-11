@@ -6,6 +6,7 @@
   import { GAME_DATA as D } from '../lib/data.js';
   import { getRules, getDev } from '../lib/settings.js';
   import { energyRules } from '../lib/clock.js';
+  import { xpRules } from '../lib/xp.js';
   import { ATTRS, chassis, attrCurrent, armorTotal, armorCurrent, epMax, hasSecondary, shownAttrs, attrLabels } from '../lib/rules.js';
 
   const c = $derived(store.c);
@@ -18,7 +19,7 @@
   const attrs = $derived(shownAttrs(c, ch));
   const npcPool = $derived(c.kind === 'npc' && store.combat.usePool);
   const creature = $derived(c.body === 'creature');
-  const per = $derived(getRules().xpPerUpgrade);
+  const xr = $derived(xpRules(store.campaign));
 
   function setAttr(a, cur) {
     const max = ch.attrMax[a];
@@ -140,11 +141,11 @@
     <section class="panel">
       <div class="panel-head">
         <h2>Expérience</h2>
-        <span class="meta">{per} PX = un programme +1 ou une fonction ; gains en fin de séance</span>
+        <span class="meta">{xr.costs.program} PX = un programme +1, {xr.costs.secondary} PX = une fonction ; gains en fin de séance</span>
       </div>
       <div class="xp-row">
         <Stepper value={c.xp.current} min={0} max={999} label="Expérience" onchange={(v) => store.commit(`Expérience : ${v} PX`, (s) => (s.xp.current = v))} />
-        <button class="btn small" disabled={c.xp.current < per} onclick={() => store.commit(`${per} PX dépensés`, (s) => (s.xp.current -= per))}>Dépenser {per} PX</button>
+        <button class="btn small primary" disabled={c.xp.current < Math.min(xr.costs.program, xr.costs.secondary)} onclick={() => store.open({ type: 'xpSpend', cid: c.id })}>Dépenser des PX</button>
       </div>
     </section>
     {/if}
