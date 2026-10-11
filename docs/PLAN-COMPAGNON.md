@@ -49,7 +49,7 @@ Repo: `HeihachiMichima/Mechatron` (local: `G:\MYZ\mechatron-sheet`) · Baseline:
 
 ---
 
-## 1. Current state (verified against the code; as of v3.2.1, after T05)
+## 1. Current state (verified against the code; as of v3.3.0, after T06)
 
 - **Stack:** Svelte 5 (runes), Vite 8, `vite-plugin-singlefile` → a single `dist/index.html` (about 624 kB) with scripts, CSS, fonts and logo inlined. French UI, mobile-first, side rail at ≥ 960 px.
 - **Layout and deploy (T00, v2.3.8):** the app lives at the repo root (`index.html` = Vite entry, `src/`, `package.json`). `.github/workflows/deploy.yml` builds and deploys `dist/` to GitHub Pages on each push to `main`; `dist/` is git-ignored. Paths below are relative to the root (`src/...`); before T00 they were under `svelte/`.
@@ -72,6 +72,7 @@ Repo: `HeihachiMichima/Mechatron` (local: `G:\MYZ\mechatron-sheet`) · Baseline:
   - MJ (GM mode): `GmView` = NPC roster (`RobotList`, *Nouveau PNJ*, *Tout remettre à neuf*) + placeholders (market, house rules, encounters); an NPC's fiche opens there with « Tous les PNJ » to go back.
   - GM mode hides tools, not information: combat is identical in both modes. From Combat, « Ouvrir la fiche » opens an NPC's fiche in place (`ui.peek`, v3.2.1) with « Retour au combat ». Outside GM mode the PJ/PNJ switch (Identité) is hidden.
   - The robot's own notes (`c.notes`) moved from Collectif to Identité; the « Fin de séance » button left État (Séance has it).
+- **Creation (T06, v3.3.0):** every new PC goes through `views/creation/CreationWizard.svelte` (rules in `lib/creation.js`, draft in `store.ui.wizard`, not saved): Modèle → Nom → Châssis → Programmes → Fonction secondaire → Modules → Équipement → Relations → Récapitulatif. Players move forward through valid steps only; GM mode opens any step and may take a part or module another PC has. « Reprendre l'assistant » (Identité) edits a PC during creation or in GM mode (gear, EP, damage untouched). Gate: the MJ space shows « Création de l'équipe » (unfinished robots listed) with *L'équipe est prête* → `campaign.phase = 'play'` (`store.setPhase`, journal entry, undoable; *Rouvrir la création* reverses it). The market placeholder reads the phase. The clock start (Day 1) waits for T07.
 - **Energy:** in StateView: ±1, "Recharger jusqu'à {ration}", "Soleil (+1)" when `c.online` is false (outside), and "Nouveau jour (−1)". There is no clock.
 - **XP:** `XpSheet` has 6 questions from `data.js`, 1 XP each, applied **to one robot** (opened per robot from Séance). `xpPerUpgrade: 5` is fixed. The "Dépenser 5 PX" button only subtracts XP.
 - **Combat:** preparation → initiative → guided turn (`TurnFlow.svelte`, about 1,060 lines).
@@ -683,6 +684,7 @@ campaign.xp.log = [{ at, awards: [{ cid, total, items }] }]
 - 2026-10-11: **plan agreed** → commits and pushes allowed, following §0.1.
 - 2026-10-11: crop the logo to remove the « Road to Eden » line (v3.0.1, before T04).
 - 2026-10-11: T05 merged; NPC fiches open in place from Combat in both GM modes (option chosen over hiding the buttons or switching GM mode on).
+- 2026-10-11 (T06, agent's reading of the book, to confirm): starting gear = the model's whole GEAR box with its « or » choices (p.31-46 and the example robot p.29), although p.25 says « one piece of gear »; modules are unique among PCs like chassis parts (p.22); the serial format (3 letters, 3 digits) is generated but not enforced, since junk robots name themselves (p.16) and the demo's serials are shorter.
 - **Still open:** none blocking. If a ticket raises a question, the agent asks before choosing.
 
 ---

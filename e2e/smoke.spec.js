@@ -82,14 +82,11 @@ test('clean profile: welcome screen, then a new campaign with an empty team', as
   await expect(page.getByText('Le journal est vide.')).toBeVisible();
   await page.screenshot({ path: 'e2e/screenshots/empty-seance-390.png' });
 
-  // Create a robot, then delete it: the team is empty again.
+  // « Nouveau robot » opens the creation wizard (T06); leaving it keeps the team empty.
   await page.locator('#app-nav button', { hasText: 'Équipe' }).click();
   await page.getByRole('button', { name: 'Nouveau robot', exact: true }).click();
-  await expect(page.locator('.plate')).toBeVisible();
-  await page.getByRole('button', { name: "Gérer l'équipe", exact: true }).click();
-  await page.getByRole('button', { name: /Supprimer/ }).click();
-  await page.getByRole('button', { name: /Supprimer/ }).click();
-  await page.keyboard.press('Escape');
+  await expect(page.getByRole('heading', { name: 'Nouveau robot' })).toBeVisible();
+  await page.getByRole('button', { name: 'Abandonner' }).click();
   await expect(page.getByRole('heading', { name: 'Créez votre premier robot' })).toBeVisible();
 
   await page.waitForTimeout(400); // debounced autosave

@@ -30,6 +30,7 @@
   import DuplicateSheet from './sheets/DuplicateSheet.svelte';
   import CombatView from './views/CombatView.svelte';
   import EmptyTeam from './components/EmptyTeam.svelte';
+  import CreationWizard from './views/creation/CreationWizard.svelte';
   import WelcomeView from './views/WelcomeView.svelte';
   import CampaignSheet from './sheets/CampaignSheet.svelte';
   import { store } from './lib/store.svelte.js';
@@ -40,7 +41,8 @@
   const spaces = { energie: EnergyView, marche: MarketView, combat: CombatView, seance: SessionView };
   const space = $derived(store.space);
   const fiche = $derived(store.fiche);
-  const View = $derived(fiche ? fiches[store.ui.tab] || StateView : space === 'equipe' ? EmptyTeam : space === 'mj' ? GmView : spaces[space]);
+  const wizard = $derived(space === 'equipe' && !!store.ui.wizard);
+  const View = $derived(wizard ? CreationWizard : fiche ? fiches[store.ui.tab] || StateView : space === 'equipe' ? EmptyTeam : space === 'mj' ? GmView : spaces[space]);
   // Keep the active robot in line with the space: Équipe shows PCs only (an undo or
   // a combat sheet can make an NPC active), the MJ fiche is the open NPC's.
   $effect(() => store.syncFiche());
@@ -73,7 +75,7 @@
   <div class="main">
     <header class="head" style="--pc:{fiche?.kind !== 'npc' && fiche?.color ? fiche.color : 'var(--line)'}; --accent:{fiche?.kind !== 'npc' && fiche?.color ? fiche.color : 'var(--amber)'}">
       <TopBar />
-      {#if space === 'equipe'}<PcTabs />{/if}
+      {#if space === 'equipe' && !wizard}<PcTabs />{/if}
       {#if fiche && space === 'mj'}
         <div class="npcbar"><button class="btn small ghost" onclick={() => (store.ui.npc = null)}><Icon name="back" size={18} />Tous les PNJ</button></div>
       {:else if fiche && space === 'combat'}
@@ -82,7 +84,7 @@
       {#if fiche}<VitalsPlate /><FicheTabs />{/if}
     </header>
     <main id="contenu">
-      {#key `${space}:${fiche ? store.ui.tab : ''}`}<View />{/key}
+      {#key `${space}:${wizard ? 'wizard' : fiche ? store.ui.tab : ''}`}<View />{/key}
     </main>
   </div>
 </div>

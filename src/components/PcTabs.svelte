@@ -2,7 +2,8 @@
   // Colored tabs to jump between player robots. The active robot's color
   // also edges the status plate below, so you always know whose fiche it is.
   import Icon from './Icon.svelte';
-  import { store, blankCharacter } from '../lib/store.svelte.js';
+  import { store } from '../lib/store.svelte.js';
+  import { startWizard } from '../lib/creation.js';
   import { chassis, status, attrCurrent, ATTRS } from '../lib/rules.js';
 
   const pcs = $derived(store.chars.filter((c) => c.kind !== 'npc'));
@@ -16,7 +17,7 @@
     return '';
   };
   function go(id) { store.activate(id); }
-  function add() { store.openFiche(store.addChar(blankCharacter('pc'), { label: 'Nouveau robot créé' }), 'robot'); }
+  const add = () => startWizard();
 
   // keep the active tab visible
   $effect(() => {

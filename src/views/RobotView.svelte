@@ -5,6 +5,7 @@
   import { GAME_DATA as D } from '../lib/data.js';
   import { ATTRS, chassis, modelOf, autoHierarchy, attrLabels } from '../lib/rules.js';
   import { partItems } from '../lib/pickers.js';
+  import { startWizard } from '../lib/creation.js';
 
   const c = $derived(store.c);
   // Typed text: one undo step per field edit.
@@ -48,7 +49,9 @@
 
 <div class="grid">
   <section class="panel">
-    <div class="panel-head"><h2>Identité</h2></div>
+    <div class="panel-head"><h2>Identité</h2>
+      {#if c.kind !== 'npc' && (store.campaign.phase === 'creation' || store.ui.gm)}<button class="btn small" onclick={() => startWizard(c.id)}>Reprendre l'assistant</button>{/if}
+    </div>
     <label class="field"><span>Nom et numéro de série</span><input class="input" value={c.name} oninput={typed('name')} placeholder="ex. Rani NON-836" autocomplete="off" /></label>
     <label class="field"><span>Joueur</span><input class="input" value={c.player} oninput={typed('player')} autocomplete="off" /></label>
     {#if c.kind !== 'npc'}

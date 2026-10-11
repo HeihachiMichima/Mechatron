@@ -23,6 +23,7 @@ code, comments and identifiers are in English.
     │   ├── house.js         house rules: values the book doesn't give (« règle maison », GM-editable)
     │   ├── settings.js      getRules() (book ← house ← campaign overrides), getDev() (campaign.dev)
     │   ├── demo.js          demoParty(): the demo team (« Essayer la démo »)
+    │   ├── creation.js      creation wizard: STEPS, stepErrors, buildRobot/applyDraft, start/finishWizard
     │   ├── campaign.js      campaign files (classifyImport, readImport, file name) + automatic backups
     │   ├── rules.js         pure rules functions (chassis, pools, dice, damage…)
     │   ├── rng.js           every random draw: d6(), random(), pick(), setRng(seed)
@@ -38,8 +39,9 @@ code, comments and identifiers are in English.
     │                        PrintSheet, OverheatDice (shows one module activation)
     ├── views/               Welcome (no campaign yet); fiche tabs État, Programmes, Matériel, Robot
     │                        (« Identité »); spaces Energy, Market, Combat, Session, Gm
-    │   └── combat/          CombatPrep → CombatInit → CombatFight (+ TurnFlow, ActorStats,
-    │                        LogicConflict, BlowerStep, RecycleStep)
+    │   ├── combat/          CombatPrep → CombatInit → CombatFight (+ TurnFlow, ActorStats,
+    │   │                    LogicConflict, BlowerStep, RecycleStep)
+    │   └── creation/        CreationWizard (+ ChassisStep, ProgramStep, ModuleStep)
     └── sheets/              bottom-sheet dialogs (Roll, Damage, Module, Picker, Weapon,
                              Template, Roster (« Gérer l'équipe », PCs), Export, Incoming, Xp, Combatant, EnemyEdit, Duplicate,
                              Campaign = the top bar menu: rename, export, import, new, backups, theme)
@@ -126,6 +128,15 @@ undo step. `store.open(type, props)` / `store.close()` drive bottom sheets; **pr
   `store.fiche`, never `store.c`, so a hidden NPC can't leak into Équipe. GM mode hides tools (MJ
   space, NPC fiches, the PC/NPC switch), never combat information. `restoreAll(data, kind)` and
   `ResetAllButton kind` reset the team (`pc`), the NPCs (`npc`) or everyone (combat).
+- **Creation wizard (T06, `lib/creation.js`).** `store.ui.wizard = { id, step, draft }` (not saved;
+  `id` = PC being edited, else a new robot); App shows `CreationWizard` in Équipe while it is set
+  (`store.fiche` is then null). `startWizard(id?)`, `closeWizard()`, `finishWizard()` (adds with
+  `addChar` or saves with `commitOn` + `applyDraft`, then opens the fiche). `stepErrors(step, draft,
+  {chars, id, gm})` is the single source of the rules: 10 points / max 3 / specialist ≥ 1
+  (`getRules()`), the model's secondary, chassis parts and modules unique among PCs except
+  `scrap: true` parts (GM mode overrides), gear choices. `buildRobot(draft)` = `applyDraft` + the
+  model's `gear` groups (data.js) + EP = today's ration. Edit mode leaves gear, EP, damage, XP alone.
+  `store.setPhase('play'|'creation')` = « L'équipe est prête » / « Rouvrir la création » (journal).
 - **`store.started`** is false while no campaign exists (clean profile, or a save of another
   version): App shows `WelcomeView` and nothing is saved. `store.start(raw, label)` opens the first
   campaign (new, demo, file, backup) with no undo back to the welcome screen, saves at once and
@@ -326,6 +337,11 @@ Follow `docs/PLAN-COMPAGNON.md` §0: one ticket at a time, in order.
   journal) and the campaign journal; Énergie = DEV levels + connection of each robot; PC notes moved
   to Identité; the roster sheet is PCs only (`RobotList` shared with the MJ space); « remettre à
   neuf » is scoped there (team / NPCs).
+- v3.3.0 (2026-10-11, plan ticket T06): team creation wizard (9 steps in the book's order, numbered
+  rail, live chassis totals, blocked invalid spends, parts and modules unique among PCs except Scrap
+  parts, model gear with choices, EP = ration, summary) for every new PC and « Reprendre
+  l'assistant » (creation phase or GM mode); « L'équipe est prête » gate in the MJ space (lists
+  unfinished robots) opens the market; `models[].gear` and `scrap: true` parts in data.js.
 - v3.2.1 (2026-10-11): from Combat, « Ouvrir la fiche » opens an NPC's full fiche in place, in both
   GM modes, with « Retour au combat » (`ui.peek`): combat is now strictly the same in both modes.
 

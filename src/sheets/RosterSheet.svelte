@@ -4,11 +4,12 @@
   import Icon from '../components/Icon.svelte';
   import RobotList from '../components/RobotList.svelte';
   import ResetAllButton from '../components/ResetAllButton.svelte';
-  import { store, blankCharacter } from '../lib/store.svelte.js';
+  import { store } from '../lib/store.svelte.js';
+  import { startWizard } from '../lib/creation.js';
 
   const pcs = $derived(store.chars.filter((c) => c.kind !== 'npc'));
   function pick(id) { store.close(); store.openFiche(id); }
-  function newPc() { store.close(); store.openFiche(store.addChar(blankCharacter('pc'), { label: 'Nouveau robot créé' }), 'robot'); }
+  function newPc() { store.close(); startWizard(); }
 </script>
 
 <Sheet title="Gérer l'équipe" subtitle={pcs.length ? 'Touchez un robot pour ouvrir sa fiche' : ''}>
