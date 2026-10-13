@@ -6,8 +6,9 @@ import { viteSingleFile } from 'vite-plugin-singlefile';
 // inlined), so it opens by double-click, offline, or on GitHub Pages.
 export default defineConfig({
   base: './',
-  // Nothing is copied next to the build: the logo is imported from src/assets and inlined.
-  publicDir: false,
+  // The logo is imported from src/assets and inlined. pwa/ (manifest + icons for the
+  // home-screen install, T16) is copied next to index.html; the page works without it.
+  publicDir: 'pwa',
   plugins: [svelte(), viteSingleFile()],
   build: { assetsInlineLimit: 100000000, cssCodeSplit: false },
   // Vitest: unit tests live next to the code in src/**/__tests__; e2e/ is Playwright's.

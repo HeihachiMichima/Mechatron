@@ -49,9 +49,9 @@ Repo: `HeihachiMichima/Mechatron` (local: `G:\MYZ\mechatron-sheet`) · Baseline:
 
 ---
 
-## 1. Current state (verified against the code; as of v3.12.0, after T15)
+## 1. Current state (verified against the code; as of v3.13.0, after T16 — the plan is complete)
 
-- **Stack:** Svelte 5 (runes), Vite 8, `vite-plugin-singlefile` → a single `dist/index.html` (about 750 kB) with scripts, CSS, fonts and logo inlined. French UI, mobile-first, side rail at ≥ 960 px.
+- **Stack:** Svelte 5 (runes), Vite 8, `vite-plugin-singlefile` → a single `dist/index.html` (about 815 kB, budget 900 kB) with scripts, CSS, fonts and logo inlined. French UI, mobile-first, side rail at ≥ 960 px.
 - **Layout and deploy (T00, v2.3.8):** the app lives at the repo root (`index.html` = Vite entry, `src/`, `package.json`). `.github/workflows/deploy.yml` builds and deploys `dist/` to GitHub Pages on each push to `main`; `dist/` is git-ignored. Paths below are relative to the root (`src/...`); before T00 they were under `svelte/`.
 - **Logo (v2.3.7):** `src/assets/logo.png` (tracked) is shown in `TopBar.svelte` and `PrintSheet.svelte`. Taken from the *Road to Eden* video game logo, cropped in v3.0.1 to « MUTANT / YEAR ZERO » (the « Road to Eden » line removed); the owner chose to keep it.
 - **Docs (tracked since T00):** `CLAUDE.md` (agent guide), `README.md` (French, user-facing), `docs/PLAN-COMPAGNON.md`. The v1 files, `releases/` and the committed build are gone.
@@ -83,6 +83,7 @@ Repo: `HeihachiMichima/Mechatron` (local: `G:\MYZ\mechatron-sheet`) · Baseline:
 - **Map (T13, v3.10.0):** `campaign.maps = [{ id, name, w, h, cells }]` (`normalizeMap`; `store.saveMap` / `removeMap`, not undo steps). `combat.mapId` + combatant `pos` (undoable; `store.setCombatMap`, `store.placeToken`). `components/tactics/MapView.svelte` (SVG, one path per terrain, tokens, pan/pinch/wheel zoom, keyboard arrows), `views/combat/CombatMap.svelte` (Préparation and Combat: picker, « À placer » tray, spawn zones, overlays Portées / Déplacement / Lignes de vue with suggested cover), `views/gm/MapsPanel.svelte` + `MapEditor.svelte` (MJ → Cartes, paint tool, grid house rules in `campaign.rules.grid`). Phones: map between the turn lane and the turn panel, collapsible; ≥ 1280 px: map on the left.
 - **Map ↔ combat (T14, v3.11.0):** `src/lib/tactics/combat.js` (`mapCtx`, `rangeBetween`, `sight`, `within`, `coverSuggestion`, `nearestEnemyBand`, `moveSquaresFor`, `overwatchers`, `blastFromCell`): TurnFlow pre-selects the band, warns without sight (GM override), frames the suggested cover chip (never applied), pre-selects the flee band, filters module/Protect targets by range, logs « tir à Courte (7 cases), couverture Meuble 3 »; CombatMap: blast square picking (`ui.mapPick`, `ui.blastCell`), overwatch prompt (`ui.owTarget`), reach × 2 with a movement module. Without a map, seeded fight logs are identical to v3.10.0 (`e2e/fights.spec.js`, `e2e/fixtures/no-map-logs.json`).
 - **Encounters (T15, v3.12.0):** `src/lib/encounters.js` (`normalizeEncounter`, files, `PRESETS`: 4 original 20×14 maps with spawn zones and a suggested mix), `campaign.encounters` (not undo steps), `store.launchEncounter` (one undo step: team + NPCs with shared groups, surprise, pool, map, tokens on spawn zones → Combat → Préparation). UI `views/gm/EncountersPanel.svelte` + `EncounterEditor.svelte` (MJ → Rencontres; the « Outils à venir » placeholder is gone). Model note: each NPC line has `side` (enemy/ally) instead of `spawn`; it also picks the spawn zone.
+- **Finish (T16, v3.13.0):** home-screen install (`pwa/manifest.webmanifest` + icons, copied by Vite's `publicDir`, linked by `main.js` only over http(s) so the double-clicked file stays error-free), accessibility checks in `e2e/a11y.spec.js` (names, 44 px targets, AA contrast; light amber/coolant/fault and dark fault adjusted), size budget in `e2e/install.spec.js` (< 900 kB, about 815 kB), end-of-session export reminder, README reorganised (players / GM).
 - **Combat:** preparation → initiative → guided turn (`TurnFlow.svelte`, about 1,130 lines).
   - Range is chosen by hand (`shootRanges`), pre-selected from the map when both robots are on it (T14).
   - Cover is **a state of the robot** (`c.cover`): set by the "se mettre à couvert" maneuver (chips), and worn down by hits (`t.cover = res.newCover`).
@@ -693,6 +694,7 @@ campaign.xp.log = [{ at, awards: [{ cid, total, items }] }]
 - 2026-10-11: crop the logo to remove the « Road to Eden » line (v3.0.1, before T04).
 - 2026-10-11: T05 merged; NPC fiches open in place from Combat in both GM modes (option chosen over hiding the buttons or switching GM mode on).
 - 2026-10-11 (T06, confirmed by the owner): starting gear = the model's whole GEAR box with its « or » choices (p.31-46 and the example robot p.29), although p.25 says « one piece of gear »; modules are unique among PCs like chassis parts (p.22); the serial format (3 letters, 3 digits) is generated but not enforced, since junk robots name themselves (p.16) and the demo's serials are shorter.
+- 2026-10-11: T12–T16 delivered as stacked PRs #16–#20 (owner's choice), to merge in order.
 - **Still open:** none blocking. If a ticket raises a question, the agent asks before choosing.
 
 ---

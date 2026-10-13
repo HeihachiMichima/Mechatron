@@ -114,12 +114,11 @@
   .who { flex: 1 1 160px; min-width: 0; display: grid; }
   .who b { font-family: var(--display); font-weight: 600; }
   .who .muted { font-size: .82rem; }
-  .side .chip { min-height: 32px; }
   .acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
   .spare { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
   .pool-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
   .pv { font-size: 2rem; font-weight: 700; color: var(--coolant); }
-  .toggle { display: flex; gap: 10px; align-items: center; margin-top: 10px; font-size: .9rem; cursor: pointer; }
+  .toggle { display: flex; gap: 10px; align-items: center; margin-top: 10px; font-size: .9rem; cursor: pointer; min-height: 44px; }
   .toggle input { width: 20px; height: 20px; accent-color: var(--amber); }
   .cta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 4px; }
   .big { min-height: 52px; padding: 0 22px; font-size: 1.05rem; }

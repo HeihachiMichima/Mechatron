@@ -81,7 +81,7 @@
   .who b { font-family: var(--display); font-weight: 600; }
   .who small { color: var(--muted); font-size: .82rem; }
   .rules { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 10px; }
-  .rules summary { cursor: pointer; font-family: var(--display); font-weight: 600; min-height: 36px; display: flex; align-items: center; gap: 8px; }
+  .rules summary { cursor: pointer; font-family: var(--display); font-weight: 600; min-height: 44px; display: flex; align-items: center; gap: 8px; }
   .fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0 12px; margin-top: 10px; }
   .badge { font-family: var(--body); font-size: .7rem; font-weight: 600; padding: 1px 6px; border-radius: 3px; background: var(--hull-2); color: var(--amber); }
 </style>

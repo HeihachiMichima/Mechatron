@@ -1088,7 +1088,7 @@
   .tg[aria-pressed='true'] { background: var(--hull-2); }
   .tgi { font-size: .72rem; color: var(--muted); }
   .toggles { display: grid; gap: 6px; }
-  .tog { display: flex; gap: 10px; align-items: center; cursor: pointer; font-size: .92rem; }
+  .tog { display: flex; gap: 10px; align-items: center; cursor: pointer; font-size: .92rem; min-height: 44px; }
   .tog input { width: 20px; height: 20px; accent-color: var(--amber); flex: none; }
   .en-tog { padding: 8px 10px; border-left: 3px solid var(--coolant); background: var(--abyss); }
   .en-hint { display: flex; gap: 6px; align-items: baseline; flex-wrap: wrap; }
@@ -1117,7 +1117,7 @@
   .prot ul { margin: 4px 0 8px; padding-left: 18px; font-size: .92rem; }
   .react { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 8px; font-size: .9rem; }
   .react > span { display: inline-flex; gap: 5px; align-items: center; flex-wrap: wrap; }
-  .sel { max-width: 50%; min-height: 40px; }
+  .sel { max-width: 50%; min-height: 44px; }
   .dice { display: flex; flex-wrap: wrap; gap: 6px; }
   .die { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 6px; background: var(--die-gear); color: #f0f0f0; font-family: var(--display); font-weight: 700; box-shadow: inset 0 0 0 1px #5d666b; }
   .die.six { box-shadow: 0 0 0 3px var(--amber); }
@@ -1135,7 +1135,7 @@
   .fxhead span { font-size: .88rem; color: var(--muted); }
   .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .callout { margin: 0; padding: 8px 10px; border-left: 3px solid var(--fault); background: var(--abyss); font-size: .9rem; }
-  .skip { justify-self: start; background: none; border: 0; color: var(--muted); font-size: .85rem; text-decoration: underline; padding: 6px 0; }
+  .skip { justify-self: start; background: none; border: 0; color: var(--muted); font-size: .85rem; text-decoration: underline; padding: 6px 0; min-height: 44px; }
   /* Map suggestions (T14): dashed frame on the suggested chip, map notes. */
   .chip.sug:not([aria-pressed='true']) { border-style: dashed; border-color: var(--amber); }
   .mapnote { border-left: 2px solid color-mix(in srgb, var(--amber) 60%, transparent); padding-left: 8px; }

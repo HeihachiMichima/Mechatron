@@ -135,6 +135,6 @@
   .thumb { width: 96px; flex: none; aspect-ratio: 4 / 5; background: var(--abyss); border: 1px solid var(--line); }
   .thumb img { width: 100%; height: 100%; display: block; object-fit: cover; }
   details { margin: 0 0 10px; }
-  summary { cursor: pointer; font-size: .9rem; color: var(--muted); min-height: 32px; }
+  summary { cursor: pointer; font-size: .9rem; color: var(--muted); min-height: 44px; }
   pre { white-space: pre-wrap; font: .82rem/1.45 var(--body); background: var(--abyss); padding: 10px; margin: 6px 0 0; border: 1px solid var(--line); max-height: 200px; overflow: auto; }
 </style>

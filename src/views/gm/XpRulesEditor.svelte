@@ -75,7 +75,7 @@
   h3 { font-size: 1rem; margin: 14px 0 4px; }
   .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 6px 0; }
   .row.off .txt { opacity: .55; }
-  .chk { display: inline-grid; place-items: center; width: 40px; min-height: 44px; }
+  .chk { display: inline-grid; place-items: center; width: 44px; min-height: 44px; }
   .chk input { width: 20px; height: 20px; accent-color: var(--amber); }
   .txt { flex: 1; min-width: 12em; }
   .mv { display: inline-flex; }

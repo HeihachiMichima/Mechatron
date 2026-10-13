@@ -66,7 +66,7 @@
           <div class="attr-top">
             <div>
               <h3>{L[a].label}</h3>
-              <span class="muted small">{L[a].sub}</span>
+              <span class="muted fine">{L[a].sub}</span>
             </div>
             <div class="score num" class:hurt={cur < max}>
               {cur}<small>/{max}</small>
@@ -123,13 +123,13 @@
       <div class="attr-top">
         <div>
           <h3>Armure</h3>
-          <span class="muted small">châssis {ch.armorBase}{hasSecondary(c, 'Blindage supplémentaire') ? ' + blindage 3' : ''}</span>
+          <span class="muted fine">châssis {ch.armorBase}{hasSecondary(c, 'Blindage supplémentaire') ? ' + blindage 3' : ''}</span>
         </div>
         <div class="score num" class:hurt={armorCurrent(c, ch) < armorTotal(c, ch)}>{armorCurrent(c, ch)}<small>/{armorTotal(c, ch)}</small></div>
         <Stepper value={armorCurrent(c, ch)} min={0} max={armorTotal(c, ch)} label="Armure" onchange={setArmor} size="sm" bare />
       </div>
       <Segments max={armorTotal(c, ch)} current={armorCurrent(c, ch)} tone="steel" onset={setArmor} label="Armure" />
-      <h3 class="cover-h">Couverture <span class="muted small">contre les tirs uniquement</span></h3>
+      <h3 class="cover-h">Couverture <span class="muted fine">contre les tirs uniquement</span></h3>
       <div class="chips">
         {#each covers as cv (cv.name)}
           <button class="chip" aria-pressed={c.cover === cv.armor} onclick={() => store.commit(cv.armor ? `Couverture : ${cv.name.toLowerCase()} (${cv.armor})` : 'Plus de couverture', (s) => (s.cover = cv.armor))}>{cv.name}{cv.armor ? ` ${cv.armor}` : ''}</button>
@@ -168,7 +168,7 @@
   .attrs li:first-child { padding-top: 2px; }
   .attr-top { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 12px; }
   h3 { font-size: 1.05rem; }
-  .small { font-size: .82rem; }
+  .fine { font-size: .82rem; }
   .score { font-size: 1.7rem; font-weight: 700; line-height: 1; text-align: right; position: relative; }
   .score small { font-size: .55em; color: var(--muted); font-weight: 500; }
   .score.hurt { color: var(--fault); }

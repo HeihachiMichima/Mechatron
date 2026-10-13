@@ -53,7 +53,8 @@
     <div class="panel donep">
       <h2>Séance terminée</h2>
       <ul class="list">{#each s.done.awards as a (a.cid)}<li><b>{a.name}</b><span class="num">+{a.total} PX</span></li>{/each}</ul>
-      <p class="hint">Tout est au journal. Les robots peuvent dépenser leurs PX (5 pour un programme +1 ou une fonction secondaire).</p>
+      <p class="hint">Tout est au journal. Les robots peuvent dépenser leurs PX ({rules.costs.program} pour un programme +1, {rules.costs.secondary} pour une fonction secondaire).</p>
+      <p class="remind">Exportez la campagne : c'est votre copie hors de ce navigateur, qui peut effacer ses données (surtout sur iPhone et iPad, après quelques jours sans visite).</p>
       <div class="acts">
         <button class="btn primary" onclick={exportCampaign}><Icon name="download" size={18} />Exporter la campagne</button>
         <button class="btn" onclick={() => (store.ui.session = null)}>Fermer</button>
@@ -121,6 +122,7 @@
 </section>
 
 <style>
+  .remind { margin: 8px 0 0; padding: 8px 10px; border-left: 3px solid var(--amber); background: var(--abyss); font-size: .9rem; }
   .wiz { display: grid; gap: 12px; max-width: 980px; }
   .whead { display: grid; gap: 8px; }
   .title { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }

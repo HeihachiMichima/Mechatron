@@ -60,7 +60,7 @@
   .tab {
     flex: none; scroll-snap-align: start; position: relative;
     display: inline-flex; align-items: center; gap: 7px; max-width: 46vw;
-    min-height: 42px; padding: 0 12px 0 10px; background: transparent; border: 0; color: var(--muted);
+    min-height: 44px; min-width: 44px; padding: 0 12px 0 10px; background: transparent; border: 0; color: var(--muted);
     font-family: var(--display); font-weight: 600; font-size: .95rem;
   }
   .tab::after { content: ''; position: absolute; left: 6px; right: 6px; bottom: 0; height: 3px; background: var(--tc); opacity: .35; border-radius: 2px 2px 0 0; }

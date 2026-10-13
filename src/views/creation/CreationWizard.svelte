@@ -198,7 +198,7 @@
   .quit { color: var(--muted); }
   .quit.armed { color: var(--amber); border-color: var(--amber); }
   /* The rail: the 9 stations of the assembly line, joined by a track. */
-  .rail { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(9, 1fr); position: relative; }
+  .rail { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(9, minmax(44px, 1fr)); position: relative; overflow-x: auto; scrollbar-width: none; }
   .rail::before { content: ''; position: absolute; left: 5%; right: 5%; top: 50%; height: 2px; background: var(--line); }
   .rail li { display: grid; justify-items: center; position: relative; }
   /* Each button fills its column (44 px tall touch target); the circle is drawn inside. */
@@ -229,7 +229,7 @@
   .serial .input { flex: 1; min-width: 0; letter-spacing: .04em; }
   .field > span small { color: var(--muted); }
   .swatches { display: flex; flex-wrap: wrap; gap: 8px; }
-  .sw { width: 40px; height: 40px; border-radius: 50%; background: var(--sw); border: 2px solid var(--hull); box-shadow: 0 0 0 1px var(--line); position: relative; }
+  .sw { width: 44px; height: 44px; border-radius: 50%; background: var(--sw); border: 2px solid var(--hull); box-shadow: 0 0 0 1px var(--line); position: relative; }
   .sw[aria-checked='true'] { box-shadow: 0 0 0 3px var(--text); }
   .sw.taken::after { content: ''; position: absolute; inset: 14px; border-radius: 50%; background: var(--hull); opacity: .7; }
   .quick { margin: -6px 0 12px; }
@@ -246,7 +246,7 @@
   .recap > div { padding: 10px 0; border-top: 1px solid var(--line); }
   .recap dt { display: flex; justify-content: space-between; align-items: center; font-size: .85rem; color: var(--muted); }
   .recap dd { margin: 2px 0 0; }
-  .link { background: none; border: 0; color: var(--amber); font-size: .85rem; min-height: 36px; padding: 0 4px; }
+  .link { background: none; border: 0; color: var(--amber); font-size: .85rem; min-height: 44px; padding: 0 4px; }
   .stats { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 4px; color: var(--muted); font-size: .9rem; }
   .stats b { color: var(--text); }
   .errors { margin: 0; padding: 10px 12px 10px 28px; background: var(--abyss); border-left: 3px solid var(--amber); }

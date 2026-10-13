@@ -160,7 +160,7 @@
   .main { min-height: 60px; justify-content: space-between; text-align: left; padding: 8px 16px; }
   .main span { display: grid; }
   .main b { font-size: 1.1rem; }
-  .main small { font-weight: 500; opacity: .85; }
+  .main small { font-weight: 500; }
   .callout { margin: 0; padding: 10px 12px; border-left: 3px solid var(--line); background: var(--abyss); }
   .rows li { display: grid; gap: 6px; padding: 10px 0; }
   @media (min-width: 640px) { .rows li { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto; align-items: center; gap: 12px; } }
@@ -176,7 +176,7 @@
   .ep span { font-size: .9rem; color: var(--muted); }
   .ep b { font-size: 1.15rem; color: var(--coolant); }
   .opts { display: flex; flex-wrap: wrap; gap: 4px 14px; }
-  .chk { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; cursor: pointer; font-size: .9rem; }
+  .chk { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; cursor: pointer; font-size: .9rem; }
   .report li { display: grid; padding: 8px 0; }
   .report li span { color: var(--muted); font-size: .92rem; }
   .ration { margin: 0 0 4px; }

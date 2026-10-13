@@ -74,7 +74,7 @@
 </div>
 
 <style>
-  .tog { display: flex; gap: 10px; align-items: center; cursor: pointer; font-size: .92rem; }
+  .tog { display: flex; gap: 10px; align-items: center; cursor: pointer; font-size: .92rem; min-height: 44px; }
   .tog input { width: 20px; height: 20px; accent-color: var(--amber); flex: none; }
   .res { margin: 0; }
   .nav { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }

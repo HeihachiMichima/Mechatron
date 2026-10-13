@@ -43,7 +43,7 @@
 
   const ringColor = (r) => (r.c.kind !== 'npc' && r.c.color ? r.c.color : r.x.side === 'enemy' ? 'var(--fault)' : 'var(--muted)');
   const tokens = $derived(placed.map((r) => ({
-    id: r.x.id, x: r.x.pos.x, y: r.x.pos.y, initials: initials(r.c.name), color: ringColor(r), side: r.x.side,
+    id: r.x.id, x: r.x.pos.x, y: r.x.pos.y, initials: initials(r.c.name), color: ringColor(r), ink: r.c.kind !== 'npc' && r.c.color ? '#10181a' : null, side: r.x.side,
     current: r.x.id === curId, selected: r.x.id === sel, down: isDown(r), title: r.c.name || 'Sans nom'
   })));
   const takenBy = (except) => placed.filter((r) => r.x.id !== except).map((r) => key(r.x.pos));
@@ -227,10 +227,9 @@
 <style>
   .cmap { display: grid; gap: 10px; }
   .cmap > .panel-head { margin-bottom: 0; }
-  .lh { width: 100%; background: none; border: 0; padding: 0; text-align: left; color: inherit; min-height: 32px; }
+  .lh { width: 100%; background: none; border: 0; padding: 0; text-align: left; color: inherit; min-height: 44px; align-items: center; }
   .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
   .pick { flex: 1 1 180px; width: auto; }
-  .ovs .chip { min-height: 36px; }
   .selrow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 6px 0; border-top: 1px solid var(--line); }
   .selrow .who { flex: 1 1 160px; display: grid; min-width: 0; }
   .selrow b { font-family: var(--display); font-weight: 600; }

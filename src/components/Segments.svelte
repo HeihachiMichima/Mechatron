@@ -23,7 +23,9 @@
   .cell { flex: 1 1 0; min-width: 0; height: 8px; border: 0; padding: 0; border-radius: 1px; background: var(--line); }
   .md .cell { height: 26px; border-radius: 2px; max-width: 34px; }
   .sm .cell { height: 6px; }
-  button.cell { cursor: pointer; }
+  button.cell { cursor: pointer; position: relative; }
+  /* 44 px tall hit area; the cells stay narrow (the ± stepper beside them is the full-size control). */
+  .md button.cell::before { content: ''; position: absolute; inset: -9px 0; }
   .amber .on { background: var(--amber); box-shadow: 0 0 8px color-mix(in srgb, var(--amber) 45%, transparent); }
   .coolant .on { background: var(--coolant); box-shadow: 0 0 8px color-mix(in srgb, var(--coolant) 45%, transparent); }
   .steel .on { background: var(--muted); }

@@ -198,7 +198,7 @@
   .totals div { display: grid; }
   .totals b { font-size: 1.4rem; color: var(--amber); }
   .swatches { display: flex; flex-wrap: wrap; gap: 8px; }
-  .sw { width: 36px; height: 36px; border-radius: 50%; background: var(--sw); border: 2px solid var(--hull); box-shadow: 0 0 0 1px var(--line); position: relative; }
+  .sw { width: 44px; height: 44px; border-radius: 50%; background: var(--sw); border: 2px solid var(--hull); box-shadow: 0 0 0 1px var(--line); position: relative; }
   .sw[aria-checked='true'] { box-shadow: 0 0 0 2px var(--text); }
   .sw.taken::after { content: ''; position: absolute; inset: 13px; border-radius: 50%; background: var(--hull); opacity: .7; }
   .opts { display: grid; gap: 12px; }
