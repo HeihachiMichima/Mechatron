@@ -5,6 +5,7 @@
   import { energyRules } from '../../lib/clock.js';
   import { store, newCombatant } from '../../lib/store.svelte.js';
   import ResetAllButton from '../../components/ResetAllButton.svelte';
+  import CombatMap from './CombatMap.svelte';
   import { GAME_DATA as D } from '../../lib/data.js';
   import { chassis, armorCurrent, status } from '../../lib/rules.js';
 
@@ -92,6 +93,8 @@
     <label class="toggle"><input type="checkbox" checked={cb.usePool} onchange={(e) => store.commitAll(null, (d) => (d.combat.usePool = e.currentTarget.checked))} /><span>Les PNJ paient leurs PE dans cette réserve</span></label>
   </section>
 {/if}
+
+{#if store.campaign.maps.length}<CombatMap />{/if}
 
 <div class="reset"><ResetAllButton small /><span class="muted">Avant un nouveau combat : dégâts, armure, modules, PE et armes au maximum, pour tous.</span></div>
 

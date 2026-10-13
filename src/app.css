@@ -125,6 +125,20 @@ textarea.input { min-height: 160px; resize: vertical; line-height: 1.5; }
 .list > li { border-top: 1px solid var(--line); }
 .list > li:first-child { border-top: 0; }
 
+/* ---------- tactical map terrain (MapView, MapEditor swatches) ---------- */
+.tt-floor { fill: color-mix(in srgb, var(--hull) 70%, var(--abyss)); }
+.tt-grid { stroke: var(--line); stroke-width: 0.03; fill: none; }
+.tt-mur { fill: color-mix(in srgb, var(--text) 62%, var(--abyss)); }
+.tt-porte { fill: color-mix(in srgb, var(--text) 40%, var(--abyss)); stroke: color-mix(in srgb, var(--text) 62%, var(--abyss)); stroke-width: 0.14; }
+.tt-porte-ouverte { fill: none; stroke: color-mix(in srgb, var(--text) 45%, transparent); stroke-width: 0.06; stroke-dasharray: 0.16 0.12; }
+.tt-meuble { fill: color-mix(in srgb, var(--muted) 42%, var(--hull)); stroke: var(--muted); stroke-width: 0.05; }
+.tt-porte-blindee { fill: color-mix(in srgb, var(--muted) 75%, var(--abyss)); stroke: var(--text); stroke-width: 0.07; }
+.tt-difficile { fill: color-mix(in srgb, var(--muted) 18%, transparent); }
+.tt-eau { fill: color-mix(in srgb, #3f7fbf 45%, var(--abyss)); }
+.tt-spawn-allie { fill: color-mix(in srgb, var(--text) 12%, transparent); }
+.tt-spawn-ennemi { fill: color-mix(in srgb, var(--fault) 16%, transparent); }
+
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }

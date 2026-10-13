@@ -26,8 +26,9 @@ code, comments and identifiers are in English.
     │   ├── creation.js      creation wizard: STEPS, stepErrors, buildRobot/applyDraft, start/finishWizard
     │   ├── clock.js         day/night clock + energy engine: endDay, nightCharge, startDay, transfer, drainPack
     │   ├── market.js        black market: catalog (defaultListings), normalizeMarket, prices, sell price, file
-    │   ├── tactics/         square-grid map: terrain.js (TERRAIN, map format, parseMap, edits) and
-    │   │                    geometry.js (distance, line, los, suggestCover, bandOf, reach, blastVictims)
+    │   ├── tactics/         square-grid map: terrain.js (TERRAIN, map format, normalizeMap, edits),
+    │   │                    geometry.js (distance, line, los, suggestCover, bandOf, reach, blastVictims,
+    │   │                    spawnPlaces, canStand), paths.js (SVG paths)
     │   ├── xp.js            XP rules (xpRules ← campaign.rules.xp), session draft/apply, spendProgram/Secondary
     │   ├── campaign.js      campaign files (classifyImport, readImport, file name) + automatic backups
     │   ├── rules.js         pure rules functions (chassis, pools, dice, damage…)
@@ -39,15 +40,16 @@ code, comments and identifiers are in English.
     │   │                    lookup, energy-weapon power sources, E-packs, blasts
     │   ├── exports.js       JSON / text / share-link / PNG card exports
     │   └── pickers.js       list builders for the picker sheets
-    ├── components/          TopBar, PcTabs, VitalsPlate, FicheTabs, Nav, RobotList, Sheet, Stepper,
+    ├── components/          tactics/MapView (the SVG map); TopBar, PcTabs, VitalsPlate, FicheTabs, Nav, RobotList, Sheet, Stepper,
     │                        EmptyTeam, BackupList, Segments, Toast, Icon, Avatar, DiceTray, CombatGuide,
     │                        PrintSheet, OverheatDice (shows one module activation)
     ├── views/               Welcome (no campaign yet); fiche tabs État, Programmes, Matériel, Robot
     │                        (« Identité »); spaces Energy, Market, Combat, Session, Gm
     │   ├── energy/          EnergyTransfer (« Donner des PE »), EnergyRules (GM overrides)
-    │   ├── gm/              MarketEditor (MJ → Marché noir), XpRulesEditor (MJ → Règles de l'expérience)
+    │   ├── gm/              MarketEditor (MJ → Marché noir), XpRulesEditor (MJ → Règles de l'expérience),
+    │   │                    MapsPanel + MapEditor (MJ → Cartes, paint tool)
     │   ├── session/         SessionWizard (« Terminer la séance »)
-    │   ├── combat/          CombatPrep → CombatInit → CombatFight (+ TurnFlow, ActorStats,
+    │   ├── combat/          CombatPrep → CombatInit → CombatFight (+ CombatMap, TurnFlow, ActorStats,
     │   │                    LogicConflict, BlowerStep, RecycleStep)
     │   └── creation/        CreationWizard (+ ChassisStep, ProgramStep, ModuleStep)
     └── sheets/              bottom-sheet dialogs (Roll, Damage, Module, Picker, Weapon,
@@ -189,6 +191,21 @@ undo step. `store.open(type, props)` / `store.close()` drive bottom sheets; **pr
   Dijkstra, `moveSquares` (4) per maneuver; `blastVictims` = tokens at Bras/Proche/Courte in sight of
   the centre (feed `band` to `blastDice`). Everything is a suggestion: never change a robot from here.
   Tests draw grids in ASCII (`parseMap`: capitals are tokens).
+- **Map UI (T13).** `campaign.maps = [{ id, name, w, h, cells }]` (`normalizeMap`), saved with
+  `store.saveMap(map)` / `store.removeMap(id)`: **not** undo steps (left out of snapshots); the paint
+  tool has its own undo. The fight's map is `combat.mapId` (`store.setCombatMap`, `store.combatMap`)
+  and each combatant has `pos` (`{x,y}` or null, `store.placeToken(xid, pos)`): both are combat
+  state, so moving a token is undoable. `components/tactics/MapView.svelte` = one SVG (viewBox in
+  squares, `paths.js`: one path per terrain / overlay, grid as one path), tokens as `<g data-tok>`,
+  pan (one pointer), pinch/wheel zoom, +/− and Recentrer under the map, `touch-action: none` on the
+  SVG only; modes `view` (ontap, ontoken, ondrop, onkeymove for arrows) and `paint` (onpaint
+  start/move/end/cancel). Terrain colors are global `.tt-*` classes in `app.css`.
+  `views/combat/CombatMap.svelte` = the panel in Préparation and Combat (map picker, tray « À placer »,
+  `spawnPlaces`, overlays Portées / Déplacement / Lignes de vue from the selected token, else the
+  current actor, plus a text list for screen readers). CombatFight puts it between the turn lane and
+  TurnFlow on phones (`main-col` becomes `display: contents`) and on the left from 1280 px.
+  `views/gm/MapEditor.svelte` (palette, brush/rectangle, undo, size, name, delete) and
+  `views/gm/MapsPanel.svelte` (MJ → Cartes, grid house rules → `campaign.rules.grid`).
 - **`store.started`** is false while no campaign exists (clean profile, or a save of another
   version): App shows `WelcomeView` and nothing is saved. `store.start(raw, label)` opens the first
   campaign (new, demo, file, backup) with no undo back to the welcome screen, saves at once and
@@ -209,9 +226,10 @@ undo step. `store.open(type, props)` / `store.close()` drive bottom sheets; **pr
   phase ('creation'|'play'), dev {Energie, Production, Défense, Information}, rules {} (GM
   overrides), journal [{at, day?, text}], clock, market, xp {log}, maps [], encounters []`.
   `clock` = `{ day, phase, clearSky, charged, exclude[], report }` (`normalizeClock`, T07);
+  `maps` = `[{ id, name, w, h, cells }]` (`normalizeMap`, T13);
   `market` = `{ open, sellRate, rarities[], listings[], ledger[] }` (`normalizeMarket`, T09);
   `xp` = `{ log: [session], spent: [spend] }` (`normalizeXp`, T11); `maps`/`encounters` are kept as
-  plain JSON until their ticket (T13…T15).
+  plain JSON until their ticket (T15).
   Journal: `pushJournal(data, text, {day})` inside a commit, or `store.addJournal(text)`.
   Rename with `store.renameCampaign(name)`.
 - **DEV levels live once, in `campaign.dev`** — read them with `getDev()` (`settings.js`), never
@@ -422,6 +440,11 @@ Follow `docs/PLAN-COMPAGNON.md` §0: one ticket at a time, in order.
   only): map format and terrain, distance, line, line of sight with partial sight, suggested cover
   (Meuble 3, Porte blindée 5, Mur 7 from the book), range band from squares, reach by maneuvers,
   blast victims; house grid values (`HOUSE.grid`: 2 m squares, band edges, 4 squares per maneuver).
+- v3.10.0 (2026-10-11, plan ticket T13): tactical map — `campaign.maps`, MJ → Cartes with a
+  minimal paint tool (terrain palette, brush/rectangle, own undo, size ≤ 32×24, name, duplicate,
+  delete, grid house rules), the Carte panel in Préparation and Combat (map picker, place tokens by
+  tap or drag, spawn zones, range rings, reach in 1/2 maneuvers, lines of sight with suggested
+  cover), `combat.mapId` and combatant `pos` (undoable); map on the left from 1280 px.
 - v3.2.1 (2026-10-11): from Combat, « Ouvrir la fiche » opens an NPC's full fiche in place, in both
   GM modes, with « Retour au combat » (`ui.peek`): combat is now strictly the same in both modes.
 

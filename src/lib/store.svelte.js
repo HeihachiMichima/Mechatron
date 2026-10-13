@@ -10,6 +10,7 @@ import { makeBackup, listBackups, backupData } from './campaign.js';
 import { blankClock, normalizeClock, isBank, bankCapacity } from './clock.js';
 import { blankMarket, normalizeMarket, drawMarket } from './market.js';
 import { normalizeXp } from './xp.js';
+import { normalizeMap, normalizePos } from './tactics/terrain.js';
 
 export const VERSION = 3;
 const KEY = 'mechatron-v3';
@@ -118,10 +119,10 @@ export function fromTemplate(t, name) {
 // held: { by, how, mod, with } while immobilized; extra: { round, used: [module] }
 // for bonus attacks; defenses: defenses this round; protectRound: last round
 // the Protect program was used (once per round).
-export const newCombatant = (cid, side) => ({ id: newId(), cid, side, init: null, tie: random(), acted: false, defending: false, overwatch: false, surprise: false, lostAction: false, prone: false, fled: false, lock: null, initBonus: 0, held: null, extra: null, defenses: 0, protectRound: 0 });
+export const newCombatant = (cid, side) => ({ id: newId(), cid, side, init: null, tie: random(), acted: false, defending: false, overwatch: false, surprise: false, lostAction: false, prone: false, fled: false, lock: null, initBonus: 0, held: null, extra: null, defenses: 0, protectRound: 0, pos: null });
 
 export function blankCombat() {
-  return { phase: 'prep', active: false, round: 1, turn: 0, combatants: [], log: [], gmPool: 0, usePool: true };
+  return { phase: 'prep', active: false, round: 1, turn: 0, combatants: [], log: [], gmPool: 0, usePool: true, mapId: null };
 }
 function normalizeCombat(raw, ids) {
   const b = blankCombat();
@@ -138,10 +139,12 @@ function normalizeCombat(raw, ids) {
       initBonus: num(x.initBonus),
       held: x.held && typeof x.held === 'object' ? { by: str(x.held.by), how: str(x.held.how), mod: num(x.held.mod), with: str(x.held.with) } : null,
       extra: x.extra && typeof x.extra === 'object' ? { round: num(x.extra.round), used: arr(x.extra.used).map(str) } : null,
-      defenses: Math.max(0, num(x.defenses)), protectRound: num(x.protectRound)
+      defenses: Math.max(0, num(x.defenses)), protectRound: num(x.protectRound),
+      pos: normalizePos(x.pos) // square on the combat map (T13), null = not placed
     })),
     log: arr(raw.log).slice(-60).map((l) => ({ round: num(l?.round, 1), text: str(l?.text) })),
-    gmPool: Math.max(0, num(raw.gmPool)), usePool: raw.usePool !== false
+    gmPool: Math.max(0, num(raw.gmPool)), usePool: raw.usePool !== false,
+    mapId: str(raw.mapId) || null // campaign.maps entry used by this fight (T13)
   };
 }
 
@@ -213,7 +216,8 @@ export function ensureColor(chars, c) {
 
 // ---------- campaign ----------
 // clock: normalizeClock (lib/clock.js, T07); market: normalizeMarket (lib/market.js,
-// T09). xp (T11), maps (T13) and encounters (T15) are kept as plain JSON until then.
+// T09), xp: normalizeXp (T11), maps: normalizeMap (lib/tactics, T13). encounters
+// (T15) are kept as plain JSON until then.
 
 /** A new, empty campaign (DEV levels at the book's starting value). */
 export function blankCampaign(name = '') {
@@ -253,9 +257,15 @@ export function normalizeCampaign(raw) {
     clock: normalizeClock(raw.clock),
     market: normalizeMarket(raw.market, raw.phase),
     xp: normalizeXp(raw.xp),
-    maps: arr(raw.maps).filter(isObj).map(copy),
+    maps: dedupeIds(arr(raw.maps).filter(isObj).map((m) => normalizeMap(m, newId))),
     encounters: arr(raw.encounters).filter(isObj).map(copy)
   };
+}
+
+function dedupeIds(list) {
+  const seen = new Set();
+  list.forEach((x) => { while (seen.has(x.id)) x.id = newId(); seen.add(x.id); });
+  return list;
 }
 
 /** Append a journal line (inside a commit). extra: { day } */
@@ -636,6 +646,40 @@ class Store {
     if (!d) { this.notify('Cette sauvegarde est illisible.'); return false; }
     if (!this.started) return this.start(d, 'Sauvegarde restaurée');
     return this.replaceAll(d, 'Sauvegarde restaurée', { backup: false });
+  }
+
+  // ---------- maps (T13) ----------
+  // Maps keep their own save: editing one is not an undo step (the paint tool has
+  // its own undo). Token positions and the map chosen for a fight live in the
+  // combat, so moving a token is undoable like any combat change.
+  /** The map used by the current fight, or null. */
+  get combatMap() { return this.data.campaign.maps.find((m) => m.id === this.data.combat.mapId) ?? null; }
+  /** Create or replace a map (by id); returns its id. */
+  saveMap(raw) {
+    const m = normalizeMap(raw, newId);
+    const maps = this.data.campaign.maps;
+    const i = maps.findIndex((x) => x.id === m.id);
+    if (i >= 0) maps[i] = m; else maps.push(m);
+    this.#touch();
+    return m.id;
+  }
+  /** Delete a map for good (not undoable; a fight using it goes back to no map). */
+  removeMap(id) {
+    this.data.campaign.maps = this.data.campaign.maps.filter((m) => m.id !== id);
+    if (this.data.combat.mapId === id) this.data.combat.mapId = null;
+    this.#touch();
+  }
+  /** Choose the fight's map (null = none). Undoable. */
+  setCombatMap(id) {
+    const m = this.data.campaign.maps.find((x) => x.id === id);
+    this.commitAll(null, (d) => (d.combat.mapId = m ? m.id : null));
+  }
+  /** Put a combatant on a square of the fight's map, or take it off (pos null). Undoable. */
+  placeToken(xid, pos) {
+    this.commitAll(null, (d) => {
+      const x = d.combat.combatants.find((y) => y.id === xid);
+      if (x) x.pos = normalizePos(pos);
+    });
   }
 
   /** Theme button: auto → dark → light. */

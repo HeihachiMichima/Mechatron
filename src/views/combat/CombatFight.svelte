@@ -4,6 +4,7 @@
   import Stepper from '../../components/Stepper.svelte';
   import CombatGuide from '../../components/CombatGuide.svelte';
   import TurnFlow from './TurnFlow.svelte';
+  import CombatMap from './CombatMap.svelte';
   import ResetAllButton from '../../components/ResetAllButton.svelte';
   import { flip } from 'svelte/animate';
   import { energyRules } from '../../lib/clock.js';
@@ -33,6 +34,8 @@
   $effect(() => { cur?.x.id; trackEl?.scrollTo({ left: 0, behavior: reduced ? 'auto' : 'smooth' }); });
   const supply = $derived(energyRules(store.campaign).ration); // the GM pool follows the same supply level (p.73)
   let confirmEnd = $state(false);
+
+  const showMap = $derived(store.campaign.maps.length > 0); // GM: maps are drawn in MJ → Cartes
   let logOpen = $state(true);
 
   function end(cleanup) {
@@ -54,7 +57,8 @@
   const wState = (c) => (c.weapons || []).filter((w) => isEnergyWeapon(w)).map((w) => `${w.name} : ${weaponPower(w) === 'internal' ? 'interne' : weaponPower(w) === 'crank' ? (w.crankDue ? 'manivelle à remonter' : 'manivelle') : w.empty ? 'E-pack vide' : 'E-pack'}`);
 </script>
 
-<div class="layout">
+<div class="layout" class:withmap={showMap}>
+  {#if showMap}<div class="map-col"><CombatMap fight /></div>{/if}
   <div class="main-col">
     <section class="panel track-panel">
       <div class="track-head">
@@ -147,6 +151,23 @@
   @media (min-width: 1000px) { .layout { grid-template-columns: minmax(0, 1fr) 340px; align-items: start; } }
   @media (min-width: 1400px) { .layout { grid-template-columns: minmax(0, 1fr) minmax(380px, 28%); } }
   .main-col, .side-col { display: grid; gap: 12px; align-content: start; min-width: 0; grid-template-columns: minmax(0, 1fr); }
+  /* With a map: on phones the map sits between the turn lane and the turn panel
+     (main-col's children join the layout grid); from 1280 px it takes the left
+     column and the turn panel the right one. */
+  .withmap > .main-col { display: contents; }
+  .withmap > .main-col > :global(*) { order: 3; }
+  .withmap > .main-col > .track-panel { order: 1; }
+  .withmap > .map-col { order: 2; min-width: 0; }
+  .withmap > .side-col { order: 4; }
+  @media (min-width: 1000px) and (max-width: 1279.98px) {
+    .withmap { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (min-width: 1280px) {
+    .withmap { grid-template-columns: minmax(0, 1.15fr) minmax(360px, 1fr); grid-template-areas: 'map main' 'map side'; }
+    .withmap > .main-col { display: grid; grid-area: main; }
+    .withmap > .side-col { grid-area: side; }
+    .withmap > .map-col { grid-area: map; position: sticky; top: 12px; align-self: start; }
+  }
   .main-col > :global(.panel + .panel), .side-col > .panel + .panel { margin-top: 0; }
   .track-panel { padding-bottom: 8px; min-width: 0; }
   .track-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
