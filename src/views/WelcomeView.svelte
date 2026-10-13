@@ -1,6 +1,8 @@
 <script>
-  // First screen when no campaign exists (clean profile, or a save of another
-  // version): start a new campaign, import one, or try the demo (T04).
+  // Home screen (T04, T17): first screen when no campaign exists, and what the
+  // logo opens over a running campaign (« Reprendre »). Start a new campaign,
+  // import one or try the demo; over a running campaign these replace it (it goes
+  // to the automatic backups first, and the toast can undo).
   import Icon from '../components/Icon.svelte';
   import BackupList from '../components/BackupList.svelte';
   import { store, blankCampaign, VERSION, THEME_LABEL, THEME_ICON } from '../lib/store.svelte.js';
@@ -12,28 +14,33 @@
   let name = $state('');
   let fileInput;
   const hasBackups = store.backups().length > 0;
+  const running = $derived(store.started);
+  const cp = $derived(store.campaign);
+  const pcs = $derived(store.chars.filter((c) => c.kind !== 'npc').length);
 
   const campaign = (n, extra = {}) => ({ ...blankCampaign(n), ...extra });
+  /** Open a campaign: the first one, or in place of the running one (backed up, undoable). */
+  const begin = (raw, label) => (store.started ? store.replaceAll(raw, label) : store.start(raw, label));
   function create(e) {
     e.preventDefault();
-    if (store.start({ version: VERSION, campaign: campaign(name.trim()), chars: [], activeId: null }, 'Campagne créée')) store.go('equipe', 'etat');
+    if (begin({ version: VERSION, campaign: campaign(name.trim()), chars: [], activeId: null }, 'Campagne créée')) store.go('equipe', 'etat');
   }
   function demo() {
     // The demo is already in play: the black market is open.
-    const cp = campaign('Démo', { phase: 'play' });
-    cp.market.open = true;
-    store.start({ version: VERSION, campaign: cp, ...demoParty() }, 'Démo chargée : 4 robots et 3 PNJ');
-    store.go('equipe', 'etat');
+    const c = campaign('Démo', { phase: 'play', demo: true });
+    c.market.open = true;
+    if (begin({ version: VERSION, campaign: c, ...demoParty() }, 'Démo chargée : 4 robots et 3 PNJ')) store.go('equipe', 'etat');
   }
+  function resume() { store.leaveHome(); }
   async function openFile(e) {
     const f = e.currentTarget.files[0];
     e.currentTarget.value = '';
     if (!f) return;
     const { kind, data } = await readImport(f);
-    if (kind === 'campaign') store.start(data, `Campagne « ${data.campaign.name || 'sans nom'} » importée`);
-    else if (kind === 'robot') store.start({ version: VERSION, campaign: campaign(''), chars: [{ ...data, id: undefined }] }, `${data.name || 'Robot'} ajouté à une nouvelle campagne`);
+    if (kind === 'campaign') begin(data, `Campagne « ${data.campaign.name || 'sans nom'} » importée`);
+    else if (kind === 'robot') begin({ version: VERSION, campaign: campaign(''), chars: [{ ...data, id: undefined }] }, `${data.name || 'Robot'} ajouté à une nouvelle campagne`);
     else store.notify(kind === 'old' ? OLD_SAVE : NOT_MECHATRON);
-    if (store.started) store.go('equipe', 'etat');
+    if (store.started && !store.ui.home) store.go('equipe', 'etat');
   }
 </script>
 
@@ -46,13 +53,23 @@
     <p>Les fiches de l'équipe, l'énergie, les combats : toute la table de jeu sur un seul appareil.</p>
   </header>
 
-  <form class="panel new" onsubmit={create}>
+  {#if running}
+    <section class="panel resume">
+      <h2>{cp.name || 'Campagne sans nom'}</h2>
+      <p>{pcs} robot{pcs > 1 ? 's' : ''} dans l'équipe{cp.phase === 'play' ? `, jour ${cp.clock.day}` : ", création de l'équipe"}.</p>
+      <button class="btn primary block" onclick={resume}><Icon name="chevron" size={18} />Reprendre la campagne</button>
+      {#if cp.demo}<button class="btn block quit" onclick={() => store.quitDemo()}>Quitter la démo</button>{/if}
+    </section>
+    <p class="hint swap">Ouvrir une autre campagne remplace celle-ci, qui part dans les sauvegardes automatiques.</p>
+  {/if}
+
+  <form class="panel new" class:sub={running} onsubmit={create}>
     <h2>Nouvelle campagne</h2>
     <label class="field"><span>Nom de la campagne</span>
       <input class="input" bind:value={name} maxlength="80" autocomplete="off" placeholder="Par exemple : Opération Noatun" />
     </label>
     <button class="btn primary block" type="submit"><Icon name="plus" size={18} />Créer la campagne</button>
-    <p class="hint">Vous créerez ensuite les robots de l'équipe.</p>
+    <p class="hint">Créez les robots de l'équipe et c'est parti.</p>
   </form>
 
   <div class="others">
@@ -72,11 +89,11 @@
   {#if hasBackups}
     <section class="panel">
       <h2>Sauvegardes automatiques</h2>
-      <BackupList onrestore={() => (store.go('equipe', 'etat'))} />
+      <BackupList onrestore={() => { store.leaveHome(); store.go('equipe', 'etat'); }} />
     </section>
   {/if}
 
-  <footer>Compagnon de fan, non officiel. Tout reste dans ce navigateur : exportez la campagne pour la garder ailleurs.</footer>
+  <footer>Pas de sauvegarde serveur : exportez la campagne pour la stocker.</footer>
 </div>
 
 <style>
@@ -88,6 +105,11 @@
   header p { margin: 10px 0 0; color: var(--muted); max-width: 36ch; }
   h2 { font-size: 1.15rem; margin-bottom: 6px; }
   .new { border-top: 3px solid var(--amber); padding-top: 14px; }
+  .resume { border-top: 3px solid var(--amber); padding-top: 14px; display: grid; gap: 8px; }
+  .resume h2 { margin: 0; }
+  .resume p { margin: 0 0 4px; color: var(--muted); }
+  .new.sub { border-top-color: var(--line); margin-top: 12px; }
+  .swap { margin: 12px 2px 0; }
   .new h2 { margin-bottom: 12px; }
   .new .hint { margin-top: 8px; }
   .others { display: grid; gap: 12px; margin-top: 12px; }

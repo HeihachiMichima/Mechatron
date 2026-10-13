@@ -12,7 +12,6 @@
 
   const m = $derived(store.campaign.market);
   let q = $state('');
-  let kind = $state('');
   let rarity = $state('');
   let onlyOn = $state(false);
   let newName = $state('');
@@ -20,7 +19,15 @@
   let armed = $state(false);
   let fileInput;
   const norm = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-  const shown = $derived(m.listings.filter((l) => (!kind || l.kind === kind) && (!rarity || l.rarity === rarity) && (!onlyOn || l.enabled) && (!q || norm(listingName(l)).includes(norm(q)))));
+  const shown = $derived(m.listings.filter((l) => (!rarity || l.rarity === rarity) && (!onlyOn || l.enabled) && (!q || norm(listingName(l)).includes(norm(q)))));
+  // Same layout as the shop (T17): one collapsible group per kind, one line per item
+  // (name, source, price); tapping the name opens rarity, stock, on sale, hidden.
+  const groups = $derived(KINDS.map((k) => ({ ...k, items: shown.filter((l) => l.kind === k.id) })).filter((g) => g.items.length));
+  let opened = $state([]);
+  const filtering = $derived(!!q || !!rarity);
+  const isOpen = (id) => filtering || opened.includes(id);
+  const toggle = (id) => (opened = opened.includes(id) ? opened.filter((x) => x !== id) : [...opened, id]);
+  let detail = $state(null);
   const toSet = $derived(m.listings.filter((l) => l.enabled && l.price == null).length);
   const SRC = { book: 'livre p.234', house: 'règle maison', none: 'prix à fixer' };
 
@@ -33,7 +40,7 @@
     const l = customListing(newName, num(newPrice));
     store.commitAll(`${l.custom} ajouté au marché`, (d) => d.campaign.market.listings.push(l));
     newName = ''; newPrice = '';
-    kind = 'custom';
+    if (!opened.includes('custom')) opened = [...opened, 'custom'];
   }
   const remove = (l) => store.commitAll(`${listingName(l)} retiré du marché`, (d) => (d.campaign.market.listings = d.campaign.market.listings.filter((x) => x.id !== l.id)));
   function resetAll() {
@@ -69,32 +76,40 @@
     <select class="input" bind:value={rarity} aria-label="Rareté"><option value="">Toutes raretés</option>{#each m.rarities as r (r.id)}<option value={r.id}>{r.label}</option>{/each}</select>
     <label class="chk"><input type="checkbox" bind:checked={onlyOn} /><span>En vente seulement</span></label>
   </div>
-  <div class="chips kinds">
-    <button class="chip" aria-pressed={!kind} onclick={() => (kind = '')}>Tout</button>
-    {#each KINDS as k (k.id)}<button class="chip" aria-pressed={kind === k.id} onclick={() => (kind = k.id)}>{k.label}</button>{/each}
-  </div>
-
-  <ul class="list rows">
-    {#each shown as l (l.id)}
-      {@const src = priceSource(l)}
-      <li class:off={!l.enabled}>
-        <div class="name">
-          <b>{listingName(l)}</b>
-          <span class="badge {src}">{SRC[src]}{src === 'house' && bookPrice(l) != null ? ` (livre : ${bookPrice(l)})` : ''}</span>
-          {#if l.hidden}<span class="badge">caché</span>{/if}
-          <small>{listingInfo(l)}</small>
-        </div>
-        <div class="ctl">
-          <label><span>Prix</span><input class="input num" type="number" min="0" inputmode="numeric" value={l.price ?? ''} placeholder="?" onchange={(e) => edit(l.id, { price: num(e.currentTarget.value) })} aria-label="Prix de {listingName(l)} en PE" /></label>
-          <label><span>Rareté</span><select class="input" value={l.rarity} onchange={(e) => edit(l.id, { rarity: e.currentTarget.value })} aria-label="Rareté de {listingName(l)}">{#each m.rarities as r (r.id)}<option value={r.id}>{r.label}</option>{/each}</select></label>
-          <label><span>Stock</span><input class="input num" type="number" min="0" inputmode="numeric" value={l.stock ?? ''} placeholder="∞" onchange={(e) => edit(l.id, { stock: num(e.currentTarget.value) })} aria-label="Stock de {listingName(l)}" /></label>
-          <label class="chk"><input type="checkbox" checked={l.enabled} onchange={(e) => edit(l.id, { enabled: e.currentTarget.checked })} /><span>En vente</span></label>
-          <label class="chk"><input type="checkbox" checked={l.hidden} onchange={(e) => edit(l.id, { hidden: e.currentTarget.checked })} /><span>Caché</span></label>
-          {#if l.kind === 'custom'}<button class="icon-btn" aria-label="Retirer {listingName(l)}" onclick={() => remove(l)}><Icon name="trash" /></button>{/if}
-        </div>
-      </li>
-    {/each}
-  </ul>
+  {#each groups as g (g.id)}
+    <div class="grp">
+      <button class="gh" aria-expanded={isOpen(g.id)} onclick={() => toggle(g.id)}>
+        <Icon name="chevron" size={18} /><b>{g.label}</b><span class="gn num">{g.items.length}</span>
+        {#if g.items.some((l) => l.enabled && l.price == null)}<span class="gp">{g.items.filter((l) => l.enabled && l.price == null).length} sans prix</span>{/if}
+      </button>
+      {#if isOpen(g.id)}
+        <ul class="list rows">
+          {#each g.items as l (l.id)}
+            {@const src = priceSource(l)}
+            <li class:off={!l.enabled}>
+              <div class="line">
+                <button class="nm" aria-expanded={detail === l.id} onclick={() => (detail = detail === l.id ? null : l.id)}>
+                  <b>{listingName(l)}</b>
+                  <span class="tags"><span class="badge {src}">{SRC[src]}{src === 'house' && bookPrice(l) != null ? ` (livre : ${bookPrice(l)})` : ''}</span>{#if !l.enabled}<span class="badge">pas en vente</span>{/if}{#if l.hidden}<span class="badge">caché</span>{/if}</span>
+                </button>
+                <label class="pr"><input class="input num" type="number" min="0" inputmode="numeric" value={l.price ?? ''} placeholder="?" onchange={(e) => edit(l.id, { price: num(e.currentTarget.value) })} aria-label="Prix de {listingName(l)} en PE" /><span>PE</span></label>
+              </div>
+              {#if detail === l.id || filtering}
+                <div class="ctl">
+                  <small class="info">{listingInfo(l)}</small>
+                  <label><span>Rareté</span><select class="input" value={l.rarity} onchange={(e) => edit(l.id, { rarity: e.currentTarget.value })} aria-label="Rareté de {listingName(l)}">{#each m.rarities as r (r.id)}<option value={r.id}>{r.label}</option>{/each}</select></label>
+                  <label><span>Stock</span><input class="input num" type="number" min="0" inputmode="numeric" value={l.stock ?? ''} placeholder="∞" onchange={(e) => edit(l.id, { stock: num(e.currentTarget.value) })} aria-label="Stock de {listingName(l)}" /></label>
+                  <label class="chk"><input type="checkbox" checked={l.enabled} onchange={(e) => edit(l.id, { enabled: e.currentTarget.checked })} /><span>En vente</span></label>
+                  <label class="chk"><input type="checkbox" checked={l.hidden} onchange={(e) => edit(l.id, { hidden: e.currentTarget.checked })} /><span>Caché</span></label>
+                  {#if l.kind === 'custom'}<button class="icon-btn" aria-label="Retirer {listingName(l)}" onclick={() => remove(l)}><Icon name="trash" /></button>{/if}
+                </div>
+              {/if}
+            </li>
+          {/each}
+        </ul>
+      {/if}
+    </div>
+  {/each}
   {#if !shown.length}<p class="muted">Aucun objet ne correspond.</p>{/if}
 
   <form class="add" onsubmit={add}>
@@ -135,18 +150,30 @@
   .sw input, .chk input { width: 20px; height: 20px; accent-color: var(--amber); }
   .filters { display: grid; grid-template-columns: 1fr; gap: 8px; }
   @media (min-width: 640px) { .filters { grid-template-columns: 2fr 1fr auto; align-items: center; } }
-  .kinds { margin: 8px 0 4px; }
   .chk { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; cursor: pointer; font-size: .9rem; }
-  .rows li { display: grid; gap: 6px; padding: 10px 0; }
-  .rows li.off .name { opacity: .55; }
-  @media (min-width: 900px) { .rows li { grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 16px; } }
-  .name { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; min-width: 0; }
-  .name b { font-family: var(--display); font-weight: 600; }
-  .name small { flex-basis: 100%; font-size: .8rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; }
+  .grp { border-top: 1px solid var(--line); }
+  .grp:first-of-type { margin-top: 10px; }
+  .gh { width: 100%; display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 2px; background: none; border: 0; text-align: left; }
+  .gh > :global(svg) { flex: none; color: var(--muted); transition: rotate .15s; }
+  .gh[aria-expanded='true'] > :global(svg) { rotate: 90deg; }
+  .gh b { font-family: var(--display); font-weight: 600; font-size: 1.05rem; }
+  .gn { font-size: .78rem; color: var(--muted); padding: 1px 7px; border: 1px solid var(--line); border-radius: 10px; }
+  .gp { margin-left: auto; font-size: .85rem; color: var(--muted); }
+  .rows { margin-bottom: 8px; }
+  @media (min-width: 1100px) { .rows { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 24px; } .rows > li:nth-child(2) { border-top: 0; } }
+  .rows li { display: grid; gap: 4px; padding: 2px 0; }
+  .rows li.off .nm b { color: var(--muted); }
+  .line { display: flex; align-items: center; gap: 10px; min-height: 52px; }
+  .nm { flex: 1; min-width: 0; display: grid; gap: 2px; text-align: left; background: none; border: 0; padding: 4px 0; min-height: 44px; }
+  .nm b { font-family: var(--display); font-weight: 600; }
+  .tags { display: flex; flex-wrap: wrap; gap: 4px; }
+  .pr { display: inline-flex; align-items: center; gap: 4px; font-size: .8rem; color: var(--muted); }
+  .pr .input { width: 4.5em; min-height: 44px; padding: 6px 8px; text-align: center; }
+  .info { flex-basis: 100%; font-size: .8rem; color: var(--muted); }
   .badge { font-size: .7rem; font-weight: 600; padding: 1px 6px; border-radius: 3px; background: var(--hull-2); color: var(--muted); }
   .badge.house { color: var(--amber); }
   .badge.none { color: var(--text); border: 1px dashed var(--muted); }
-  .ctl { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: flex-end; }
+  .ctl { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: flex-end; padding: 0 0 10px; }
   .ctl label:not(.chk) { display: grid; gap: 2px; }
   .ctl label span { font-size: .72rem; color: var(--muted); }
   .ctl .input { min-height: 44px; padding: 6px 8px; }

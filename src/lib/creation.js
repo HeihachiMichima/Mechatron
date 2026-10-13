@@ -34,6 +34,27 @@ export const SLOTS = [
 const SERIAL_LIKE = /^[A-Z]{2,4}-\d{1,4}$/;
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
+// Random nickname (« Au hasard »): our own lists, junk-yard words and compound
+// names in the spirit of the book's (Rani, Pontiac…) — no names from other works.
+const NICKS = ['Boulon', 'Rivet', 'Piston', 'Diode', 'Vérin', 'Ressort', 'Turbine', 'Bobine', 'Fusible', 'Manivelle',
+  'Calibre', 'Cardan', 'Courroie', 'Grappin', 'Durite', 'Écrou', 'Rouage', 'Soupape', 'Bielle', 'Culasse',
+  'Clou', 'Virgule', 'Gamelle', 'Tournevis', 'Ampoule', 'Étincelle', 'Volt', 'Ohm', 'Joule', 'Néon',
+  'Cuivre', 'Zinc', 'Chrome', 'Cobalt', 'Nickel', 'Titane', 'Mercure', 'Graphite', 'Silice', 'Quartz',
+  'Pixel', 'Octet', 'Bémol', 'Sonar', 'Radar', 'Laser', 'Gyro', 'Pilote', 'Sentinelle', 'Patrouille',
+  'Noyau', 'Balise', 'Antenne', 'Relais', 'Capteur', 'Signal', 'Écho', 'Bip', 'Tic-Tac', 'Zigzag'];
+const VERBS = ['Brise', 'Casse', 'Tord', 'Coupe', 'Serre', 'Ronge', 'Tire', 'Perce', 'Fond', 'Racle'];
+const THINGS = ['Fer', 'Tôle', 'Boulon', 'Câble', 'Tuyau', 'Vis', 'Rouille', 'Béton', 'Acier', 'Plomb'];
+
+/** A nickname no PC uses yet (one in four is a compound like « Casse-Tôle »). */
+export function randomNick(chars = []) {
+  const taken = new Set(chars.filter((c) => c.kind !== 'npc').map((c) => (c.name || '').split(' ')[0].toLowerCase()));
+  for (let i = 0; i < 40; i++) {
+    const n = pick([0, 1, 2, 3]) === 0 ? `${pick(VERBS)}-${pick(THINGS)}` : pick(NICKS);
+    if (!taken.has(n.toLowerCase())) return n;
+  }
+  return `${pick(NICKS)}-${pick(THINGS)}`;
+}
+
 export const modelById = (id) => D.models.find((m) => m.id === id) || null;
 export const plural = (n, w, ws = `${w}s`) => `${n} ${n > 1 ? ws : w}`;
 

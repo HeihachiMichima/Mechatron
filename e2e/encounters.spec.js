@@ -15,9 +15,7 @@ async function gmDemo(browser, w, theme) {
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
   await page.goto(url);
   await page.getByRole('button', { name: 'Ouvrir la démo' }).click();
-  await page.getByRole('button', { name: 'Menu de la campagne' }).click();
   await page.getByRole('switch', { name: /Mode MJ/ }).click();
-  await page.keyboard.press('Escape');
   await nav(page, 'MJ').click();
   return { ctx, page, errors };
 }

@@ -67,7 +67,7 @@
   $effect(() => { checkHash(); window.addEventListener('hashchange', checkHash); return () => window.removeEventListener('hashchange', checkHash); });
 </script>
 
-{#if !store.started}
+{#if !store.started || store.ui.home}
 <WelcomeView />
 {:else}
 <div class="app">

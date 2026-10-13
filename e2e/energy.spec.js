@@ -72,9 +72,7 @@ test('transfers, the GM rules and the fiche without « Nouveau jour »', async (
   d = await save(page);
   expect(d.chars[0].equipment.map((e) => e.name)).not.toContain('E-pack');
   // GM rules: ration override, then reset.
-  await page.getByRole('button', { name: 'Menu de la campagne' }).click();
   await page.getByRole('switch', { name: /Mode MJ/ }).click();
-  await page.keyboard.press('Escape');
   await nav(page, 'Énergie').click();
   await page.getByText("Règles de l'énergie").click();
   await page.getByRole('button', { name: 'Augmenter Rationnement' }).click();

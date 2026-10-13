@@ -17,9 +17,7 @@ for (const { w, h, theme } of [{ w: 390, h: 844, theme: 'dark' }, { w: 1280, h: 
     await page.getByRole('button', { name: 'Ouvrir la démo' }).click();
 
     // GM: the « binôme » question is worth 2 XP this campaign.
-    await page.getByRole('button', { name: 'Menu de la campagne' }).click();
     await page.getByRole('switch', { name: /Mode MJ/ }).click();
-    await page.keyboard.press('Escape');
     await nav(page, 'MJ').click();
     await page.getByRole('button', { name: 'Augmenter PX de la question 3' }).click();
     await page.screenshot({ path: `e2e/screenshots/xp-rules-${w}-${theme}.png` });

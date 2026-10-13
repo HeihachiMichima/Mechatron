@@ -111,9 +111,7 @@ test('a second robot cannot take the first one\'s parts or modules; the GM opens
   await page.goto(url);
   await page.getByRole('button', { name: 'Ouvrir la démo' }).click();
   // The demo is already in play: reopen the creation in GM mode.
-  await page.getByRole('button', { name: 'Menu de la campagne' }).click();
   await page.getByRole('switch', { name: /Mode MJ/ }).click();
-  await page.keyboard.press('Escape');
   await nav(page, 'MJ').click();
   await page.getByRole('button', { name: 'Rouvrir la création' }).click();
   await page.getByRole('button', { name: /Toucher encore/ }).click();
@@ -122,9 +120,7 @@ test('a second robot cannot take the first one\'s parts or modules; the GM opens
   await expect(page.getByText("Le marché noir ouvre une fois l'équipe créée.")).toBeVisible();
 
   // Outside GM mode, a part another PC has is unavailable; Scrap parts stay free.
-  await page.getByRole('button', { name: 'Menu de la campagne' }).click();
   await page.getByRole('switch', { name: /Mode MJ/ }).click();
-  await page.keyboard.press('Escape');
   await nav(page, 'Équipe').click();
   await page.getByRole('button', { name: 'Nouveau robot joueur' }).click();
   await page.getByRole('button', { name: /^Robot de sécurité/ }).click();
@@ -139,9 +135,7 @@ test('a second robot cannot take the first one\'s parts or modules; the GM opens
   await expect(page.locator('.plate')).toBeVisible();
 
   // GM: « L'équipe est prête » opens the market.
-  await page.getByRole('button', { name: 'Menu de la campagne' }).click();
   await page.getByRole('switch', { name: /Mode MJ/ }).click();
-  await page.keyboard.press('Escape');
   await nav(page, 'MJ').click();
   await page.screenshot({ path: 'e2e/screenshots/gate-390.png', fullPage: true });
   await page.getByRole('button', { name: "L'équipe est prête" }).click();

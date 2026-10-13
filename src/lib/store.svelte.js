@@ -226,6 +226,7 @@ export function blankCampaign(name = '') {
   const now = new Date().toISOString();
   return {
     name, createdAt: now, updatedAt: now,
+    demo: false,                 // « Essayer la démo »: offers « Quitter la démo »
     phase: 'creation',
     dev: defaultDev(),
     rules: {},
@@ -252,6 +253,7 @@ export function normalizeCampaign(raw) {
     name: str(raw.name),
     createdAt: str(raw.createdAt) || b.createdAt,
     updatedAt: str(raw.updatedAt) || b.updatedAt,
+    demo: raw.demo === true,
     phase: raw.phase === 'play' ? 'play' : 'creation',
     dev,
     rules: isObj(raw.rules) ? copy(raw.rules) : {},
@@ -361,9 +363,10 @@ class Store {
   // is open inside Combat (any GM mode), until « Retour au combat ». None is saved.
   // wizard: the creation wizard in progress { id, step, draft } (T06, lib/creation.js);
   // session: the end-of-session wizard { step, draft, done } (T11, lib/xp.js).
+  // home: the home screen is shown over a running campaign (logo, T17).
   // mapPick: 'blast' while the turn waits for a square on the map (T14), blastCell: that
   // square; owTarget: the robot an overwatch shot aims at, owResume: the turn it interrupted (T14).
-  ui = $state({ ...loadUi(), npc: null, pc: null, peek: null, wizard: null, session: null, sheet: null, turn: null, turnActor: null, mapPick: null, blastCell: null, owTarget: null, owResume: null });
+  ui = $state({ ...loadUi(), npc: null, pc: null, peek: null, wizard: null, session: null, sheet: null, home: false, turn: null, turnActor: null, mapPick: null, blastCell: null, owTarget: null, owResume: null });
   toast = $state(null);
   incoming = $state(null);
   #history = [];
@@ -609,6 +612,7 @@ class Store {
     this.#push(true);
     this.data = normalizeAll(raw);
     this.started = true;
+    this.ui.home = false;
     if (label) this.notify(label, true);
     return true;
   }
@@ -624,6 +628,7 @@ class Store {
     this.#typingKey = null;
     this.data = normalizeAll(raw);
     this.started = true;
+    this.ui.home = false;
     this.#pending = JSON.stringify(this.data);
     this.flush();
     try { navigator.storage?.persist?.().catch(() => {}); } catch {}
@@ -739,6 +744,26 @@ class Store {
       }
     });
     this.go('combat');
+  }
+
+  /** The home screen (logo): over the running campaign, which « Reprendre » goes back to. */
+  goHome() { this.close(); this.ui.home = true; if (typeof window !== 'undefined') window.scrollTo?.({ top: 0 }); }
+  leaveHome() { this.ui.home = false; }
+  /**
+   * « Quitter la démo »: the demo goes to the automatic backups and the app is
+   * back on the home screen with no campaign (nothing saved until one starts).
+   */
+  quitDemo() {
+    this.backup('Démo quittée');
+    this.#history = [];
+    this.#typingKey = null;
+    this.#pending = null;
+    clearTimeout(this.#saveTimer);
+    try { localStorage.removeItem(KEY); } catch {}
+    this.ui = { ...this.ui, sheet: null, home: false, wizard: null, session: null, turn: null, turnActor: null, npc: null, pc: null, peek: null };
+    this.data = normalizeAll({});
+    this.started = false;
+    this.notify('Démo quittée (gardée dans les sauvegardes automatiques)');
   }
 
   /** Theme button: auto → dark → light. */

@@ -52,8 +52,8 @@ const screens = async (page) => {
   await grab('welcome');
   await page.getByRole('button', { name: 'Ouvrir la démo' }).click();
   await page.evaluate(() => window.__mechatron.setRng(5)); // reproducible initiative and dice
-  await page.getByRole('button', { name: 'Menu de la campagne' }).click();
   await page.getByRole('switch', { name: /Mode MJ/ }).click();
+  await page.getByRole('button', { name: 'Menu de la campagne' }).click();
   await grab('menu');
   await page.keyboard.press('Escape');
   const sheet = async (name, open) => { await open(); await page.waitForTimeout(250); await grab(name); await page.keyboard.press('Escape'); await page.waitForTimeout(250); };
