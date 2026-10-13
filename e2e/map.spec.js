@@ -26,9 +26,7 @@ async function open(browser, w, h, theme) {
   return { ctx, page, errors };
 }
 async function gmOn(page) {
-  await page.getByRole('button', { name: 'Menu de la campagne' }).click();
   await page.getByRole('switch', { name: /Mode MJ/ }).click();
-  await page.keyboard.press('Escape');
 }
 
 /** A 30 × 20 map with walls, crates and doors, and a fight of 10 combatants on it. */

@@ -13,7 +13,7 @@
   import { ATTRS, findWeapon, findEquipment } from '../../lib/rules.js';
   import { getDev } from '../../lib/settings.js';
   import { energyRules } from '../../lib/clock.js';
-  import { STEPS, SLOTS, stepErrors, modelById, draftName, draftAttrs, newSerial, gearItems, closeWizard, finishWizard } from '../../lib/creation.js';
+  import { STEPS, SLOTS, stepErrors, modelById, draftName, draftAttrs, newSerial, randomNick, gearItems, closeWizard, finishWizard } from '../../lib/creation.js';
 
   const w = $derived(store.ui.wizard);
   const d = $derived(w.draft);
@@ -78,7 +78,13 @@
       </div>
 
     {:else if step.id === 'nom'}
-      <label class="field"><span>Surnom</span><input class="input" bind:value={d.nick} maxlength="40" autocomplete="off" placeholder="ex. Rani" /></label>
+      <div class="field">
+        <span>Surnom</span>
+        <div class="serial">
+          <input class="input" bind:value={d.nick} maxlength="40" autocomplete="off" placeholder="ex. Rani" aria-label="Surnom" />
+          <button class="btn" onclick={() => (d.nick = randomNick(store.chars))}><Icon name="dice" size={18} />Au hasard</button>
+        </div>
+      </div>
       <div class="field">
         <span>Numéro de série</span>
         <div class="serial">

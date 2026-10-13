@@ -27,17 +27,23 @@ Le logo (`src/assets/logo.png`, versionné dans le dépôt) est intégré au fic
 
 **Premier lancement.** Un écran d'accueil propose *Nouvelle campagne* (donnez-lui un nom, l'équipe est vide : créez ensuite vos robots), *Importer une campagne* (un fichier `.mechatron.json`, ou un robot `.json` qui ouvre une nouvelle campagne) ou *Essayer la démo* (quatre robots joueurs et trois PNJ). Une seule campagne à la fois : pour en changer, exportez-la, puis créez-en une autre ou importez-en une.
 
+**Accueil.** Le logo, en haut à gauche, ramène à l'accueil depuis n'importe quel écran (aussi
+*Accueil* dans le menu ☰) : *Reprendre la campagne*, ou en ouvrir une autre (nouvelle, importée,
+démo), ce qui remplace la campagne en cours après l'avoir copiée dans les sauvegardes automatiques.
+Pendant la démo, *Quitter la démo* (à l'accueil et dans le menu ☰) revient à un accueil vide ; la
+démo reste dans les sauvegardes automatiques.
+
 **Une table, un appareil.** Le compagnon est fait pour un appareil posé sur la table (tablette
 partagée ou ordinateur du MJ). Pas de comptes ni de synchronisation : un joueur qui veut son robot
 sur son téléphone ouvre le *lien de partage* de sa fiche, qui lui en donne une **copie**.
 
-**Mode MJ.** Un interrupteur dans le menu ☰, propre à l'appareil (il n'est pas dans la campagne
+**Mode MJ.** L'interrupteur « MJ » de la barre du haut, à côté du menu ☰, propre à l'appareil (il n'est pas dans la campagne
 ni dans les exports). Il affiche l'espace MJ et les outils du meneur ; il cache des outils, pas des
 informations : le combat est le même dans les deux modes. Hors mode MJ, les PNJ n'apparaissent pas
 dans l'Équipe. En combat, « Ouvrir la fiche » montre la fiche complète d'un PNJ sur place, quel que
 soit le mode, avec « Retour au combat » pour revenir. Pas de code.
 
-**Menu de la campagne** (icône ☰ en haut) : renommer la campagne, *Exporter la campagne*, *Importer* (une campagne remplace l'actuelle après confirmation, avec la proposition de l'exporter d'abord ; un robot s'ajoute à l'équipe), *Nouvelle campagne*, *Restaurer une sauvegarde automatique*, le *Mode MJ* et le thème.
+**Menu de la campagne** (icône ☰ en haut) : renommer la campagne, *Exporter la campagne*, *Importer* (une campagne remplace l'actuelle après confirmation, avec la proposition de l'exporter d'abord ; un robot s'ajoute à l'équipe), *Nouvelle campagne*, *Restaurer une sauvegarde automatique*, *Quitter la démo* (pendant la démo), *Accueil* et le thème.
 
 ## L'appli, espace par espace
 
@@ -73,8 +79,8 @@ et droite passent d'un onglet à l'autre.
 ## Pour les joueurs
 
 **Création de l'équipe.** « Nouveau robot » (le « + » des onglets, *Gérer*, ou l'équipe vide) ouvre
-un assistant qui suit l'ordre du livre, un écran par étape : modèle, nom (le numéro de série peut
-être tiré au hasard), châssis (attributs, armure et emplacements calculés en direct), programmes
+un assistant qui suit l'ordre du livre, un écran par étape : modèle, nom (*Au hasard* propose un
+surnom de robot, *Générer* un numéro de série), châssis (attributs, armure et emplacements calculés en direct), programmes
 (10 points, 3 au plus par programme, le spécialiste au moins à 1 : « Suivant » reste bloqué tant que
 la répartition n'est pas juste), fonction secondaire (une des trois du modèle), modules (autant que
 d'emplacements), équipement de départ du modèle (avec ses choix) et énergie de départ au niveau de
@@ -125,10 +131,12 @@ l'horloge de l'espace Énergie qui fait passer les jours.
 
 **Acheter et vendre (espace Marché).** Chaque jour de jeu, l'offre est tirée selon la rareté
 (commun : toujours ; peu commun : 1 chance sur 2 ; rare : 1 sur 6 ; unique : seulement si le MJ le
-met en vente). Choisissez l'acheteur (le robot de la fiche par défaut, avec ses PE), puis
-*Acheter* : le bouton reste grisé avec la raison s'il manque des PE, s'il n'y a plus d'emplacement
-libre pour un module ou si le robot a déjà ce module. Pour une arme, la carte rappelle les armes du
-même type que le robot possède. Une pièce de châssis arrive dans l'équipement, à monter ensuite. Un
+met en vente). Choisissez l'acheteur (le robot de la fiche par défaut, avec ses PE). L'offre est
+une liste compacte, rangée par catégorie repliable (modules, armes, pièces, équipement), du moins
+cher au plus cher : une ligne par objet avec son prix et *Acheter*. Le bouton reste grisé, la raison
+écrite sous le nom, s'il manque des PE, s'il n'y a plus d'emplacement libre pour un module ou si le
+robot a déjà ce module. Touchez le nom pour le détail : effet, et pour une arme, les armes du même
+type que le robot possède. Une pièce de châssis arrive dans l'équipement, à monter ensuite. Un
 achat retire les PE, ajoute l'objet, baisse le stock et s'inscrit au journal ; « Annuler » défait
 tout. *Vendre* reprend un module, une arme ou un équipement à la moitié du prix (au moins 1 PE,
 règle maison), sans dépasser le maximum de PE, et remet l'objet en stock. En mode MJ : *Nouveau
@@ -239,9 +247,9 @@ d'équipement font 1 au premier jet ; recharge en manœuvre avec un E-pack de r�
 tir). En manœuvre, un E-pack ou une batterie de l'équipement recharge le robot de D6 PE ; en
 action, un robot peut transférer des PE à un allié par câble.
 
-**Tout remettre à neuf.** Un bouton (préparation du combat, bas de l'écran de combat) remet tous
-les robots, PJ et PNJ, en parfait état ; *Remettre l'équipe à neuf* (liste de l'équipe) et
-*Remettre les PNJ à neuf* (espace MJ) ne touchent que leur groupe. Parfait état : aucun dégât, armure et modules
+**Reset.** Le bouton *Reset* (préparation du combat, bas de l'écran de combat) remet tous les
+robots, PJ et PNJ, à neuf ; *Reset de l'équipe* (liste de l'équipe) et *Reset des PNJ* (espace MJ)
+ne touchent que leur groupe. Parfait état : aucun dégât, armure et modules
 réparés, pas de couverture, PE au maximum, armes à énergie rechargées, bonus d'équipement des
 armes du livre rétabli. En combat, il efface aussi les états temporaires (immobilisé, à terre,
 action perdue) mais garde l'initiative. Deuxième appui pour confirmer, et « Annuler » juste après.
@@ -260,7 +268,7 @@ accompli »…), coûts, et *Valeurs du livre*.
 
 ## Pour le MJ
 
-Tout ce qui suit est dans l'espace **MJ**, visible quand le *Mode MJ* est activé (menu ☰). Il
+Tout ce qui suit est dans l'espace **MJ**, visible quand l'interrupteur *MJ* de la barre du haut est activé. Il
 regroupe la création de l'équipe (*L'équipe est prête*), les PNJ et leurs fiches, le marché noir,
 les règles d'expérience, les cartes et les rencontres. Les valeurs que le livre ne donne pas sont
 des *règles maison*, marquées d'un badge et modifiables pour la campagne.

@@ -14,10 +14,8 @@ function watch(page) {
 const noHScroll = (page) => page.evaluate(() => document.documentElement.scrollWidth > innerWidth).then((v) => expect(v).toBe(false));
 const nav = (page, label) => page.locator('#app-nav button', { hasText: label });
 async function setGm(page, on) {
-  await page.getByRole('button', { name: 'Menu de la campagne' }).click();
-  const sw = page.getByRole('switch', { name: /Mode MJ/ });
+  const sw = page.getByRole('switch', { name: /Mode MJ/ }); // in the top bar (T17)
   if ((await sw.getAttribute('aria-checked')) !== String(on)) await sw.click();
-  await page.keyboard.press('Escape');
 }
 
 for (const { w, h } of [{ w: 390, h: 844 }, { w: 1280, h: 900 }]) {
@@ -127,13 +125,14 @@ test('every v2.3.6 feature is within 2 taps of Équipe (GM mode on)', async ({ b
     ['PJ ou PNJ (mode MJ)', [tab('Identité')], () => page.getByRole('button', { name: 'MJ (PNJ)' })],
     ['Choisir une pièce de châssis', [tab('Identité'), () => page.locator('.part').first().click()], () => dialog()],
     ['Exports du robot (JSON, lien, texte, image, impression)', [btn('Exporter')], () => dialog()],
-    ["Gérer l'équipe : dupliquer, supprimer, nouveau, remise à neuf", [btn("Gérer l'équipe", true)], () => dialog().getByRole('button', { name: /Remettre l'équipe à neuf/ })],
+    ["Gérer l'équipe : dupliquer, supprimer, nouveau, reset", [btn("Gérer l'équipe", true)], () => dialog().getByRole('button', { name: /Reset de l'équipe/ })],
     ['Combat : préparation, initiative, tours', [go('Combat')], () => page.getByRole('button', { name: 'Initiative', exact: true })],
     ['Niveaux de développement, connexion et horloge', [go('Énergie')], () => page.getByRole('heading', { name: 'Rationnement' })],
     ['Journal de campagne', [go('Séance')], () => page.getByRole('heading', { name: 'Journal de campagne' })],
     // Last of the Séance items: the wizard stays open while you look elsewhere.
     ['Fin de séance : PX, usure des niveaux, relations', [go('Séance'), btn('Terminer la séance')], () => page.getByRole('button', { name: /Niveaux/ })],
-    ['Campagne : exporter, importer, nouvelle, sauvegardes, thème, mode MJ', [btn('Menu de la campagne')], () => page.getByRole('switch', { name: /Mode MJ/ })],
+    ['Campagne : exporter, importer, nouvelle, sauvegardes, thème', [btn('Menu de la campagne')], () => page.getByRole('button', { name: /Exporter la campagne/ })],
+    ['Mode MJ (barre du haut)', [], () => page.getByRole('switch', { name: /Mode MJ/ })],
     ['PNJ du MJ', [go('MJ')], () => page.getByRole('heading', { name: /PNJ du MJ/ })],
     ['Nouveau PNJ (modèles du livre)', [go('MJ'), btn('Nouveau PNJ')], () => dialog()],
     ['Dupliquer ou supprimer un PNJ', [go('MJ'), () => page.getByRole('button', { name: /^Dupliquer / }).first().click()], () => page.getByText(/\(copie\)/).first()],

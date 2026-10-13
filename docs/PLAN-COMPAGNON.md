@@ -49,7 +49,7 @@ Repo: `HeihachiMichima/Mechatron` (local: `G:\MYZ\mechatron-sheet`) · Baseline:
 
 ---
 
-## 1. Current state (verified against the code; as of v3.13.0, after T16 — the plan is complete)
+## 1. Current state (verified against the code; as of v3.14.0, after T17 (owner's feedback))
 
 - **Stack:** Svelte 5 (runes), Vite 8, `vite-plugin-singlefile` → a single `dist/index.html` (about 815 kB, budget 900 kB) with scripts, CSS, fonts and logo inlined. French UI, mobile-first, side rail at ≥ 960 px.
 - **Layout and deploy (T00, v2.3.8):** the app lives at the repo root (`index.html` = Vite entry, `src/`, `package.json`). `.github/workflows/deploy.yml` builds and deploys `dist/` to GitHub Pages on each push to `main`; `dist/` is git-ignored. Paths below are relative to the root (`src/...`); before T00 they were under `svelte/`.
@@ -695,6 +695,7 @@ campaign.xp.log = [{ at, awards: [{ cid, total, items }] }]
 - 2026-10-11: T05 merged; NPC fiches open in place from Combat in both GM modes (option chosen over hiding the buttons or switching GM mode on).
 - 2026-10-11 (T06, confirmed by the owner): starting gear = the model's whole GEAR box with its « or » choices (p.31-46 and the example robot p.29), although p.25 says « one piece of gear »; modules are unique among PCs like chassis parts (p.22); the serial format (3 letters, 3 digits) is generated but not enforced, since junk robots name themselves (p.16) and the demo's serials are shorter.
 - 2026-10-11: T12–T16 delivered as stacked PRs #16–#20 (owner's choice), to merge in order.
+- 2026-10-13 (feedback after T16, ticket T17): the logo opens a home screen (the welcome screen with « Reprendre la campagne »); « Quitter la démo » goes back to an empty home (demo kept in the backups); « MJ » switch in the top bar; « Au hasard » nickname (our own word lists); « Tout remettre à neuf » → « Reset »; black market as a compact list in collapsible categories; welcome texts « Créez les robots de l'équipe et c'est parti. » and « Pas de sauvegarde serveur : exportez la campagne pour la stocker. ». Menus and options: an inventory and regrouping proposal first, coded after the owner agrees.
 - **Still open:** none blocking. If a ticket raises a question, the agent asks before choosing.
 
 ---

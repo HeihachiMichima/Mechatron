@@ -247,6 +247,16 @@ undo step. `store.open(type, props)` / `store.close()` drive bottom sheets; **pr
   carries `map`) saves its map once (reused when relaunched). Files: `encounterFile(encs, maps)` /
   `readEncounterFile` (fresh ids, map links kept). UI: `views/gm/EncountersPanel.svelte` (launch asks a
   second tap over a running fight) and `EncounterEditor.svelte`.
+- **Home screen (T17).** `WelcomeView` shows while `!store.started` **or** `store.ui.home` (not saved):
+  the logo (TopBar, button « Accueil ») and the menu's *Accueil* call `store.goHome()`; over a running
+  campaign it adds « Reprendre la campagne » (`leaveHome()`), and its new / import / demo go through
+  `replaceAll` (backup + undo) instead of `start`. `campaign.demo` (normalised, set by « Ouvrir la
+  démo ») offers « Quitter la démo » (home + menu): `store.quitDemo()` backs up, removes the save
+  key, empties the store and sets `started = false`. The « Mode MJ » switch is in the TopBar (no
+  longer in the menu). `randomNick(chars)` (creation.js, our own word lists, through `rng.pick`)
+  feeds the wizard's « Au hasard ». `ResetAllButton` reads « Reset » / « Reset de l'équipe » /
+  « Reset des PNJ ». Marché = groups by kind (`KINDS` order, first open), one `.item` line each
+  (name + rarity or blocking reason, price, Acheter), `button.nm` toggles the details.
 - **`store.started`** is false while no campaign exists (clean profile, or a save of another
   version): App shows `WelcomeView` and nothing is saved. `store.start(raw, label)` opens the first
   campaign (new, demo, file, backup) with no undo back to the welcome screen, saves at once and
@@ -501,6 +511,10 @@ Follow `docs/PLAN-COMPAGNON.md` §0: one ticket at a time, in order.
 - v3.13.0 (2026-10-11, plan ticket T16): finish — home-screen install (`pwa/` manifest + icons,
   linked over http(s) only), 44 px targets and AA contrast everywhere (a11y e2e), size budget test,
   « Exportez la campagne » reminder at the end of a session, README reorganised for players and GM.
+- v3.14.0 (2026-10-13, ticket T17, owner's feedback): home screen behind the logo (« Reprendre »,
+  other campaigns replace the running one), « Quitter la démo », « MJ » switch in the top bar,
+  « Au hasard » robot nickname, « Reset » label, black market as a compact grouped list, export
+  button icon-only on phones, welcome texts.
 - v3.2.1 (2026-10-11): from Combat, « Ouvrir la fiche » opens an NPC's full fiche in place, in both
   GM modes, with « Retour au combat » (`ui.peek`): combat is now strictly the same in both modes.
 

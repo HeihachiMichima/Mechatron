@@ -17,12 +17,11 @@ for (const { w, h, theme } of [{ w: 390, h: 844, theme: 'dark' }, { w: 1280, h: 
     await page.getByRole('button', { name: 'Ouvrir la démo' }).click();
     await nav(page, 'Marché').click();
     await expect(page.getByRole('heading', { name: /Aujourd'hui, jour/ })).toBeVisible();
-    await expect(page.locator('li.card', { has: page.locator('.cn', { hasText: /^Pistolet laser$/ }) })).toContainText('2 PE'); // p.234
+    await page.getByRole('button', { name: /^Armes/ }).click().catch(() => {}); // open the group if closed
+    await expect(page.locator('li.item', { has: page.locator('.cn', { hasText: /^Pistolet laser$/ }) })).toContainText('2 PE'); // p.234
     await page.screenshot({ path: `e2e/screenshots/market-catalog-${w}-${theme}.png` });
 
-    await page.getByRole('button', { name: 'Menu de la campagne' }).click();
     await page.getByRole('switch', { name: /Mode MJ/ }).click();
-    await page.keyboard.press('Escape');
     await nav(page, 'MJ').click();
     await expect(page.getByRole('heading', { name: 'Marché noir' })).toBeVisible();
     await page.getByRole('searchbox', { name: 'Rechercher un objet' }).fill('jetpack');
@@ -68,9 +67,13 @@ test('T10: buy, blocked purchases, undo, sell, and the GM forcing an item in', a
   await page.getByRole('button', { name: 'Ouvrir la démo' }).click();
   await nav(page, 'Marché').click();
   await expect(page.getByRole('radio', { name: /Brise-Fer/ })).toHaveAttribute('aria-checked', 'true');
-  const card = (name) => page.locator('li.card', { has: page.locator('.cn', { hasText: new RegExp(`^${name}$`) }) });
+  const card = (name) => page.locator('li.item', { has: page.locator('.cn', { hasText: new RegExp(`^${name}$`) }) });
+  const details = async (name) => { const b = card(name).locator('button.nm'); if ((await b.getAttribute('aria-expanded')) !== 'true') await b.click(); };
+  const group = async (label) => { const g = page.getByRole('button', { name: new RegExp(`^${label}`) }); if ((await g.getAttribute('aria-expanded')) !== 'true') await g.click(); };
+  await group('Armes');
 
   // A common weapon is always on sale: Brise-Fer (5 EP) buys a laser pistol for 2 EP.
+  await details('Pistolet laser');
   await expect(card('Pistolet laser')).toContainText('Brise-Fer BTL-07 a : Pistolet laser');
   await card('Pistolet laser').getByRole('button', { name: 'Acheter' }).click();
   let d = await save(page);
@@ -87,11 +90,11 @@ test('T10: buy, blocked purchases, undo, sell, and the GM forcing an item in', a
   await expect(card('Fusil à plasma')).toContainText('Pas assez de PE : il en faut 7, Brise-Fer BTL-07 en a 5.');
 
   // GM mode: force a rare module in. Brise-Fer has no free slot; Clou (6 slots) buys it.
-  await page.getByRole('button', { name: 'Menu de la campagne' }).click();
   await page.getByRole('switch', { name: /Mode MJ/ }).click();
-  await page.keyboard.press('Escape');
   await nav(page, 'Marché').click();
   await page.getByLabel('Tout le catalogue (MJ)').check();
+  await group('Modules');
+  await details('Jetpack');
   await card('Jetpack').getByLabel('Disponibilité de Jetpack').selectOption('in');
   await expect(card('Jetpack')).toContainText('Aucun emplacement libre (3 sur 3 pris).');
   await page.getByRole('radio', { name: /Clou/ }).click();
