@@ -26,7 +26,7 @@ ordinateur, une colonne à gauche) :
 | Marché | Le marché noir : ce qui est en vente aujourd'hui, acheter et vendre (fermé pendant la création ou si le MJ le ferme) |
 | Combat | Préparation, initiative et tours guidés, avec une carte tactique facultative |
 | Séance | *Terminer la séance* (PX de toute l'équipe, usure des niveaux, relations, résumé), PX à dépenser, historique, journal |
-| MJ | En mode MJ seulement : les PNJ et leurs fiches, la création de l'équipe, le marché noir, les règles d'expérience, les cartes |
+| MJ | En mode MJ seulement : les PNJ et leurs fiches, la création de l'équipe, le marché noir, les règles d'expérience, les cartes, les rencontres |
 
 Les quatre parties d'une fiche :
 
@@ -172,6 +172,19 @@ pinceau ou rectangle, *Annuler*, taille, nom, dupliquer, supprimer. Les *Règles
 d'une case, limites de Proche et de Courte, cases par manœuvre) se changent pour la campagne. Les
 cartes sont enregistrées à part : *Annuler* (en bas de l'écran) ne défait pas un dessin, mais défait
 le déplacement d'un pion. Elles partent avec *Exporter la campagne*.
+
+**Rencontres (mode MJ).** *MJ → Rencontres* prépare des combats à lancer en un geste. Une
+rencontre a un nom, des mots-clés, une carte (facultative), des PNJ tirés des modèles du livre
+(nombre, adversaires ou alliés), la surprise (+2 à l'initiative pour l'équipe ou pour les
+adversaires), la réserve du MJ (vide = ration × nombre de PJ) et des notes. *Lancer* remplace le
+combat en cours (deuxième appui pour confirmer) : toute l'équipe, les PNJ (les copies d'un même
+modèle partagent une initiative), la surprise, la réserve, la carte, chacun posé sur sa zone de
+départ ; on arrive dans *Combat → Préparation*, *Initiative* est à un appui. Recherche, mots-clés,
+dupliquer, supprimer, exporter et importer (les cartes utilisées partent avec). Quatre *mises en
+place rapides* originales sont prêtes : *Couloir de service* (embuscade), *Quai* (caisses, eau),
+*Salle du réacteur* (bassins, cœur brûlant) et *Entrepôt* (rayonnages) ; *Copier pour la modifier*
+les met dans la bibliothèque. Comme les cartes, la bibliothèque s'enregistre à part (*Annuler* ne
+la défait pas), mais lancer une rencontre s'annule.
 
 **Modules en combat.** Chaque module intervient là où le livre le prévoit, et chaque activation
 lance ses dés de surchauffe (un par PE ; Économiseur d'énergie : un dé de plus, un 6 retire 1 PE) :
