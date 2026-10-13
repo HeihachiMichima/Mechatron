@@ -5,7 +5,7 @@
   // enhancing effects ride along a roll or maneuver, reactive effects are
   // used when hit, other modules are an action. Every activation rolls the
   // overheating dice (lib/energy.js).
-  import { tick } from 'svelte';
+  import { tick, untrack } from 'svelte';
   import Avatar from '../../components/Avatar.svelte';
   import Icon from '../../components/Icon.svelte';
   import Stepper from '../../components/Stepper.svelte';
@@ -20,6 +20,8 @@
   import { order, current, isDown, endTurn } from '../../lib/combat.js';
   import { chassis, armorCurrent, combatWeapons, combatModules, poolFor, canTarget, rangeIndex, hasWorkingModule, resolveDamage, findWeapon, fmtBonus, attrCurrent, attrLabel, attrLabels, hasSecondary, status, epMax, ATTRS, isSwarm } from '../../lib/rules.js';
   import { rollActivation, settleActivation, actText, moduleFx, workingIndex, isEnergyWeapon, weaponPower, weaponBlock, POWER, chargeItems, spareEpacks, rollBlast, blastDice, rollD6 } from '../../lib/energy.js';
+  import { getRules } from '../../lib/settings.js';
+  import { mapCtx, rangeBetween, bandText, sight, within, nearestEnemyBand, coverSuggestion, blastFromCell, distance, bandOf } from '../../lib/tactics/index.js';
 
   const ACTION_KINDS = ['dmg', 'multi', 'fatigue', 'selfHarm', 'disable', 'control', 'grappleAtk', 'hold', 'blast', 'shift', 'escape', 'info'];
   const FREE_KINDS = ['repair', 'repairModule', 'drone'];
@@ -45,6 +47,7 @@
     if (!key) return;
     if (!store.ui.turn || store.ui.turn.key !== key) {
       store.ui.turn = fresh(key);
+      store.ui.mapPick = null; store.ui.blastCell = null;
       // Overwatch lasts until the robot's next turn.
       if (actor && actor.x.overwatch && !overwatchShot) store.commitAll(null, (d) => (d.combat.combatants.find((y) => y.id === actor.x.id).overwatch = false));
     }
@@ -71,6 +74,20 @@
       if (!seen) window.scrollTo({ top: Math.max(0, window.scrollY + panel.getBoundingClientRect().top - top - 8), behavior: 'smooth' });
     });
   });
+
+  // ---- the map (T14): suggestions only, and only when both robots are on it ----
+  const mctx = $derived(mapCtx(store.data, getRules().grid));
+  const rangeTo = (r) => (mctx && actor && r ? rangeBetween(mctx, actor.x, r.x) : null);
+  const inSight = (r) => (mctx && actor && r ? sight(mctx, actor.x, r.x) : null);
+  const mapRange = $derived(target ? rangeTo(target) : null);
+  const noSight = $derived(inSight(target) === false);
+  const coverSug = $derived(mctx && actor ? coverSuggestion(mctx, store.data, actor.x) : null);
+  const coverName = (v) => D.coverPresets.find((p) => p.armor === v)?.name;
+  /** Range band the map gives for a target (cid), else null. Lointaine never comes from a map. */
+  const bandFor = (cid) => rangeTo(ord.find((r) => r.c.id === cid))?.band ?? null;
+  /** The map's band, capped by the weapon's range (the chips beyond it are disabled). */
+  const capBand = (band, weapon) => (band && weapon && rangeIndex(band) > rangeIndex(weapon.portee) ? weapon.portee : band);
+  const outOfRange = $derived(kind === 'ranged' && !!mapRange && !!w && rangeIndex(mapRange.band) > rangeIndex(w.portee));
 
   const log = (t) => store.log(t);
   const sgn = (n) => fmtBonus(n).replace('-', '−');
@@ -144,7 +161,7 @@
   const extraArms = $derived(!!target && hasWorkingModule(target.c, 'Bras supplémentaires'));
   const canDefend = $derived(!!target && !isDown(target) && !target.x.held && !grappling && (!target.x.defending || (extraArms && ep(target.c) >= 1)));
   const rolled = $derived(T?.atk && (!T.defend || T.def));
-  const protectors = $derived(target ? ord.filter((r) => r.x.side === target.x.side && r.c.id !== target.c.id && !isDown(r) && r.c.model === 'security' && (r.c.specialRating || 0) > 0 && r.x.protectRound !== cb.round && !r.x.held) : []);
+  const protectors = $derived(target ? ord.filter((r) => r.x.side === target.x.side && r.c.id !== target.c.id && !isDown(r) && r.c.model === 'security' && (r.c.specialRating || 0) > 0 && r.x.protectRound !== cb.round && !r.x.held && (!mctx || within(mctx, r.x, target.x, 'Proche') !== false)) : []);
   const prot = $derived(T?.protector ? ord.find((r) => r.x.id === T.protector) : null);
   // Help (+1 each, costs the helper's action — book p.81; NPC groups attack
   // together the same way) and Calculate (Protocol Robot, book p.61).
@@ -158,14 +175,34 @@
     return moduleFx(actor.c, 'extraAttack').filter((f) => f.progs.includes(T.action) && !used.includes(f.module) && ep(actor.c) >= f.cost);
   });
 
-  function set(patch) { store.ui.turn = { ...store.ui.turn, ...patch }; }
+  function set(patch) {
+    if (patch.step && patch.step !== 'fx' && store.ui.mapPick) { store.ui.mapPick = null; store.ui.blastCell = null; }
+    store.ui.turn = { ...store.ui.turn, ...patch };
+  }
+  // Explosion aimed at a square of the map (T14): the victims and their band follow.
+  $effect(() => {
+    const cell = store.ui.blastCell;
+    if (!cell) return;
+    untrack(() => {
+      const t = store.ui.turn;
+      if (!t || t.step !== 'fx' || t.fxObj?.kind !== 'blast' || !mctx) return;
+      if (t.blastAt && t.blastAt.x === cell.x && t.blastAt.y === cell.y) return;
+      const up = new Set(ord.filter((r) => !isDown(r)).map((r) => r.c.id));
+      const v = blastFromCell(mctx, store.data, cell).filter((x) => up.has(x.cid) && blastDice(t.fxObj.power, x.band) > 0);
+      set({ blastAt: { ...cell }, fxTargets: v.map((x) => x.cid), fxDist: Object.fromEntries(v.map((x) => [x.cid, x.band])) });
+    });
+  });
+  const blastRange = $derived(T?.blastAt && actor?.x.pos && mctx ? { d: distance(actor.x.pos, T.blastAt), band: bandOf(distance(actor.x.pos, T.blastAt), mctx.rules) } : null);
   const firstFree = (ws, swarm) => ws.find((x) => !weaponBlock(actor.c, x, ep(actor.c)) && !!x.swarmOnly === swarm) ?? ws.find((x) => !weaponBlock(actor.c, x, ep(actor.c)) && !x.swarmOnly) ?? ws[0];
   function choose(action) {
     const first = opponents[0]?.c.id ?? null;
     const ws = actor ? combatWeapons(actor.c, action === 'shoot' ? 'ranged' : 'melee') : [];
-    const tgt = action === 'target' ? first : lock ? (opponents.find((o) => o.c.id === lock.target)?.c.id ?? first) : first;
+    const ow = overwatchShot && opponents.some((o) => o.c.id === store.ui.owTarget) ? store.ui.owTarget : null;
+    const tgt = action === 'target' ? first : ow ?? (lock ? (opponents.find((o) => o.c.id === lock.target)?.c.id ?? first) : first);
     const w0 = firstFree(ws, isSwarm(ord.find((r) => r.c.id === tgt)?.c));
-    set({ action, step: action === 'melee' || action === 'shoot' ? 'setup' : action, targetId: tgt, weaponIdx: w0?.index ?? null, range: action === 'shoot' ? (rangeIndex(w0?.portee) >= 2 ? 'Courte' : 'Proche') : 'Bras' });
+    const mapBand = action === 'shoot' ? capBand(bandFor(tgt), w0) : null;
+    const fleeBand = action === 'flee' && mctx ? nearestEnemyBand(mctx, store.data, actor.x)?.band : null;
+    set({ action, step: action === 'melee' || action === 'shoot' ? 'setup' : action, targetId: tgt, weaponIdx: w0?.index ?? null, range: action === 'shoot' ? (mapBand ?? (rangeIndex(w0?.portee) >= 2 ? 'Courte' : 'Proche')) : 'Bras', ...(fleeBand ? { fleeRange: fleeBand } : {}) });
   }
 
   // ---- attack ----
@@ -181,7 +218,10 @@
     const ax = actor.x.id, aid = actor.c.id, wi = w?.index;
     const helpers = T.helpers.map((id) => ord.find((r) => r.x.id === id)).filter(Boolean);
     const calcBy = calcRow;
+    // With a map: say where the shot comes from (« tir à Courte (7 cases), couverture Meuble 3 »).
+    const shotLine = kind === 'ranged' && mapRange ? `${nm(actor.c)} → ${nm(target.c)} : tir à ${T.range}${T.range === mapRange.band ? ` (${mapRange.d} case${mapRange.d > 1 ? 's' : ''})` : ` (carte : ${bandText(mapRange)})`}, ${target.c.cover ? `couverture ${coverName(target.c.cover) ? `${coverName(target.c.cover)} ` : ''}${target.c.cover}` : 'à découvert'}${noSight ? ', sans ligne de vue (décision du MJ)' : ''}${outOfRange ? ', hors de portée (décision du MJ)' : ''}` : '';
     store.commitAll(null, (d) => {
+      if (shotLine && d.combat.log.at(-1)?.text !== shotLine) log(shotLine);
       acts.forEach((a) => { const c = C(d, a.who); settleActivation(d, c, a.index, a.act, payEp); log(`${nm(c)} : ${actText(a.name, a.act)}`); });
       const me = C(d, aid);
       helpers.forEach((h) => { X(d, h.x.id).lostAction = true; });
@@ -284,12 +324,25 @@
     log(`${nm(actor.c)} renonce à son attaque sur le conseil de ${nm(calcRow?.c)}`);
     set({ step: 'action', atk: null, atkFirst: null, def: null, defend: false, calc: null, calcBy: null, helpers: [], preActs: [] });
   }
+  /** Back from an overwatch shot to the turn it interrupted (if any). */
+  function resumeTurn() {
+    const r = store.ui.owResume;
+    store.ui.turnActor = null;
+    store.ui.owTarget = null; store.ui.owResume = null; store.ui.mapPick = null; store.ui.blastCell = null;
+    store.ui.turn = r ?? null;
+  }
+  /** « Annuler le tir » : no shot, the robot stays in overwatch. */
+  function cancelOverwatch() { resumeTurn(); }
   function finish() {
     const id = actor.x.id, cid = actor.c.id;
     const ow = overwatchShot;
     const spentIdx = T?.spentIdx || [];
-    store.ui.turnActor = null;
-    store.ui.turn = null;
+    if (ow) resumeTurn();
+    else {
+      store.ui.turnActor = null;
+      store.ui.owTarget = null; store.ui.mapPick = null; store.ui.blastCell = null;
+      store.ui.turn = null;
+    }
     store.commitAll(null, (d) => {
       const me = C(d, cid);
       // One-use recycled weapons are thrown away once the turn they were used ends.
@@ -307,8 +360,12 @@
     store.ui.turn = null;
   }
   function flee(how = '') {
-    store.commitAll(`${nm(actor.c)} s'échappe`, (d) => { X(d, actor.x.id).fled = true; });
-    log(`${nm(actor.c)} quitte le combat${how ? ` (${how})` : ''}`);
+    const name = nm(actor.c), xid = actor.x.id;
+    store.commitAll(`${name} s'échappe`, (d) => {
+      X(d, xid).fled = true;
+      log(`${name} quitte le combat${how ? ` (${how})` : ''}`);
+      endTurn(d, null, log); // the last one to act fleeing starts the next round
+    });
     store.ui.turn = null;
   }
   function breakFree() {
@@ -384,11 +441,15 @@
     if (!f) return [];
     if (f.kind === 'blast') return [...opponents, ...allies, ...everyone.filter((r) => r.x.id === actor.x.id)];
     let L = opponents;
+    // With a map, an effect with a range only reaches the targets within it (unplaced robots stay listed).
+    if (f.range && mctx) L = L.filter((r) => within(mctx, actor.x, r.x, f.range) !== false);
     if (f.robotOnly) L = L.filter((r) => r.c.body !== 'creature');
     if (f.kind === 'fatigue') L = L.filter((r) => r.c.body === 'creature');
     return L;
   }
   function pickFx(f) {
+    store.ui.mapPick = f.kind === 'blast' && mctx ? 'blast' : null;
+    store.ui.blastCell = null;
     const cand = fxCandidates(f);
     set({ step: 'fx', fx: f.key, fxObj: f, fxTargets: single(f.kind) && cand[0] ? [cand[0].c.id] : [], fxEp: f.perEp ? 1 : f.cost, fxDist: {}, fxArmor: f.armor !== false, fxReact: 0, fxEmp: 0, fxFrom: '', fxTo: '', fxAttr: '', fxMods: [], fxResult: null });
   }
@@ -419,6 +480,7 @@
     set({ fxTargets: has ? T.fxTargets.filter((x) => x !== id) : [...T.fxTargets, id] });
   }
   function runFx() {
+    store.ui.mapPick = null; store.ui.blastCell = null;
     const f = curFx, k = f.kind, n = fxCost;
     const a = rollActivation(actor.c, n);
     const per = a.ep ? a.effective / a.ep : 1; // Power Surge doubles each EP
@@ -515,9 +577,10 @@
       <div class="manoeuvre">
         <span class="lbl">Manœuvre</span>
         <div class="chips">
-          {#each covers as cv (cv.name)}<button class="chip" aria-pressed={(actor.c.cover || 0) === cv.armor} onclick={() => setCover(cv.armor)}>{cv.armor ? `${cv.name} ${cv.armor}` : cv.name}</button>{/each}
+          {#each covers as cv (cv.name)}<button class="chip" class:sug={coverSug && coverSug.rating === cv.armor} aria-pressed={(actor.c.cover || 0) === cv.armor} onclick={() => setCover(cv.armor)}>{cv.armor ? `${cv.name} ${cv.armor}` : cv.name}</button>{/each}
           {#if combatWeapons(actor.c, 'ranged').length}<button class="chip" aria-pressed={actor.x.overwatch} onclick={overwatch} disabled={actor.x.overwatch}>Surveillance</button>{/if}
         </div>
+        {#if coverSug}<p class="hint mapnote">La carte suggère {coverSug.rating ? `${coverSug.source} ${coverSug.rating}` : 'à découvert'} face à {nm(store.char(coverSug.from.cid))} (cadre pointillé). Se mettre à couvert reste votre choix.</p>{/if}
         {#if moveFx.length || charges.length || emptyWeapons.length}
           <div class="chips">
             {#each moveFx as f (f.key)}<button class="chip en" disabled={ep(actor.c) < f.cost} onclick={() => quickFx(f)}><Icon name="bolt" size={13} />{f.module} : {f.short || f.label} ({f.cost} PE)</button>{/each}
@@ -563,7 +626,7 @@
             <button class="act" onclick={() => choose('flee')}><b>Fuir</b><span>Jet de Déplacement</span></button>
           {/if}
         {/if}
-        <button class="act pass" onclick={finish}><b>{overwatchShot ? 'Annuler le tir' : 'Fin du tour'}</b><span>{overwatchShot ? 'Garder la surveillance' : 'Passer au suivant'}</span></button>
+        <button class="act pass" onclick={overwatchShot ? cancelOverwatch : finish}><b>{overwatchShot ? 'Annuler le tir' : 'Fin du tour'}</b><span>{overwatchShot ? 'Garder la surveillance' : 'Passer au suivant'}</span></button>
       </div>
       {/if}
 
@@ -572,14 +635,23 @@
       <span class="lbl">Cible</span>
       <div class="targets">
         {#each (T.bonus === 'Accélérateur' ? opponents.filter((o) => o.c.id === T.targetId) : opponents) as o (o.x.id)}
-          <button class="tg" aria-pressed={T.targetId === o.c.id} onclick={() => set({ targetId: o.c.id, defend: false })}>
+          {@const mr = rangeTo(o)}
+          <button class="tg" class:nosight={kind === 'ranged' && inSight(o) === false} aria-pressed={T.targetId === o.c.id} onclick={() => set({ targetId: o.c.id, defend: false, losOk: false, ...(kind === 'ranged' && mr ? { range: capBand(mr.band, w) } : {}) })}>
             <Avatar c={o.c} side={o.x.side} size={44} selected={T.targetId === o.c.id} />
             <span class="tgi num">arm. {armorCurrent(o.c, chassis(o.c))}{o.c.cover ? `, couv. ${o.c.cover}` : ''}{lock?.target === o.c.id ? ', verrouillé' : ''}</span>
+            {#if mr}<span class="tgi map num">{bandText(mr)}{kind === 'ranged' && inSight(o) === false ? ', hors de vue' : ''}</span>{/if}
           </button>
         {/each}
         {#if !opponents.length}<p class="muted">Aucune cible debout.</p>{/if}
       </div>
       {#if target}{@render tstats(target.c)}{/if}
+      {#if kind === 'ranged' && (noSight || outOfRange)}
+        <div class="banner bad mapnote"><span>{#if noSight}<b>Pas de ligne de vue</b> d'après la carte : {nm(target.c)} est caché.{/if}{#if noSight && outOfRange}<br />{/if}{#if outOfRange}<b>Hors de portée</b> : la carte donne {bandText(mapRange)}, {w.name} porte à {w.portee}.{/if}</span>
+          <label class="tog"><input type="checkbox" checked={!!T.losOk} onchange={(e) => set({ losOk: e.currentTarget.checked })} /><span>Le MJ autorise le tir quand même</span></label>
+        </div>
+      {:else if kind === 'melee' && mapRange && mapRange.band !== 'Bras'}
+        <p class="hint mapnote">D'après la carte, {nm(target.c)} est à {bandText(mapRange)} : pas au contact. Approchez d'abord (manœuvre), ou la table en décide.</p>
+      {/if}
       {#if grappling}<p class="hint">{nm(target.c)} est immobilisé par vous : attaque d'immobilisation, sans arme, +2, impossible à parer.</p>{/if}
       {#if T.bonus === 'Accélérateur'}<p class="hint">Accélérateur : même cible, sans manœuvre en plus.</p>{:else if T.bonus === 'Bras supplémentaires'}<p class="hint">Bras supplémentaires : ce 2e Assaut coûte aussi la manœuvre du tour.</p>{/if}
 
@@ -600,10 +672,11 @@
         <span class="lbl">Portée de la cible</span>
         <div class="chips">
           {#each D.shootRanges as r (r.id)}
-            <button class="chip" aria-pressed={T.range === r.id} disabled={rangeIndex(r.id) > rangeIndex(w?.portee)} onclick={() => set({ range: r.id })}>{r.label} {fmtBonus(r.mod)}{r.gm ? '*' : ''}</button>
+            <button class="chip" class:sug={mapRange?.band === r.id} aria-pressed={T.range === r.id} disabled={rangeIndex(r.id) > rangeIndex(w?.portee)} onclick={() => set({ range: r.id })}>{r.label}{mapRange?.band === r.id ? ` (${mapRange.d} case${mapRange.d > 1 ? 's' : ''})` : ''} {fmtBonus(r.mod)}{r.gm ? '*' : ''}</button>
           {/each}
         </div>
         {#if T.range === 'Lointaine'}<p class="hint">* Lointaine n'a pas de modificateur dans le livre : −3 par défaut, au MJ de trancher.</p>{/if}
+        {#if mapRange}<p class="hint mapnote">Portée lue sur la carte : {bandText(mapRange)} (1 case = {mctx.rules.squareM} m). Changez-la si la table en décide autrement.</p>{/if}
         <div class="toggles">
           <label class="tog"><input type="checkbox" checked={T.aim} onchange={(e) => set({ aim: e.currentTarget.checked })} /><span>Viser (manœuvre) : +1{actor.c.cover ? ', +2 car à couvert' : ''}</span></label>
           {#if T.range === 'Bras'}<label class="tog"><input type="checkbox" checked={T.defenseless} onchange={(e) => set({ defenseless: e.currentTarget.checked })} /><span>Cible sans défense (pas de −3)</span></label>{/if}
@@ -643,7 +716,7 @@
 
       <div class="nav">
         <button class="btn ghost" onclick={() => set({ step: 'action' })}>Retour</button>
-        <button class="btn primary" disabled={!target || !w || !!weaponBlock(actor.c, w, ep(actor.c)) || (w.swarmOnly && !swarmTarget) || (pk0.base <= 0 && !T.fullAttr) || (!!T.calcBy && !T.calc)} onclick={toRoll}>Aux dés<Icon name="chevron" size={18} /></button>
+        <button class="btn primary" disabled={!target || !w || !!weaponBlock(actor.c, w, ep(actor.c)) || (w.swarmOnly && !swarmTarget) || (pk0.base <= 0 && !T.fullAttr) || (!!T.calcBy && !T.calc) || (kind === 'ranged' && (noSight || outOfRange) && !T.losOk)} onclick={toRoll}>Aux dés<Icon name="chevron" size={18} /></button>
       </div>
 
     {:else if T.step === 'roll'}
@@ -826,6 +899,9 @@
             {#if !cand.length}<p class="muted">{f.kind === 'fatigue' ? 'Aucun être vivant en face : les robots ne subissent jamais de fatigue.' : f.robotOnly ? 'Aucun robot en face.' : 'Aucune cible.'}</p>{/if}
           </div>
           {#if fxTarget}{@render tstats(fxTarget.c)}{/if}
+        {/if}
+        {#if f.kind === 'blast' && mctx}
+          <p class="hint mapnote">{T.blastAt ? `Case visée : colonne ${T.blastAt.x + 1}, rangée ${T.blastAt.y + 1}${blastRange ? `, à ${bandText(blastRange)} de ${nm(actor.c)}` : ''}. Les personnes prises dans l'explosion et leur portée viennent de la carte ; ajustez si besoin.` : "Touchez la case visée sur la carte : les personnes prises dans l'explosion (alliés compris) et leur portée s'y lisent."}{blastRange && f.range && rangeIndex(blastRange.band) > rangeIndex(f.range) ? ` Hors de portée (${f.range}).` : ''}</p>
         {/if}
         {#if f.kind === 'blast'}
           {#each T.fxTargets as id (id)}
@@ -1060,4 +1136,10 @@
   .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .callout { margin: 0; padding: 8px 10px; border-left: 3px solid var(--fault); background: var(--abyss); font-size: .9rem; }
   .skip { justify-self: start; background: none; border: 0; color: var(--muted); font-size: .85rem; text-decoration: underline; padding: 6px 0; }
+  /* Map suggestions (T14): dashed frame on the suggested chip, map notes. */
+  .chip.sug:not([aria-pressed='true']) { border-style: dashed; border-color: var(--amber); }
+  .mapnote { border-left: 2px solid color-mix(in srgb, var(--amber) 60%, transparent); padding-left: 8px; }
+  .banner.mapnote { display: grid; gap: 6px; }
+  .tgi.map { color: var(--amber); }
+  .tg.nosight :global(.disc) { opacity: .45; }
 </style>

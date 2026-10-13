@@ -1,0 +1,25 @@
+{
+  "melee": [
+    "T1 Brise-Fer BTL-07 → Robot de garde (Mains nues) : 1 dégât. Armure 4 : 1 bloqué ; Aucun dégât ne passe.",
+    "T1 Robot de garde → Brise-Fer BTL-07 (Matraque électrique) : 1 dégât. Armure 6 : 0 bloqué, armure −1 ; D6 5 : Réseau −1 (brisé)",
+    "T1 Clou SCR-311 → Robot de garde (Couteau de ferraille) : 2 dégâts. Armure 4 : 1 bloqué, armure −1 ; D6 5 : Réseau −1",
+    "T1 Unité Sentinelle → Brise-Fer BTL-07 (Matraque électrique) : 1 dégât. Armure 5 : 1 bloqué ; Aucun dégât ne passe.",
+    "T2 — Tour 2 —"
+  ],
+  "shooting": [
+    "T1 Brise-Fer BTL-07 → Robot de garde (Pistolet laser) : 2 dégâts. Couverture 3 : 1 bloqué ; Armure 4 : 1 bloqué ; Aucun dégât ne passe.",
+    "T1 Robot de garde → Brise-Fer BTL-07 (Pistolet laser) : 3 dégâts. Armure 6 : 1 bloqué, armure −1 ; D6 4 : Processeur −2 (brisé)",
+    "T1 Clou SCR-311 → Robot de garde (Couteau de ferraille) : 2 dégâts. Armure 4 : 2 bloqués ; Aucun dégât ne passe.",
+    "T1 Unité Sentinelle → Brise-Fer BTL-07 (Pistolet maser) : 6 dégâts. Armure 5 : 2 bloqués, armure −1 ; D6 2 : Servos −4",
+    "T2 — Tour 2 —"
+  ],
+  "grenade": [
+    "T1 Brise-Fer BTL-07 : Lance-grenades (1 PE)",
+    "T1 Lance-grenades → Robot de garde : Souffle 9 dés (Proche) : 1 dégât ; Armure 4 : 1 bloqué ; Aucun dégât ne passe.",
+    "T1 Lance-grenades → Unité Sentinelle : Souffle 9 dés (Proche) : 1 dégât ; Armure 10 : 1 bloqué ; Aucun dégât ne passe.",
+    "T1 Robot de garde → Brise-Fer BTL-07 (Matraque électrique) : 5 dégâts. Armure 6 : 2 bloqués, armure −1 ; D6 3 : Stabilité −3",
+    "T1 Clou SCR-311 rate Robot de garde (Couteau de ferraille)",
+    "T1 Unité Sentinelle → Brise-Fer BTL-07 (Pistolet maser) : 6 dégâts. Armure 5 : 1 bloqué, armure −2 ; D6 5 : Réseau −1 (brisé) ; D6 3 : Stabilité −2 (brisé) ; D6 6 : module Armure réactive cassé ; D6 6 : module Lance-grenades cassé",
+    "T2 — Tour 2 —"
+  ]
+}

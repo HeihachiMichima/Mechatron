@@ -149,7 +149,20 @@ déjà posé ; au clavier, les flèches le déplacent). *Placer sur les zones de
 monde d'un geste. Le pion sélectionné (ou celui qui joue) montre au choix : les *portées* (Bras,
 Proche, Courte), le *déplacement* possible en 1 ou 2 manœuvres (4 cases par manœuvre, règle maison)
 et les *lignes de vue* vers les adversaires, avec la couverture suggérée (Meuble 3, Porte blindée 5,
-Mur 7 : la table du livre). Ce ne sont que des suggestions : la table décide. Un doigt déplace la
+Mur 7 : la table du livre). Ce ne sont que des suggestions : la table décide.
+
+Pendant le tour, quand les deux robots sont sur la carte, le tour guidé s'en sert sans rien
+imposer : la portée de la cible est présélectionnée (« Courte (7 cases) ») ; une cible cachée
+affiche « Pas de ligne de vue » et le tir attend l'accord du MJ ; la puce de couverture que la
+carte suggère est encadrée en pointillé (se mettre à couvert reste un choix, et la couverture ne
+change jamais toute seule) ; la fuite part de la portée de l'ennemi le plus proche ; le
+déplacement possible double avec un module de mouvement (Accélérateur, Jetpack) ; un obus se vise
+en touchant une case, et les personnes prises dans l'explosion arrivent avec leur portée ; les
+modules à portée (Proche, Courte, Bras) ne proposent que les cibles à portée, et *Protéger* ne
+propose que les robots de sécurité à portée Proche. Quand un pion entre dans la vue d'un ennemi en
+surveillance, l'application demande « Tir de surveillance ? » (l'arc de 90° reste à juger) et ne
+tire jamais seule. Le journal du combat note « tir à Courte (7 cases), couverture Meuble 3 ».
+Sans carte, rien ne change. Un doigt déplace la
 carte, deux doigts (ou la molette) zooment, *Recentrer* revient à la vue entière. Sur téléphone, la
 carte se replie ; sur grand écran, elle passe à gauche du tour de jeu.
 

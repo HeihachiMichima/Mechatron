@@ -40,6 +40,7 @@
 
   function end(cleanup) {
     store.ui.turn = null; store.ui.turnActor = null;
+    store.ui.owTarget = null; store.ui.owResume = null; store.ui.mapPick = null; store.ui.blastCell = null;
     store.commitAll('Combat terminé', (d) => {
       if (cleanup) {
         const dead = new Set(d.combat.combatants.map((x) => d.chars.find((c) => c.id === x.cid)).filter((c) => c && c.kind === 'npc' && status(c).deactivated).map((c) => c.id));

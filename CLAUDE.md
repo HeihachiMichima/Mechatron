@@ -206,6 +206,21 @@ undo step. `store.open(type, props)` / `store.close()` drive bottom sheets; **pr
   TurnFlow on phones (`main-col` becomes `display: contents`) and on the left from 1280 px.
   `views/gm/MapEditor.svelte` (palette, brush/rectangle, undo, size, name, delete) and
   `views/gm/MapsPanel.svelte` (MJ → Cartes, grid house rules → `campaign.rules.grid`).
+- **Map ↔ combat (T14, `lib/tactics/combat.js`).** `mapCtx(data, getRules().grid)` → `{ map, rules }`
+  or null; every helper returns null (or []) when there is no map or a combatant isn't placed, and
+  TurnFlow then behaves exactly as before (checked by `e2e/fights.spec.js` against logs recorded on
+  v3.10.0, `e2e/fixtures/no-map-logs.json`; re-record only on purpose with `RECORD=1`).
+  `rangeBetween`/`bandText` pre-select the shooting band (choose / target pick), `sight` → « Pas de
+  ligne de vue » banner + `T.losOk` (GM override) before « Aux dés », `coverSuggestion` → dashed
+  `.sug` chip (never writes `c.cover`), `nearestEnemyBand` → `fleeRange`, `within` filters fx targets
+  with a `range` and Protect (Proche), `moveSquaresFor` doubles reach with a `move` fx module,
+  `overwatchers` → CombatMap's « Tir de surveillance ? » prompt after a move (never the current
+  actor; sets `ui.owTarget` + `ui.turnActor` and keeps the interrupted turn in `ui.owResume`, which
+  `finish()` / « Annuler le tir » restore; cancelling keeps the overwatch), `blastFromCell` ← `ui.mapPick = 'blast'` / `ui.blastCell` (CombatMap taps) →
+  `fxTargets` + `fxDist`. With a map, `toRoll` logs « X → Y : tir à Courte (7 cases), couverture
+  Meuble 3 » first (only then). A map band beyond the weapon's range is capped to the weapon and,
+  like no sight, needs « Le MJ autorise le tir quand même ». `flee()` logs before the commit and
+  calls `endTurn` (the last robot of a round fleeing no longer stalls the fight).
 - **`store.started`** is false while no campaign exists (clean profile, or a save of another
   version): App shows `WelcomeView` and nothing is saved. `store.start(raw, label)` opens the first
   campaign (new, demo, file, backup) with no undo back to the welcome screen, saves at once and
@@ -445,6 +460,11 @@ Follow `docs/PLAN-COMPAGNON.md` §0: one ticket at a time, in order.
   delete, grid house rules), the Carte panel in Préparation and Combat (map picker, place tokens by
   tap or drag, spawn zones, range rings, reach in 1/2 maneuvers, lines of sight with suggested
   cover), `combat.mapId` and combatant `pos` (undoable); map on the left from 1280 px.
+- v3.11.0 (2026-10-11, plan ticket T14): map ↔ combat — suggested range band (with squares),
+  line-of-sight banner with GM override, suggested cover chip (never applied by itself), flee band,
+  reach × 2 with movement modules, overwatch prompt after a move, grenade aimed at a square with
+  victims by band, module ranges and Protect checked on the map, shot line in the log; without a map
+  the seeded fight logs are unchanged.
 - v3.2.1 (2026-10-11): from Combat, « Ouvrir la fiche » opens an NPC's full fiche in place, in both
   GM modes, with « Retour au combat » (`ui.peek`): combat is now strictly the same in both modes.
 
