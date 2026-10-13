@@ -93,7 +93,7 @@
     </section>
   {/if}
 
-  <footer>Compagnon de fan, non officiel. Pas de sauvegarde serveur : exportez la campagne pour la stocker.</footer>
+  <footer>Pas de sauvegarde serveur : exportez la campagne pour la stocker.</footer>
 </div>
 
 <style>

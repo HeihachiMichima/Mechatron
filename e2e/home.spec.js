@@ -15,6 +15,7 @@ for (const { w, theme } of [{ w: 390, theme: 'dark' }, { w: 1280, theme: 'light'
     page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
     await page.goto(url);
     await expect(page.getByText('Pas de sauvegarde serveur : exportez la campagne pour la stocker.')).toBeVisible();
+    await expect(page.getByText('Compagnon de fan, non officiel')).toHaveCount(0);
     await expect(page.getByText("Créez les robots de l'équipe et c'est parti.")).toBeVisible();
     await page.getByRole('button', { name: 'Ouvrir la démo' }).click();
 
@@ -30,9 +31,18 @@ for (const { w, theme } of [{ w: 390, theme: 'dark' }, { w: 1280, theme: 'light'
     await page.getByRole('button', { name: 'Reprendre la campagne' }).click();
     await expect(page.getByRole('heading', { name: /Aujourd'hui, jour/ })).toBeVisible();
 
-    // Quit the demo from the menu: back to an empty home, nothing saved, demo in the backups.
+    // Robot exports are in the menu now.
     await page.getByRole('button', { name: 'Menu de la campagne' }).click();
-    await page.getByRole('button', { name: /Quitter la démo/ }).click();
+    await expect(page.getByRole('button', { name: /^Exporter Brise-Fer/ })).toHaveCount(0); // not on a fiche (Marché)
+    await page.keyboard.press('Escape');
+    await nav(page, 'Équipe').click();
+    await page.getByRole('button', { name: 'Menu de la campagne' }).click();
+    await page.getByRole('button', { name: /^Exporter Brise-Fer/ }).click();
+    await expect(page.getByRole('dialog', { name: /Exporter et partager/ })).toBeVisible();
+    await page.keyboard.press('Escape');
+
+    // Quit the demo from the top bar: back to an empty home, nothing saved, demo in the backups.
+    await page.getByRole('button', { name: 'Quitter la démo' }).click();
     await expect(page.getByRole('button', { name: 'Reprendre la campagne' })).toHaveCount(0);
     await expect(page.getByRole('heading', { name: 'Nouvelle campagne' })).toBeVisible();
     await page.waitForTimeout(400);
@@ -44,9 +54,7 @@ for (const { w, theme } of [{ w: 390, theme: 'dark' }, { w: 1280, theme: 'light'
     // A real campaign: no « Quitter la démo »; random nickname in the wizard; « Reset » in the roster.
     await page.getByLabel('Nom de la campagne').fill('Opération Noatun');
     await page.getByRole('button', { name: 'Créer la campagne' }).click();
-    await page.getByRole('button', { name: 'Menu de la campagne' }).click();
     await expect(page.getByRole('button', { name: /Quitter la démo/ })).toHaveCount(0);
-    await page.keyboard.press('Escape');
     await page.getByRole('button', { name: 'Nouveau robot' }).first().click();
     await page.locator('.models button, .model').first().click().catch(() => {});
     await page.getByRole('button', { name: /^Étape 2/ }).click();

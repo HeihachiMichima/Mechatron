@@ -256,7 +256,14 @@ undo step. `store.open(type, props)` / `store.close()` drive bottom sheets; **pr
   longer in the menu). `randomNick(chars)` (creation.js, our own word lists, through `rng.pick`)
   feeds the wizard's « Au hasard ». `ResetAllButton` reads « Reset » / « Reset de l'équipe » /
   « Reset des PNJ ». Marché = groups by kind (`KINDS` order, first open), one `.item` line each
-  (name + rarity or blocking reason, price, Acheter), `button.nm` toggles the details.
+  (name + rarity or blocking reason, price, Acheter), `button.nm` toggles the details; « Vendre »
+  (`button.sellh`) is folded by default and lists only what the market takes back (a price).
+  MJ → Marché noir uses the same groups (all closed; all open while searching or filtering by
+  rarity), one line per item with its price input, the rest behind `button.nm`. The TopBar holds
+  « Quitter la démo » (demo only, before « MJ ») and no export button: the robot's exports are the
+  menu's « Exporter <nom> » (on a fiche). `.btn.alt` (`--alt`, orange) = a second filled button,
+  e.g. the quick setups' « Copier » next to « Lancer ». The home footer no longer says « Compagnon
+  de fan, non officiel » (the PNG card and the README still do).
 - **`store.started`** is false while no campaign exists (clean profile, or a save of another
   version): App shows `WelcomeView` and nothing is saved. `store.start(raw, label)` opens the first
   campaign (new, demo, file, backup) with no undo back to the welcome screen, saves at once and

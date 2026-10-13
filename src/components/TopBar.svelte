@@ -1,6 +1,7 @@
 <script>
   // Logo (→ home screen), then whose fiche is on screen (or the campaign in the
-  // other spaces), the « MJ » switch, the campaign menu and, on a fiche, the robot's exports.
+  // other spaces), « Quitter la démo » during the demo, the « MJ » switch and the
+  // campaign menu (which also holds the robot's exports, T17).
   import Icon from './Icon.svelte';
   import { store } from '../lib/store.svelte.js';
   import { modelOf, hierarchy } from '../lib/rules.js';
@@ -33,11 +34,11 @@
       <span class="sub">{SPACE[store.space]}{store.campaign.phase === 'creation' ? ', création de l\'équipe' : ''}</span>
     </button>
   {/if}
+  {#if store.campaign.demo}<button class="btn small ghost quit" onclick={() => store.quitDemo()} aria-label="Quitter la démo"><span class="long">Quitter la démo</span><span class="short">Quitter</span></button>{/if}
   <button class="gm" role="switch" aria-checked={store.ui.gm} aria-label="Mode MJ" title="Mode MJ : affiche l'espace MJ et les outils du meneur, sur cet appareil" onclick={() => store.setGm(!store.ui.gm)}>
     <span class="gml">MJ</span><i class="sw" class:on={store.ui.gm} aria-hidden="true"></i>
   </button>
   <button class="icon-btn" aria-label="Menu de la campagne" title="Campagne, mode MJ, sauvegardes, thème" onclick={() => store.open({ type: 'campaign' })}><Icon name="menu" /></button>
-  {#if c}<button class="btn small export" aria-label="Exporter ce robot" title="Exporter ce robot" onclick={() => store.open({ type: 'export' })}><Icon name="share" size={18} /><span>Exporter</span></button>{/if}
 </div>
 
 <style>
@@ -57,8 +58,10 @@
   .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
   .count { display: inline-flex; align-items: center; gap: 3px; font-size: .75rem; font-weight: 600; color: var(--muted); padding: 1px 6px; border: 1px solid var(--line); border-radius: 10px; flex: none; }
   .sub { font-size: .8rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  /* Phones: the robot's name needs the room; the export button keeps its icon. */
-  @media (max-width: 559.98px) { .export span { display: none; } .export { padding: 0; min-width: 44px; } }
+  .quit { flex: none; padding: 0 8px; color: var(--amber); }
+  .quit .short { display: none; }
+  /* Phones: the robot's name needs the room. */
+  @media (max-width: 479.98px) { .quit .long { display: none; } .quit .short { display: inline; } .count { display: none; } .bar { gap: 2px; } .gm { padding: 0 4px; gap: 4px; } }
   @media (max-width: 340px) { .logo { height: 22px; } }
   @media (min-width: 720px) { .bar { padding: 10px 20px 8px; } .name { font-size: 1.35rem; } .logo { height: 42px; } }
 </style>

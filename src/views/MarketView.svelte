@@ -47,7 +47,9 @@
     const id = buyer.id;
     store.commitAll(`${buyer.name || 'Robot'} achète ${listingName(l)} (${l.price} PE)`, (d) => buy(d, l.id, id, { pay: payEp, ep: availableEp }));
   }
-  const goods = $derived(buyer ? sellables(m, buyer) : []);
+  // Only what the market takes back (no price = not shown).
+  const goods = $derived(buyer ? sellables(m, buyer).filter((it) => it.price != null) : []);
+  let sellOpen = $state(false);
   function resell(it) {
     const id = buyer.id;
     let why = null;
@@ -146,18 +148,21 @@
 
     {#if buyer}
       <section class="panel wide">
-        <div class="panel-head"><h2>Vendre</h2><span class="meta">{buyer.name || 'Sans nom'}, {buyer.ep.current}/{epMax(buyer)} PE</span></div>
+        <button class="gh sellh" aria-expanded={sellOpen} onclick={() => (sellOpen = !sellOpen)}>
+          <Icon name="chevron" size={18} /><b>Vendre</b><span class="gm-n num">{goods.length}</span><span class="gp">{buyer.name || 'Sans nom'}, {buyer.ep.current}/{epMax(buyer)} PE</span>
+        </button>
+        {#if sellOpen}
         <p class="hint top">Le marché reprend à {Math.round(m.sellRate * 100)} % du prix, au moins 1 PE (règle maison). Pas au-delà du maximum de PE.</p>
         {#if !goods.length}<p class="muted">Rien à vendre.</p>{/if}
         <ul class="list sells">
           {#each goods as it (`${it.kind}:${it.index}`)}
             <li>
               <span class="sn"><b>{it.name}</b><small>{it.kind === 'module' ? 'module' : it.kind === 'weapon' ? 'arme' : 'équipement'}</small></span>
-              {#if it.price == null}<span class="muted note">non repris</span>
-              {:else}<button class="btn small" onclick={() => resell(it)}>Vendre <b class="num">+{it.price} PE</b></button>{/if}
+              <button class="btn small" onclick={() => resell(it)}>Vendre <b class="num">+{it.price} PE</b></button>
             </li>
           {/each}
         </ul>
+        {/if}
       </section>
     {/if}
   </div>

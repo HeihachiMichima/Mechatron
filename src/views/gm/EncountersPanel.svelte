@@ -83,7 +83,7 @@
           <span class="muted note">{p.notes}</span>
           <div class="acts">
             <button class="btn small primary" class:armed={busy && armed === p.name} onclick={() => launch(p)}>{launchLabel(p)}</button>
-            <button class="btn small ghost" onclick={() => copyPreset(p)}><Icon name="copy" size={16} />Copier pour la modifier</button>
+            <button class="btn small alt" title="Copier dans la bibliothèque pour la modifier" onclick={() => copyPreset(p)}><Icon name="copy" size={16} />Copier</button>
           </div>
         </li>
       {/each}

@@ -25,6 +25,8 @@
   --body: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
   --toast-accent: #8a4f00;
   --on-ring: #10181a;    /* text on a filled ring (selected avatar / token) */
+  --alt: #ee7a2f;        /* second filled button (« Copier » next to « Lancer ») */
+  --alt-ink: #2a1a05;
   --cut: 10px;
   --nav-h: 64px;
   color-scheme: dark;
@@ -43,12 +45,14 @@
   --shadow: 0 10px 30px rgb(20 42 46 / .15);
   --toast-accent: #f2a541;
   --on-ring: #ffffff;
+  --alt: #c2410c;
+  --alt-ink: #ffffff;
   color-scheme: light;
 }
 @media (prefers-color-scheme: light) {
   :root[data-theme='auto'] {
     --abyss: #e4ebe8; --hull: #f6f9f7; --hull-2: #e8efec; --line: #b7c9c5; --text: #142a2e; --muted: #4f6b69;
-    --amber: #985600; --amber-ink: #fff8ec; --coolant: #0b746c; --fault: #b52f24; --shadow: 0 10px 30px rgb(20 42 46 / .15); --toast-accent: #f2a541; --on-ring: #ffffff;
+    --amber: #985600; --amber-ink: #fff8ec; --coolant: #0b746c; --fault: #b52f24; --shadow: 0 10px 30px rgb(20 42 46 / .15); --toast-accent: #f2a541; --on-ring: #ffffff; --alt: #c2410c; --alt-ink: #ffffff;
     color-scheme: light;
   }
 }
@@ -103,6 +107,7 @@ textarea.input { min-height: 160px; resize: vertical; line-height: 1.5; }
 }
 .btn:hover { border-color: var(--muted); }
 .btn.primary { background: var(--amber); color: var(--amber-ink); border-color: var(--amber); }
+.btn.alt { background: var(--alt); color: var(--alt-ink); border-color: var(--alt); }
 .btn.ghost { background: transparent; border-color: transparent; }
 .btn.ghost:hover { border-color: var(--line); }
 .btn.danger { color: var(--fault); border-color: color-mix(in srgb, var(--fault) 50%, var(--line)); background: transparent; }

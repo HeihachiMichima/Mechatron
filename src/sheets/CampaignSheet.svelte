@@ -1,7 +1,7 @@
 <script>
   // Top bar menu: the campaign (home, rename, export, import, new, automatic
-  // backups, quit the demo) and the display theme (per device). The « Mode MJ »
-  // switch sits in the top bar itself (T17).
+  // backups), the robot on screen's exports, and the display theme (per device).
+  // « Mode MJ » and « Quitter la démo » sit in the top bar itself (T17).
   // Replacing the campaign asks first and offers to export it; every replacement is undoable and backed up (T04).
   import Sheet from '../components/Sheet.svelte';
   import Icon from '../components/Icon.svelte';
@@ -72,7 +72,7 @@
 
   <ul class="list menu">
     <li><button class="row" onclick={() => store.goHome()}><Icon name="back" /><span><b>Accueil</b><small>Reprendre, changer de campagne, importer, démo (le logo y mène aussi).</small></span></button></li>
-    {#if cp.demo}<li><button class="row" onclick={() => store.quitDemo()}><Icon name="close" /><span><b>Quitter la démo</b><small>Retour à l'accueil ; la démo reste dans les sauvegardes automatiques.</small></span></button></li>{/if}
+    {#if store.fiche}<li><button class="row" onclick={() => store.open({ type: 'export' })}><Icon name="share" /><span><b>Exporter {store.fiche.name || 'ce robot'}</b><small>Ce robot seul : fichier, lien de partage, texte, image, impression.</small></span></button></li>{/if}
     <li><button class="row" onclick={exportCampaign}><Icon name="download" /><span><b>Exporter la campagne</b><small>Tout dans un fichier {campaignFileName(cp.name)} : robots, PNJ, niveaux, journal, combat.</small></span></button></li>
     <li><button class="row" onclick={() => fileInput.click()}><Icon name="upload" /><span><b>Importer</b><small>Une campagne (remplace celle-ci) ou un robot (ajouté à l'équipe).</small></span></button>
       <input type="file" accept="application/json,.json" hidden bind:this={fileInput} onchange={openFile} /></li>

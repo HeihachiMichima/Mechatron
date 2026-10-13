@@ -124,7 +124,7 @@ test('every v2.3.6 feature is within 2 taps of Équipe (GM mode on)', async ({ b
     ['Modifier une arme', [tab('Matériel'), () => page.getByRole('button', { name: /^Modifier / }).first().click()], () => dialog()],
     ['PJ ou PNJ (mode MJ)', [tab('Identité')], () => page.getByRole('button', { name: 'MJ (PNJ)' })],
     ['Choisir une pièce de châssis', [tab('Identité'), () => page.locator('.part').first().click()], () => dialog()],
-    ['Exports du robot (JSON, lien, texte, image, impression)', [btn('Exporter')], () => dialog()],
+    ['Exports du robot (JSON, lien, texte, image, impression)', [btn('Menu de la campagne'), btn('Exporter Brise-Fer')], () => dialog().getByText(/lien|Lien/).first()],
     ["Gérer l'équipe : dupliquer, supprimer, nouveau, reset", [btn("Gérer l'équipe", true)], () => dialog().getByRole('button', { name: /Reset de l'équipe/ })],
     ['Combat : préparation, initiative, tours', [go('Combat')], () => page.getByRole('button', { name: 'Initiative', exact: true })],
     ['Niveaux de développement, connexion et horloge', [go('Énergie')], () => page.getByRole('heading', { name: 'Rationnement' })],

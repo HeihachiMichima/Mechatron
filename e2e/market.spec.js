@@ -105,6 +105,8 @@ test('T10: buy, blocked purchases, undo, sell, and the GM forcing an item in', a
   await page.screenshot({ path: 'e2e/screenshots/market-shop-gm-390.png', fullPage: true });
 
   // Sell it back: half of 5 = 3 EP (house rule).
+  await page.locator('button.sellh').click(); // « Vendre » is folded by default
+  await expect(page.locator('.sells li', { hasText: 'E-pack' })).toHaveCount(0); // not taken back: not listed
   await page.locator('.sells li', { hasText: 'Jetpack' }).getByRole('button', { name: /Vendre/ }).click();
   d = await save(page);
   expect(d.chars.find((c) => c.name === 'Clou SCR-311').ep.current).toBe(3);
